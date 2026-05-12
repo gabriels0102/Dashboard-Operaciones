@@ -1995,15 +1995,19 @@ let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porS
 
 // ── Parser Dotación ──
 function parseDotacion(rows){
+  // HOJA: Dotacion - Relevamiento
+  // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO
+  // D(3)=CANTIDAD APROBADA, E(4)=CANTIDAD RELEVADA
   const result = [];
   rows.slice(1).forEach(row => {
-    if(!row[0] && !row[1]) return;
-    const empresa = String(row[0]||'').trim();
-    const jefe = String(row[1]||'').trim();
+    if(!row[1] && !row[2]) return;
+    const empresa  = String(row[0]||'').trim();
+    const jefe     = String(row[1]||'').trim();
     const servicio = String(row[2]||'').trim();
     const aprobada = parseFloat(row[3])||0;
-    const real = parseFloat(row[4])||0;
-    if(!servicio && !jefe) return;
+    // Col E puede venir vacía — tratarla como 0
+    const real     = row[4]===''||row[4]===null||row[4]===undefined ? 0 : parseFloat(row[4])||0;
+    if(!jefe && !servicio) return;
     result.push({empresa, jefe, servicio, aprobada, real, diff: real - aprobada});
   });
   return result;
@@ -2027,7 +2031,7 @@ function parsePrev(rows){
 async function actualizarDotacion(){
   setGsStatus('dot','loading');
   try {
-    const rows = await fetchSheet(GS_DOTACION, 'Dotacion operaciones');
+    const rows = await fetchSheet(GS_DOTACION, 'Dotacion - Relevamiento');
     const data = parseDotacion(rows);
     if(data.length > 0){
       DOTACION_DATA = data;
