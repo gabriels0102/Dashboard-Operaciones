@@ -257,29 +257,86 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub">Mar 2025 – May 2026 · 2.304 trabajos acumulados</div></div>
-    <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:200px;"><option value="">Todos los zonales</option></select>
+    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
+      <select id="f-corr-estado" onchange="renderCorr()" style="min-width:150px;">
+        <option value="">Todos los estados</option>
+        <option value="Abierto">Abierto</option>
+        <option value="En curso">En curso</option>
+        <option value="Pendiente">Pendiente</option>
+        <option value="Finalizado">Finalizado</option>
+        <option value="Cerrado por complementario">Cerrado por complementario</option>
+        <option value="Anulado">Anulado</option>
+      </select>
+      <select id="f-corr-categoria" onchange="renderCorr()" style="min-width:150px;"><option value="">Todas las categorías</option></select>
+    </div>
   </div>
+
+  <!-- KPIs -->
   <div class="kg" id="k-corr-det"></div>
+
+  <!-- Serie temporal + estado actual -->
   <div class="c2">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Lead time por zonal</div><div class="cs">Días promedio hasta cierre</div></div></div><div class="cwtall"><canvas id="ch-lead"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Top servicios con más correctivos</div></div></div><div class="cwtall"><canvas id="ch-top-svc"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Evolución — Abiertos vs Cerrados</div><div class="cs">Col N vs Col P · Serie temporal completa</div></div></div>
+      <div class="cwtall"><canvas id="ch-corr-np"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">% Cerrados y Abiertos sobre el total</div><div class="cs">Col U (% cerrados) vs Col X (% abiertos)</div></div></div>
+      <div class="cwtall"><canvas id="ch-corr-pct"></canvas></div>
+    </div>
   </div>
-  <div style="margin-top:14px;" class="sl">Detalle por zonal</div>
+
+  <!-- Distribución por estado -->
+  <div class="c2" style="margin-top:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Estado actual — Distribución</div><div class="cs">Abiertos · En curso · Finalizados · Complementario</div></div></div>
+      <div class="cw"><canvas id="ch-corr-estado-pie"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Correctivos por categoría</div><div class="cs">Mantenimiento vs Limpieza vs otras</div></div></div>
+      <div class="cw"><canvas id="ch-corr-categoria"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Rubros y servicios -->
+  <div class="c2" style="margin-top:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Top rubros</div><div class="cs">Civil · Termomecánica · Electricidad · etc.</div></div></div>
+      <div class="cwtall"><canvas id="ch-corr-rubros"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Lead time por jefe zonal</div><div class="cs">Días promedio desde emisión hasta cierre</div></div></div>
+      <div class="cwtall"><canvas id="ch-lead"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Top servicios -->
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Top 15 — Servicios con más correctivos</div><div class="cs">Filtrable por jefe zonal</div></div></div>
+    <div style="height:300px;position:relative;"><canvas id="ch-top-svc"></canvas></div>
+  </div>
+
+  <!-- Detalle por zonal -->
+  <div class="sl" style="margin-top:14px;">Detalle por jefe zonal</div>
   <div id="corr-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;"></div>
 </section>
 
 <!-- MOTIVOS -->
 <section class="page" id="page-motivos">
   <div class="topbar">
-    <div><div class="ptitle">Motivos de No Cierre</div><div class="psub">Por qué los correctivos siguen abiertos</div></div>
+    <div><div class="ptitle">Motivos de No Cierre</div><div class="psub">Col T (motivos) y Col U (subclasificación) — Hoja definitiva</div></div>
     <select id="f-motivo-zonal" onchange="renderMotivos()" style="min-width:200px;"><option value="">Todos los zonales</option></select>
   </div>
+  <div class="sl">Motivos principales — Col T</div>
   <div class="c2">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Motivos globales</div><div class="cs">Correctivos Abiertos + En curso</div></div></div><div class="cwxl"><canvas id="ch-motivos-bar"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Motivos de no cierre</div><div class="cs">Correctivos Abiertos + En curso + Pendientes</div></div></div><div class="cwxl"><canvas id="ch-motivos-bar"></canvas></div></div>
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Distribución porcentual</div></div></div><div class="cwxl"><canvas id="ch-motivos-pie"></canvas></div></div>
   </div>
-  <div style="margin-top:14px;" class="sl">Por jefe zonal</div>
+  <div class="sl" style="margin-top:14px;">Subclasificación — Col U</div>
+  <div id="submotivos-container"></div>
+  <div class="sl" style="margin-top:14px;">Por jefe zonal</div>
   <div id="motivos-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;"></div>
 </section>
 
@@ -714,12 +771,12 @@ function empBadge(e){return `<span class="p ${e==="GRUB"?"p-pu":e==="PVP"?"p-ok"
 function renderDashboard(){
   const e=ESTADO_ACTUAL;
   document.getElementById("k-corr").innerHTML=`
-    <div class="kc bl"><span class="ki">📂</span><div class="kl">Trabajos activos</div><div class="kv">${e.act}</div><div class="ks">Abiertos+En curso+Pend.</div></div>
-    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos</div><div class="kv">${e.ab}</div></div>
-    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${e.ec}</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Total cerrados</div><div class="kv">${e.cer.toLocaleString()}</div><div class="ks">Final.+Complementario</div></div>
-    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${e.comp}</div></div>
-    <div class="kc te"><span class="ki">📈</span><div class="kl">% Cerrados</div><div class="kv">${e.pct_c}%</div><div class="ks">${e.total.toLocaleString()} trabajos acumulados</div></div>`;
+    <div class="kc or"><span class="ki">📂</span><div class="kl">Activos (Col N)</div><div class="kv">${e.act}</div><div class="ks">Ab+EC+Pend</div></div>
+    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (Col B)</div><div class="kv">${e.ab}</div></div>
+    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso (Col D)</div><div class="kv">${e.ec}</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Cerrados (Col P)</div><div class="kv">${e.cer.toLocaleString()}</div><div class="ks">Fin.+Compl.</div></div>
+    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementario (Col H)</div><div class="kv">${e.comp}</div></div>
+    <div class="kc te"><span class="ki">📈</span><div class="kl">% Cerrados</div><div class="kv">${e.pct_c}%</div><div class="ks">${e.total.toLocaleString()} acumulados (Col Y)</div></div>`;
 
   if(sitios.length){
     let v=0,vp=0,nr=0,vig=0,tot=0;
@@ -807,61 +864,285 @@ function renderDashboard(){
 
 // ══ CORRECTIVOS ══
 window.renderCorr=function(){
-  const fz=document.getElementById("f-corr-zonal")?.value||"";
-  const data=fz?{[fz]:CORR_ZONAL[fz]||{}}:CORR_ZONAL;
-  const vals=Object.values(data).filter(v=>v?.total>0);
-  const tot=vals.reduce((s,v)=>s+(v.total||0),0),abt=vals.reduce((s,v)=>s+(v.ab||0)+(v.ec||0),0);
-  const cer=vals.reduce((s,v)=>s+(v.fin||0),0),comp=vals.reduce((s,v)=>s+(v.comp||0),0);
-  const tasa=tot>0?Math.round((cer+comp)/tot*100):0;
-  const leads=Object.entries(data).filter(([,v])=>v?.lead>0);
-  const lp=leads.length>0?Math.round(leads.reduce((s,[,v])=>s+v.lead,0)/leads.length):0;
+  const fz  = document.getElementById("f-corr-zonal")?.value||"";
+  const fest = document.getElementById("f-corr-estado")?.value||"";
+  const fcat = document.getElementById("f-corr-categoria")?.value||"";
+
+  // ── Populate categoria filter from real data ──
+  const selCat = document.getElementById("f-corr-categoria");
+  if(selCat && selCat.options.length<=1 && window.CORR_GLOBAL){
+    const cats = Object.keys(window.CORR_GLOBAL.categorias||{}).sort();
+    cats.forEach(c=>{ selCat.innerHTML+=`<option value="${c}">${c}</option>`; });
+  }
+
+  // ── Get data scope ──
+  const data = fz ? {[fz]: CORR_ZONAL[fz]||{}} : CORR_ZONAL;
+  const vals = Object.values(data).filter(v=>v?.total>0);
+
+  // ── Aggregate totals ──
+  const tot   = vals.reduce((s,v)=>s+(v.total||0),0);
+  const abt   = vals.reduce((s,v)=>s+(v.ab||0),0);
+  const ect   = vals.reduce((s,v)=>s+(v.ec||0),0);
+  const pent  = vals.reduce((s,v)=>s+(v.pend||0),0);
+  const actTot= abt+ect+pent;
+  const fint  = vals.reduce((s,v)=>s+(v.fin||0),0);
+  const compt = vals.reduce((s,v)=>s+(v.comp||0),0);
+  const cert  = fint+compt;
+  const tasa  = tot>0?Math.round(cert/tot*100):0;
+  const leadProm = (() => {
+    const leads = Object.entries(data).filter(([,v])=>v?.lead>0).map(([,v])=>v.lead);
+    return leads.length>0?Math.round(leads.reduce((s,v)=>s+v,0)/leads.length):0;
+  })();
+
+  // Update subtitle
+  const psub = document.getElementById("corr-psub");
+  if(psub) psub.textContent = `${fz||"Todos los zonales"} · ${tot.toLocaleString()} trabajos · Actualizado en tiempo real`;
+
+  // ── KPIs ──
   document.getElementById("k-corr-det").innerHTML=`
-    <div class="kc bl"><div class="kl">Total correctivos</div><div class="kv">${tot}</div></div>
-    <div class="kc re"><div class="kl">Activos (Ab.+EC)</div><div class="kv">${abt}</div><div class="ks">${tot>0?Math.round(abt/tot*100):0}% del total</div></div>
-    <div class="kc gr"><div class="kl">Finalizados</div><div class="kv">${cer}</div></div>
-    <div class="kc am"><div class="kl">Complementarios</div><div class="kv">${comp}</div></div>
-    <div class="kc te"><div class="kl">Tasa de cierre</div><div class="kv">${tasa}%</div></div>
-    <div class="kc pu"><div class="kl">Lead time prom.</div><div class="kv">${lp}d</div></div>`;
+    <div class="kc bl"><span class="ki">📂</span><div class="kl">Total correctivos</div><div class="kv">${tot.toLocaleString()}</div><div class="ks">Trabajos acumulados</div></div>
+    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div><div class="ks">Col B — estado Abierto</div></div>
+    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div><div class="ks">Col D — estado En curso</div></div>
+    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div><div class="ks">Ab + EC + Pend (col N)</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div><div class="ks">Col J — Finalizado</div></div>
+    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div><div class="ks">Col H — Cerrado compl.</div></div>
+    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>
+    <div class="kc blue" style="--kc-color:var(--ac)"><span class="ki">⏱️</span><div class="kl">Lead time prom.</div><div class="kv">${leadProm>0?leadProm+"d":"—"}</div><div class="ks">Días desde emisión a cierre</div></div>`;
 
-  const jefes=fz?[fz]:RESP.filter(j=>CORR_ZONAL[j]?.lead>0);
-  dc("ch-lead");if(jefes.length)charts["ch-lead"]=new Chart(document.getElementById("ch-lead"),{type:"bar",data:{labels:jefes.map(j=>j.split(" ")[0]),datasets:[{label:"Días",data:jefes.map(j=>Math.round(CORR_ZONAL[j]?.lead||0)),backgroundColor:jefes.map(j=>(CORR_ZONAL[j]?.lead||0)>100?"#ef444499":(CORR_ZONAL[j]?.lead||0)>50?"#f59e0b99":"#22c55e99"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+  const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
 
-  const jr=fz||"Carlos Leonardo Costanci";
-  dc("ch-top-svc");const top=(CORR_ZONAL[jr]?.top||[]);
-  if(top.length)charts["ch-top-svc"]=new Chart(document.getElementById("ch-top-svc"),{type:"bar",data:{labels:top.map(t=>t[0].substring(0,25)),datasets:[{label:"Correctivos",data:top.map(t=>t[1]),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},title:{display:true,text:jr.split(" ")[0],color:"#8b8fa8",font:{size:11}}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+  // ── Chart N vs P (serie temporal) ──
+  dc("ch-corr-np");
+  charts["ch-corr-np"]=new Chart(document.getElementById("ch-corr-np"),{
+    type:"line",
+    data:{labels:SERIE.f,datasets:[
+      {label:"Activos (Ab+EC+Pend) — Col N",data:SERIE.N,borderColor:"#ef4444",backgroundColor:"#ef444415",tension:0.3,fill:true,pointRadius:0,borderWidth:2},
+      {label:"Cerrados (Fin+Compl) — Col P",data:SERIE.P,borderColor:"#22c55e",backgroundColor:"#22c55e15",tension:0.3,fill:true,pointRadius:0,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8}}},
+      scales:{x:{ticks:{color:"#8b8fa8",font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:16},grid:{color:"rgba(255,255,255,0.04)"}},
+        y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}
+  });
 
-  const maxL=Math.max(...Object.values(CORR_ZONAL).map(v=>v.lead||0),1);
+  // ── Chart % cerrados vs % abiertos ──
+  dc("ch-corr-pct");
+  charts["ch-corr-pct"]=new Chart(document.getElementById("ch-corr-pct"),{
+    type:"line",
+    data:{labels:SERIE.f,datasets:[
+      {label:"% Cerrados — Col U",data:SERIE.T,borderColor:"#22c55e",backgroundColor:"#22c55e15",tension:0.3,fill:true,pointRadius:0,borderWidth:2},
+      {label:"% Abiertos — Col X",data:SERIE.X,borderColor:"#ef4444",backgroundColor:"#ef444415",tension:0.3,fill:true,pointRadius:0,borderWidth:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8}}},
+      scales:{x:{ticks:{color:"#8b8fa8",font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:16},grid:{color:"rgba(255,255,255,0.04)"}},
+        y:{ticks:{color:"#8b8fa8",font:{size:9},callback:v=>v+"%"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true,max:100}}}
+  });
+
+  // ── Pie estado actual ──
+  dc("ch-corr-estado-pie");
+  charts["ch-corr-estado-pie"]=new Chart(document.getElementById("ch-corr-estado-pie"),{
+    type:"doughnut",
+    data:{labels:["Abiertos","En curso","Pendientes","Finalizados","Complementario","Anulados"],
+      datasets:[{data:[abt,ect,pent,fint,compt,vals.reduce((s,v)=>s+(v.an||0),0)],
+        backgroundColor:["#ef444499","#f97316aa","#f59e0baa","#22c55e99","#7c3aed99","#8b8fa899"],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:"60%",
+      plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8},position:"right"},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${tot>0?Math.round(c.raw/tot*100):0}%)`}}}}
+  });
+
+  // ── Categorías (Mantenimiento / Limpieza / etc) ──
+  const catData = fz
+    ? CORR_ZONAL[fz]?.categorias||{}
+    : window.CORR_GLOBAL?.categorias||{};
+  const catFilt = fcat ? {[fcat]: catData[fcat]||0} : catData;
+  const catSort = Object.entries(catFilt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  dc("ch-corr-categoria");
+  if(catSort.length>0){
+    charts["ch-corr-categoria"]=new Chart(document.getElementById("ch-corr-categoria"),{
+      type:"doughnut",
+      data:{labels:catSort.map(c=>c[0]),datasets:[{data:catSort.map(c=>c[1]),backgroundColor:COLORS.slice(0,catSort.length),borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:"60%",
+        plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8},position:"right"}}}
+    });
+  }
+
+  // ── Rubros ──
+  const rubData = fz
+    ? CORR_ZONAL[fz]?.rubros||{}
+    : window.CORR_GLOBAL?.rubros||{};
+  const rubSort = Object.entries(rubData).filter(([k])=>k).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  dc("ch-corr-rubros");
+  if(rubSort.length>0){
+    charts["ch-corr-rubros"]=new Chart(document.getElementById("ch-corr-rubros"),{
+      type:"bar",
+      data:{labels:rubSort.map(r=>r[0].substring(0,25)),
+        datasets:[{label:"Correctivos",data:rubSort.map(r=>r[1]),backgroundColor:COLORS.slice(0,rubSort.length),borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
+        plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+          y:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+    });
+  }
+
+  // ── Lead time por zonal ──
+  const jefesLead = Object.entries(data).filter(([,v])=>v?.lead>0).sort((a,b)=>b[1].lead-a[1].lead);
+  dc("ch-lead");
+  if(jefesLead.length>0){
+    charts["ch-lead"]=new Chart(document.getElementById("ch-lead"),{
+      type:"bar",
+      data:{labels:jefesLead.map(([j])=>j.split(" ")[0]),
+        datasets:[{label:"Días promedio",data:jefesLead.map(([,v])=>v.lead),
+          backgroundColor:jefesLead.map(([,v])=>v.lead>100?"#ef444499":v.lead>50?"#f59e0b99":"#22c55e99"),borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} días promedio`}}},
+        scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+          y:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+    });
+  }
+
+  // ── Top servicios ──
+  const svcData = fz
+    ? Object.entries(CORR_ZONAL[fz]?.top||[]).map(([,v])=>v)
+    : Object.entries(window.CORR_GLOBAL?.servicios||{}).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  dc("ch-top-svc");
+  if(svcData.length>0){
+    const labels = fz ? svcData.map(t=>t[0].substring(0,35)) : svcData.map(([k])=>k.substring(0,35));
+    const vals2  = fz ? svcData.map(t=>t[1]) : svcData.map(([,v])=>v);
+    charts["ch-top-svc"]=new Chart(document.getElementById("ch-top-svc"),{
+      type:"bar",
+      data:{labels,datasets:[{label:"Correctivos",data:vals2,backgroundColor:"#7c3aed99",borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
+        plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+          y:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+    });
+  }
+
+  // ── Cards por zonal ──
+  const maxLead = Math.max(...Object.values(CORR_ZONAL).map(v=>v.lead||0),1);
   document.getElementById("corr-cards").innerHTML=RESP.map(j=>{
-    const d=data[j],ini2=ini(j);
-    if(!d||d.total===0)return `<div class="zcc"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(139,143,168,.1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--mu);">${ini2}</div><div style="font-size:13px;font-weight:600;">${j}</div></div><p style="font-size:12px;color:var(--mu);">Sin correctivos registrados.</p></div>`;
-    const cer2=d.fin+d.comp,t=d.total>0?Math.round(cer2/d.total*100):0;
+    const d = data[j]; const ini2 = ini(j);
+    if(!d||d.total===0) return `<div class="zcc"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+      <div style="width:34px;height:34px;border-radius:50%;background:rgba(139,143,168,.1);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--mu);">${ini2}</div>
+      <div style="font-size:13px;font-weight:600;">${j}</div></div>
+      <p style="font-size:12px;color:var(--mu);">Sin correctivos registrados.</p></div>`;
+    const act2=d.ab+d.ec+d.pend, cer2=d.fin+d.comp, t2=d.total>0?Math.round(cer2/d.total*100):0;
     const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":"var(--ok)";
-    return `<div class="zcc"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${ini2}</div><div><div style="font-size:13px;font-weight:600;">${j}</div><div style="font-size:11px;color:var(--mu);">${d.total} correctivos</div></div></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px;">
-        <div style="background:var(--s2);border-radius:7px;padding:8px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">ACTIVOS</div><div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono';color:var(--err);">${d.ab+d.ec}</div></div>
-        <div style="background:var(--s2);border-radius:7px;padding:8px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">CERRADOS</div><div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono';color:var(--ok);">${d.fin}</div></div>
-        <div style="background:var(--s2);border-radius:7px;padding:8px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">COMPL.</div><div style="font-size:18px;font-weight:700;font-family:'JetBrains Mono';color:var(--warn);">${d.comp}</div></div>
+    // Top motivos del zonal
+    const topMots = Object.entries(d.motivos||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    return `<div class="zcc">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${ini2}</div>
+        <div><div style="font-size:13px;font-weight:600;">${j}</div><div style="font-size:11px;color:var(--mu);">${d.total} correctivos · lead ${d.lead>0?d.lead+"d":"—"}</div></div>
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Tasa de cierre</span><span style="font-weight:600;color:${t>=70?"var(--ok)":t>=40?"var(--warn)":"var(--err)"};">${t}%</span></div>
-      <div style="height:4px;background:var(--s2);border-radius:3px;overflow:hidden;margin-bottom:${d.lead>0?"10px":"0"};"><div style="height:100%;width:${t}%;background:${t>=70?"var(--ok)":t>=40?"var(--warn)":"var(--err)"};border-radius:3px;"></div></div>
-      ${d.lead>0?`<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--mu);">Lead time promedio</span><span style="font-weight:600;color:${lc};">${Math.round(d.lead)} días</span></div><div class="lb"><div class="lf" style="width:${Math.min(100,d.lead/maxL*100)}%;background:${lc};"></div></div>`:""}
-      ${(d.top||[]).length?`<div style="margin-top:10px;border-top:1px solid var(--b);padding-top:8px;"><div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:5px;">TOP SERVICIOS</div>${d.top.map(t=>`<div style="font-size:11px;color:var(--mu);padding:2px 0;">▸ ${t[0]} (${t[1]})</div>`).join("")}</div>`:""}</div>`;
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;">
+        <div style="background:var(--s2);border-radius:7px;padding:7px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">ABIERTOS</div><div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono';color:var(--err);">${d.ab}</div></div>
+        <div style="background:var(--s2);border-radius:7px;padding:7px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">EN CURSO</div><div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono';color:var(--org);">${d.ec}</div></div>
+        <div style="background:var(--s2);border-radius:7px;padding:7px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">FINALIZ.</div><div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono';color:var(--ok);">${d.fin}</div></div>
+        <div style="background:var(--s2);border-radius:7px;padding:7px;text-align:center;"><div style="font-size:9px;color:var(--mu);margin-bottom:2px;">COMPL.</div><div style="font-size:16px;font-weight:700;font-family:'JetBrains Mono';color:var(--ac2);">${d.comp}</div></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Tasa de cierre</span><span style="font-weight:600;color:${t2>=70?"var(--ok)":t2>=40?"var(--warn)":"var(--err)"};">${t2}%</span></div>
+      <div style="height:4px;background:var(--s2);border-radius:3px;overflow:hidden;margin-bottom:${d.lead>0?"10px":"6px"};"><div style="height:100%;width:${t2}%;background:${t2>=70?"var(--ok)":t2>=40?"var(--warn)":"var(--err)"};border-radius:3px;"></div></div>
+      ${d.lead>0?`<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;"><span style="color:var(--mu);">Lead time promedio</span><span style="font-weight:600;color:${lc};">${d.lead} días</span></div><div style="height:4px;background:var(--s2);border-radius:3px;overflow:hidden;margin-bottom:8px;"><div style="height:100%;width:${Math.min(100,d.lead/maxLead*100)}%;background:${lc};border-radius:3px;"></div></div>`:""}
+      ${topMots.length>0?`<div style="border-top:1px solid var(--b);padding-top:8px;"><div style="font-size:10px;color:var(--mu);font-weight:600;margin-bottom:5px;">TOP MOTIVOS NO CIERRE</div>${topMots.map(([m,n])=>`<div style="font-size:11px;color:var(--mu);padding:2px 0;">▸ ${m}: <strong style="color:var(--txt);">${n}</strong></div>`).join("")}</div>`:""}</div>`;
   }).join("");
 };
 
 // ══ MOTIVOS ══
 window.renderMotivos=function(){
-  const fz=document.getElementById("f-motivo-zonal")?.value||"";
-  const md=fz?(MOTIVOS_ZONAL[fz]||[]):MOTIVOS_GLOBAL;
-  const maxN=md.length>0?md[0].n:1;
-  dc("ch-motivos-bar");charts["ch-motivos-bar"]=new Chart(document.getElementById("ch-motivos-bar"),{type:"bar",data:{labels:md.map(m=>m.m.substring(0,35)),datasets:[{label:"Correctivos",data:md.map(m=>m.n),backgroundColor:"#ef444499",borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}}}}}); 
-  const CP=["#ef4444","#f97316","#f59e0b","#22c55e","#14b8a6","#4f8ef7","#7c3aed","#a855f7","#ec4899","#64748b","#8b8fa8"];
-  dc("ch-motivos-pie");charts["ch-motivos-pie"]=new Chart(document.getElementById("ch-motivos-pie"),{type:"doughnut",data:{labels:md.map(m=>m.m),datasets:[{data:md.map(m=>m.n),backgroundColor:CP.slice(0,md.length),borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"}}})});
-  const jefes=fz?[fz]:RESP.filter(j=>MOTIVOS_ZONAL[j]?.length>0);
+  const fz = document.getElementById("f-motivo-zonal")?.value||"";
+
+  // Get motivos from real parsed data
+  const motivosData = (() => {
+    if(fz && CORR_ZONAL[fz]?.motivos){
+      return Object.entries(CORR_ZONAL[fz].motivos).sort((a,b)=>b[1]-a[1]);
+    }
+    return Object.entries(window.CORR_GLOBAL?.motivos||MOTIVOS_GLOBAL.reduce((o,m)=>{o[m.m]=m.n;return o;},{})).sort((a,b)=>b[1]-a[1]);
+  })();
+
+  const submotivosData = (() => {
+    if(fz && CORR_ZONAL[fz]?.submotivos){
+      return Object.entries(CORR_ZONAL[fz].submotivos).sort((a,b)=>b[1]-a[1]);
+    }
+    return Object.entries(window.CORR_GLOBAL?.submotivos||{}).sort((a,b)=>b[1]-a[1]);
+  })();
+
+  const COLORS = ["#ef4444","#f97316","#f59e0b","#22c55e","#14b8a6","#4f8ef7","#7c3aed","#a855f7","#ec4899","#64748b","#8b8fa8"];
+
+  // ── Chart: Motivos principales ──
+  dc("ch-motivos-bar");
+  if(motivosData.length>0){
+    charts["ch-motivos-bar"]=new Chart(document.getElementById("ch-motivos-bar"),{
+      type:"bar",
+      data:{labels:motivosData.map(([m])=>m.substring(0,40)),
+        datasets:[{label:"Correctivos",data:motivosData.map(([,n])=>n),backgroundColor:"#ef444499",borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
+        plugins:{legend:{display:false}},
+        scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+          y:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+    });
+  }
+
+  // ── Pie motivos ──
+  dc("ch-motivos-pie");
+  if(motivosData.length>0){
+    charts["ch-motivos-pie"]=new Chart(document.getElementById("ch-motivos-pie"),{
+      type:"doughnut",
+      data:{labels:motivosData.map(([m])=>m),
+        datasets:[{data:motivosData.map(([,n])=>n),backgroundColor:COLORS.slice(0,motivosData.length),borderWidth:0}]},
+      options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"}}})
+    });
+  }
+
+  // ── Submotivos ──
+  // Check if submotivos chart exists in page, add if needed
+  const subContainer = document.getElementById("submotivos-container");
+  if(subContainer && submotivosData.length>0){
+    subContainer.innerHTML = `<div class="c2">
+      <div class="card" style="margin-bottom:0;">
+        <div class="ch"><div><div class="ct">Subclasificación de motivos</div><div class="cs">Col U — Detalle de motivos de no cierre</div></div></div>
+        <div style="height:260px;position:relative;"><canvas id="ch-submotivos-bar"></canvas></div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="ch"><div><div class="ct">Distribución subclasificación</div></div></div>
+        <div style="height:260px;position:relative;"><canvas id="ch-submotivos-pie"></canvas></div>
+      </div>
+    </div>`;
+    setTimeout(()=>{
+      dc("ch-submotivos-bar");
+      charts["ch-submotivos-bar"]=new Chart(document.getElementById("ch-submotivos-bar"),{
+        type:"bar",
+        data:{labels:submotivosData.map(([m])=>m.substring(0,40)),
+          datasets:[{label:"Correctivos",data:submotivosData.map(([,n])=>n),backgroundColor:"#7c3aed99",borderRadius:4}]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
+          plugins:{legend:{display:false}},
+          scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+            y:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+      });
+      dc("ch-submotivos-pie");
+      charts["ch-submotivos-pie"]=new Chart(document.getElementById("ch-submotivos-pie"),{
+        type:"doughnut",
+        data:{labels:submotivosData.map(([m])=>m),
+          datasets:[{data:submotivosData.map(([,n])=>n),backgroundColor:COLORS.slice(0,submotivosData.length),borderWidth:0}]},
+        options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"}}})
+      });
+    },50);
+  }
+
+  // ── Cards por jefe ──
+  const jefes = fz?[fz]:RESP.filter(j=>CORR_ZONAL[j]&&Object.keys(CORR_ZONAL[j].motivos||{}).length>0);
   document.getElementById("motivos-cards").innerHTML=jefes.map(j=>{
-    const ms=MOTIVOS_ZONAL[j]||[];if(!ms.length)return "";
-    const mx=ms[0]?.n||1;
-    return `<div class="card" style="margin-bottom:0;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;"><div style="width:32px;height:32px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--ac);">${ini(j)}</div><div style="font-size:13px;font-weight:600;">${j}</div></div>${ms.map(m=>`<div class="mb"><span class="mc">${m.n}</span><span class="ml" title="${m.m}">${m.m}</span><div class="mt"><div class="mf" style="width:${Math.round(m.n/mx*100)}%;"></div></div></div>`).join("")}</div>`;
+    const ms = Object.entries(CORR_ZONAL[j]?.motivos||{}).sort((a,b)=>b[1]-a[1]);
+    if(!ms.length) return "";
+    const mx=ms[0]?.[1]||1;
+    return `<div class="card" style="margin-bottom:0;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--ac);">${ini(j)}</div>
+        <div style="font-size:13px;font-weight:600;">${j}</div>
+      </div>
+      ${ms.map(([m,n])=>`<div class="mb"><span class="mc">${n}</span><span class="ml" title="${m}">${m}</span><div class="mt"><div class="mf" style="width:${Math.round(n/mx*100)}%;"></div></div></div>`).join("")}
+    </div>`;
   }).join("");
 };
 
@@ -1226,60 +1507,130 @@ function setGsStatus(source, status){
 
 // ── Parser: "Estado de trabajos por fecha" ──
 function parseCorrEstado(rows){
-  // row[0]=fecha, row[13]=N(activos), row[15]=P(cerrados)
-  // row[19]=T(%cerrados), row[23]=X(%abiertos), row[22]=W(flujo)
-  const fechas=[], N=[], P=[], T=[], X=[], FN=[];
+  // MAPEO EXACTO DE COLUMNAS (verificado con la planilla):
+  // A(0)=FECHA, B(1)=ABIERTO, D(3)=EN CURSO, F(5)=PENDIENTE
+  // H(7)=CERRADO POR COMPLEMENTARIO, J(9)=FINALIZADO
+  // N(13)=ABIERTO+EN CURSO+PENDIENTE (activos totales)
+  // P(15)=FINALIZADO+CERRADO POR COMPLEMENTARIO (cerrados totales)
+  // S(18)=%ABIERTO/CERRADO, T(19)=%TRABAJOS ABIERTOS
+  // U(20)=%CERRADOS/TOTAL, W(22)=FLUJO NEGATIVO (decrecimiento)
+  // X(23)=%TRABAJOS ABIERTOS/TOTAL, Y(24)=TOTAL ACUMULADO
+  const fechas=[], AB=[], EC=[], PEND=[], COMPL=[], FIN=[], N=[], P=[], T=[], X=[], FN=[], TOTAL_ACUM=[];
   rows.slice(1).forEach(row=>{
     if(!row[0]) return;
-    const fecha = row[0];
-    const n = parseFloat(row[13])||0;
-    const p = parseFloat(row[15])||0;
-    const t = Math.round((parseFloat(row[19])||0)*100*100)/100;
-    const x = Math.round((parseFloat(row[23])||0)*100*100)/100;
-    const fn = parseFloat(row[22])||0;
-    fechas.push(fecha); N.push(n); P.push(p); T.push(t); X.push(x); FN.push(fn);
+    fechas.push(String(row[0]));
+    AB.push(parseFloat(row[1])||0);      // Col B - Abiertos
+    EC.push(parseFloat(row[3])||0);      // Col D - En curso
+    PEND.push(parseFloat(row[5])||0);    // Col F - Pendiente
+    COMPL.push(parseFloat(row[7])||0);   // Col H - Cerrado por complementario
+    FIN.push(parseFloat(row[9])||0);     // Col J - Finalizado
+    N.push(parseFloat(row[13])||0);      // Col N - Activos totales
+    P.push(parseFloat(row[15])||0);      // Col P - Cerrados totales
+    // % cerrados: col U (index 20) — viene como decimal (0.9171), multiplicar x100
+    const tRaw = parseFloat(row[20])||0;
+    T.push(tRaw > 1 ? Math.round(tRaw*100)/100 : Math.round(tRaw*10000)/100);
+    // % abiertos: col X (index 23) — igual
+    const xRaw = parseFloat(row[23])||0;
+    X.push(xRaw > 1 ? Math.round(xRaw*100)/100 : Math.round(xRaw*10000)/100);
+    FN.push(parseFloat(row[22])||0);     // Col W - Flujo negativo
+    TOTAL_ACUM.push(parseFloat(row[24])||0); // Col Y - Total acumulado
   });
-  return {f:fechas, N, P, T, X, FN};
+  return {f:fechas, AB, EC, PEND, COMPL, FIN, N, P, T, X, FN, TOTAL_ACUM};
 }
 
 // ── Parser: "Hoja definitiva" → CORR_ZONAL ──
 function parseCorrZonal(rows){
-  const JEFES_MAP = {
-    "Carlos Leonardo Costanci": "Carlos Leonardo Costanci",
-    "Maria Gutierrez": "Maria Gutierrez",
-    "Germán Gutierrez": "Germán Gutierrez",
-    "Mariano Norberto Gomez Posada": "Mariano Norberto Gomez Posada",
-    "Gaston Noguera": "Gaston Noguera",
-    "Kenneth Brito": "Kenneth Brito",
-    "Patricio Frechou": "Patricio Frechou",
-    "Lexlys Zapata": "Lexlys Zapata"
-  };
+  // HOJA DEFINITIVA - MAPEO EXACTO:
+  // A(0)=FECHA EMISION, B(1)=JEFE ZONAL, F(5)=SERVICIO
+  // H(7)=CATEGORIA, I(8)=RUBRO, J(9)=NECESIDAD
+  // K(10)=ESTADO, T(19)=MOTIVOS, U(20)=SUBCLASIFICACION
+  // W(22)=DIAS DE DEMORA (lead time)
   const counts = {};
-  Object.keys(JEFES_MAP).forEach(j=>{ counts[j]={ab:0,ec:0,fin:0,comp:0,an:0,rej:0}; });
+  const serviciosPorJefe = {};
+  const motivosPorJefe = {};
+  const submotivosPorJefe = {};
+  const categoriasPorJefe = {};
+  const rubrosPorJefe = {};
+  const leadTimes = {};
 
   rows.slice(1).forEach(row=>{
     const jefe = String(row[1]||'').trim();
     const estado = String(row[10]||'').trim();
-    if(!JEFES_MAP[jefe]) return;
-    const c = counts[jefe];
-    if(estado==='Abierto') c.ab++;
-    else if(estado==='En curso') c.ec++;
-    else if(estado==='Finalizado') c.fin++;
-    else if(estado==='Cerrado por complementario') c.comp++;
-    else if(estado==='Anulado') c.an++;
-    else if(estado==='Rechazado') c.rej++;
+    const servicio = String(row[5]||'').trim();
+    const categoria = String(row[7]||'').trim();
+    const rubro = String(row[8]||'').trim();
+    const motivo = String(row[19]||'').trim();
+    const submotivo = String(row[20]||'').trim();
+    const diasDemora = parseFloat(row[22])||0;
+    if(!jefe) return;
+
+    if(!counts[jefe]) counts[jefe]={ab:0,ec:0,pend:0,fin:0,comp:0,an:0,rej:0};
+    if(!serviciosPorJefe[jefe]) serviciosPorJefe[jefe]={};
+    if(!motivosPorJefe[jefe]) motivosPorJefe[jefe]={};
+    if(!submotivosPorJefe[jefe]) submotivosPorJefe[jefe]={};
+    if(!categoriasPorJefe[jefe]) categoriasPorJefe[jefe]={};
+    if(!rubrosPorJefe[jefe]) rubrosPorJefe[jefe]={};
+    if(!leadTimes[jefe]) leadTimes[jefe]=[];
+
+    // Estado
+    if(estado==='Abierto') counts[jefe].ab++;
+    else if(estado==='En curso') counts[jefe].ec++;
+    else if(estado==='Pendiente') counts[jefe].pend++;
+    else if(estado==='Finalizado') counts[jefe].fin++;
+    else if(estado==='Cerrado por complementario') counts[jefe].comp++;
+    else if(estado==='Anulado') counts[jefe].an++;
+    else if(estado==='Rechazado') counts[jefe].rej++;
+
+    // Servicio
+    if(servicio) serviciosPorJefe[jefe][servicio]=(serviciosPorJefe[jefe][servicio]||0)+1;
+    // Categoría
+    if(categoria) categoriasPorJefe[jefe][categoria]=(categoriasPorJefe[jefe][categoria]||0)+1;
+    // Rubro
+    if(rubro) rubrosPorJefe[jefe][rubro]=(rubrosPorJefe[jefe][rubro]||0)+1;
+    // Motivo (solo activos)
+    if(motivo && ['Abierto','En curso','Pendiente'].includes(estado)){
+      motivosPorJefe[jefe][motivo]=(motivosPorJefe[jefe][motivo]||0)+1;
+    }
+    // Submotivo
+    if(submotivo && ['Abierto','En curso','Pendiente'].includes(estado)){
+      submotivosPorJefe[jefe][submotivo]=(submotivosPorJefe[jefe][submotivo]||0)+1;
+    }
+    // Lead time
+    if(diasDemora>0) leadTimes[jefe].push(diasDemora);
   });
 
   const newZonal = {};
   Object.entries(counts).forEach(([j,c])=>{
-    const existing = CORR_ZONAL[j]||{};
+    const total = c.ab+c.ec+c.pend+c.fin+c.comp+c.an+c.rej;
+    const leads = leadTimes[j]||[];
+    const leadAvg = leads.length>0 ? Math.round(leads.reduce((s,v)=>s+v,0)/leads.length) : 0;
+    // Top 5 servicios
+    const topSvcs = Object.entries(serviciosPorJefe[j]||{}).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,v])=>[n,v]);
     newZonal[j] = {
-      ab: c.ab, ec: c.ec, fin: c.fin, comp: c.comp, an: c.an,
-      total: c.ab+c.ec+c.fin+c.comp+c.an+c.rej,
-      lead: existing.lead||0,   // lead time no cambia sin fecha de cierre
-      top: existing.top||[]
+      ab: c.ab, ec: c.ec, pend: c.pend, fin: c.fin, comp: c.comp, an: c.an,
+      total, lead: leadAvg,
+      top: topSvcs,
+      categorias: categoriasPorJefe[j]||{},
+      rubros: rubrosPorJefe[j]||{},
+      motivos: motivosPorJefe[j]||{},
+      submotivos: submotivosPorJefe[j]||{}
     };
   });
+
+  // Also store global aggregates
+  window.CORR_GLOBAL = {
+    servicios: {},
+    categorias: {},
+    rubros: {},
+    motivos: {},
+    submotivos: {}
+  };
+  Object.values(serviciosPorJefe).forEach(svcs=>Object.entries(svcs).forEach(([k,v])=>{ window.CORR_GLOBAL.servicios[k]=(window.CORR_GLOBAL.servicios[k]||0)+v; }));
+  Object.values(categoriasPorJefe).forEach(cats=>Object.entries(cats).forEach(([k,v])=>{ window.CORR_GLOBAL.categorias[k]=(window.CORR_GLOBAL.categorias[k]||0)+v; }));
+  Object.values(rubrosPorJefe).forEach(rubs=>Object.entries(rubs).forEach(([k,v])=>{ window.CORR_GLOBAL.rubros[k]=(window.CORR_GLOBAL.rubros[k]||0)+v; }));
+  Object.values(motivosPorJefe).forEach(mots=>Object.entries(mots).forEach(([k,v])=>{ window.CORR_GLOBAL.motivos[k]=(window.CORR_GLOBAL.motivos[k]||0)+v; }));
+  Object.values(submotivosPorJefe).forEach(subs=>Object.entries(subs).forEach(([k,v])=>{ window.CORR_GLOBAL.submotivos[k]=(window.CORR_GLOBAL.submotivos[k]||0)+v; }));
+
   return newZonal;
 }
 
@@ -1423,16 +1774,27 @@ async function actualizarCorrectivos(){
     SERIE.X  = nuevaSerie.X;
     SERIE.FN = nuevaSerie.FN;
 
-    // Estado actual = última fila
+    // Estado actual = última fila con datos reales
     if(nuevaSerie.N.length){
       const last = nuevaSerie.N.length - 1;
-      const n = nuevaSerie.N[last], p = nuevaSerie.P[last];
-      const total = n + p;
+      const n = nuevaSerie.N[last];       // Col N - activos (Ab+EC+Pend)
+      const p = nuevaSerie.P[last];       // Col P - cerrados (Fin+Compl)
+      const ab = nuevaSerie.AB[last];     // Col B - solo abiertos
+      const ec = nuevaSerie.EC[last];     // Col D - solo en curso
+      const pend = nuevaSerie.PEND[last]; // Col F - pendientes
+      const compl = nuevaSerie.COMPL[last]; // Col H - cerrado por complementario
+      const fin = nuevaSerie.FIN[last];   // Col J - finalizados
+      const totalAcum = nuevaSerie.TOTAL_ACUM[last]; // Col Y - total acumulado
       ESTADO_ACTUAL.act = n;
+      ESTADO_ACTUAL.ab = ab;
+      ESTADO_ACTUAL.ec = ec;
+      ESTADO_ACTUAL.pe = pend;
       ESTADO_ACTUAL.cer = p;
-      ESTADO_ACTUAL.total = total;
-      ESTADO_ACTUAL.pct_c = total>0?Math.round(p/total*10000)/100:0;
-      ESTADO_ACTUAL.pct_a = total>0?Math.round(n/total*10000)/100:0;
+      ESTADO_ACTUAL.comp = compl;
+      ESTADO_ACTUAL.fin = fin;
+      ESTADO_ACTUAL.total = totalAcum || (n + p);
+      ESTADO_ACTUAL.pct_c = nuevaSerie.T[last] || (totalAcum>0?Math.round(p/totalAcum*10000)/100:0);
+      ESTADO_ACTUAL.pct_a = nuevaSerie.X[last] || (totalAcum>0?Math.round(n/totalAcum*10000)/100:0);
     }
 
     // Hoja 2: Hoja definitiva → CORR_ZONAL
