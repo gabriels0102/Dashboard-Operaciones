@@ -163,32 +163,33 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
   </div>
   <nav class="nav">
-    <div class="nav-section">Panel General</div>
-    <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard</span></button>
+    <div class="nav-section">Panel</div>
+    <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
     <div class="nav-section">Correctivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis Histórico</span></button>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
     <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
-
-    <div class="nav-section">Zonales</div>
     <button class="ni" data-page="zonales"><span class="ni-icon">🗺️</span><span class="ni-label">Resumen por Jefe Zonal</span></button>
-    <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
+
+    <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
-
-    <div class="nav-section">Flota Vehicular</div>
-    <button class="ni orange" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen Flota</span></button>
-    <button class="ni orange" data-page="flota-estado"><span class="ni-icon">📋</span><span class="ni-label">Estado de Unidades</span></button>
-    <button class="ni orange" data-page="flota-taller"><span class="ni-icon">🔧</span><span class="ni-label">Horas en Taller</span></button>
-    <button class="ni orange" data-page="flota-impacto"><span class="ni-icon">📉</span><span class="ni-label">Impacto Operativo</span></button>
-    <button class="ni orange" data-page="siniestros"><span class="ni-icon">⚠️</span><span class="ni-label">Siniestros</span></button>
-
-    <div class="nav-section">Dotación y Preventivos</div>
-    <button class="ni orange" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación</span></button>
-    <button class="ni orange" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
+    <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios</span></button>
+
+    <div class="nav-section">Flota</div>
+    <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
+    <button class="ni" data-page="flota-estado"><span class="ni-icon">📋</span><span class="ni-label">Estado de Unidades</span></button>
+    <button class="ni" data-page="flota-taller"><span class="ni-icon">🔧</span><span class="ni-label">Horas en Taller</span></button>
+    <button class="ni" data-page="flota-impacto"><span class="ni-icon">📉</span><span class="ni-label">Impacto Operativo</span></button>
+    <button class="ni" data-page="siniestros"><span class="ni-icon">⚠️</span><span class="ni-label">Siniestros</span></button>
+
+    <div class="nav-section">Recursos</div>
+    <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
+    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
+
     <div class="nav-section">Exportar</div>
-    <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">JSON</span></button>
-    <button class="ni" onclick="exportCSV()"><span class="ni-icon">📄</span><span class="ni-label">CSV Correctivos</span></button>
+    <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">Exportar JSON</span></button>
+    <button class="ni" onclick="exportCSV()"><span class="ni-icon">📄</span><span class="ni-label">Exportar CSV</span></button>
   </nav>
   <div class="sb-toggle"><button onclick="toggleSidebar()">◀</button></div>
 </aside>
@@ -326,16 +327,44 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- MOTIVOS -->
 <section class="page" id="page-motivos">
   <div class="topbar">
-    <div><div class="ptitle">Motivos de No Cierre</div><div class="psub">Col T (motivos) y Col U (subclasificación) — Hoja definitiva</div></div>
-    <select id="f-motivo-zonal" onchange="renderMotivos()" style="min-width:200px;"><option value="">Todos los zonales</option></select>
+    <div><div class="ptitle">Motivos de No Cierre</div><div class="psub">Col T (motivos macro) · Col U (subclasificación) · Hoja definitiva</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-motivo-zonal" onchange="renderMotivos()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
+      <select id="f-motivo-anio" onchange="renderMotivos()" style="min-width:110px;">
+        <option value="">Todos los años</option>
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+        <option value="2025">2025</option>
+        <option value="2026">2026</option>
+      </select>
+    </div>
   </div>
-  <div class="sl">Motivos principales — Col T</div>
+
+  <!-- KPIs motivos -->
+  <div class="kg" id="k-motivos"></div>
+
+  <!-- MOTIVOS MACRO -->
+  <div class="sl">Motivos macro — Col T</div>
   <div class="c2">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Motivos de no cierre</div><div class="cs">Correctivos Abiertos + En curso + Pendientes</div></div></div><div class="cwxl"><canvas id="ch-motivos-bar"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Distribución porcentual</div></div></div><div class="cwxl"><canvas id="ch-motivos-pie"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Motivos de no cierre</div><div class="cs">Correctivos activos (Abiertos + En curso + Pendientes)</div></div></div>
+      <div class="cwxl"><canvas id="ch-motivos-bar"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Distribución porcentual</div></div></div>
+      <div class="cwxl"><canvas id="ch-motivos-pie"></canvas></div>
+    </div>
   </div>
-  <div class="sl" style="margin-top:14px;">Subclasificación — Col U</div>
+
+  <!-- DESGLOSE MACRO → SUBCATEGORÍAS -->
+  <div class="sl" style="margin-top:14px;">Desglose por motivo macro → subcategorías (Col T → Col U)</div>
+  <div id="macro-desglose-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:14px;"></div>
+
+  <!-- SUBCLASIFICACIÓN GLOBAL -->
+  <div class="sl">Subclasificación global — Col U</div>
   <div id="submotivos-container"></div>
+
+  <!-- POR JEFE ZONAL -->
   <div class="sl" style="margin-top:14px;">Por jefe zonal</div>
   <div id="motivos-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;"></div>
 </section>
@@ -387,11 +416,14 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <!-- CONTRATOS -->
 <section class="page" id="page-contratos">
-  <div class="topbar"><div><div class="ptitle">Contratos por Responsable</div><div class="psub">74 contratos · LMSG · GRUB · PVP</div></div></div>
+  <div class="topbar">
+    <div><div class="ptitle">Contratos por Responsable</div><div class="psub" id="cont-psub">Cargando desde Google Sheets...</div></div>
+  </div>
   <div class="fb">
     <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:190px;"><option value="">Todos</option></select>
-    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:120px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option><option value="PVP">PVP</option></select>
-    <input type="text" id="f-cont-busq" placeholder="Buscar CECO o nombre..." style="width:190px;" oninput="renderContratos()"/>
+    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option><option value="PVP">PVP</option></select>
+    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activos</option><option value="Inactivo">Inactivos</option></select>
+    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o nombre..." style="width:180px;" oninput="renderContratos()"/>
   </div>
   <div id="contratos-cont"></div>
 </section>
@@ -418,11 +450,13 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <section class="page" id="page-flota-estado">
   <div class="topbar"><div><div class="ptitle">Estado de Unidades</div><div class="psub">Todas las unidades activas (sin PREVIAL)</div></div></div>
   <div class="fb">
-    <label>Estado:</label><select id="f-fl-est" onchange="renderFlotaTabla()" style="min-width:150px;"><option value="">Todos</option><option value="Operativa">Operativa</option><option value="En taller">En taller</option><option value="Fuera de servicio">Fuera de servicio</option></select>
+    <label>Tipo:</label><select id="f-fl-tipo" onchange="renderFlotaTabla()" style="min-width:130px;"><option value="">Todos</option><option value="Camioneta">Camionetas</option><option value="Maquinaria">Maquinaria</option><option value="Cliente">Del cliente</option></select>
+    <label>Estado:</label><select id="f-fl-est" onchange="renderFlotaTabla()" style="min-width:140px;"><option value="">Todos</option><option value="Operativa">Operativa</option><option value="En taller">En taller</option><option value="Fuera de servicio">Fuera de servicio</option></select>
     <label>Empresa:</label><select id="f-fl-emp" onchange="renderFlotaTabla()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option></select>
-    <label>Jefe:</label><select id="f-fl-jefe" onchange="renderFlotaTabla()" style="min-width:170px;"><option value="">Todos</option></select>
-    <input type="text" id="f-fl-busq" placeholder="Patente o servicio..." style="width:180px;" oninput="renderFlotaTabla()"/>
+    <label>Jefe:</label><select id="f-fl-jefe" onchange="renderFlotaTabla()" style="min-width:160px;"><option value="">Todos</option></select>
+    <input type="text" id="f-fl-busq" placeholder="Patente o servicio..." style="width:160px;" oninput="renderFlotaTabla()"/>
   </div>
+  <div class="kg" id="k-flota-estado-kpis" style="margin-bottom:14px;"></div>
   <div class="card">
     <div class="tw"><table>
       <thead><tr><th>Patente</th><th>Modelo</th><th>Jefe Zonal</th><th>Servicio</th><th>Estado</th><th>Empresa</th><th>Hs. taller</th></tr></thead>
@@ -433,15 +467,26 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <!-- FLOTA TALLER -->
 <section class="page" id="page-flota-taller">
-  <div class="topbar"><div><div class="ptitle">Horas en Taller</div><div class="psub">Análisis de permanencia — Gestión propia</div></div></div>
+  <div class="topbar"><div><div class="ptitle">Horas en Taller</div><div class="psub">Col N — Horas hábiles · filtros por empresa, año, área y tipo de arreglo</div></div></div>
+  <div class="fb">
+    <label>Empresa:</label><select id="f-taller-emp" onchange="renderFlotaTaller()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option></select>
+    <label>Año:</label><select id="f-taller-anio" onchange="renderFlotaTaller()" style="min-width:100px;"><option value="">Todos</option><option value="2025">2025</option><option value="2026">2026</option></select>
+    <label>Área:</label><select id="f-taller-area" onchange="renderFlotaTaller()" style="min-width:150px;"><option value="">Todas las áreas</option></select>
+    <label>Tipo arreglo:</label><select id="f-taller-tipo" onchange="renderFlotaTaller()" style="min-width:150px;"><option value="">Todos los tipos</option></select>
+    <label>Asistió:</label><select id="f-taller-asistio" onchange="renderFlotaTaller()" style="min-width:130px;"><option value="">Todos</option><option value="SI">Sí (finalizado)</option><option value="NO">No (pendiente)</option></select>
+  </div>
   <div class="kg" id="k-taller"></div>
   <div class="card">
     <div class="ch"><div><div class="ct">Evolución mensual de horas en taller</div></div></div>
     <div class="cw"><canvas id="ch-taller-evo"></canvas></div>
   </div>
   <div class="c2">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Todas las unidades — Horas acumuladas</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos gestionados por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por patente — acumulado</div><div class="cs">Ordenado de mayor a menor</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipo de arreglo</div><div class="cs">Col I — distribución por tipo de trabajo</div></div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
+  </div>
+  <div class="c2" style="margin-top:14px;">
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por área</div></div></div><div class="cw"><canvas id="ch-taller-area-pie"></canvas></div></div>
   </div>
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div class="ct">Detalle por patente</div></div>
@@ -1051,26 +1096,39 @@ window.renderCorr=function(){
 
 // ══ MOTIVOS ══
 window.renderMotivos=function(){
-  const fz = document.getElementById("f-motivo-zonal")?.value||"";
+  const fz   = document.getElementById("f-motivo-zonal")?.value||"";
+  const fanio = document.getElementById("f-motivo-anio")?.value||"";
+  const COLORS = ["#ef4444","#f97316","#f59e0b","#22c55e","#14b8a6","#4f8ef7","#7c3aed","#a855f7","#ec4899","#64748b","#8b8fa8","#94a3b8"];
 
-  // Get motivos from real parsed data
-  const motivosData = (() => {
+  // ── Get motivos filtered by jefe + año ──
+  const getMotivoData = () => {
+    if(fz && fanio){
+      const key = fz+"__"+fanio;
+      return Object.entries(window.MOTIVOS_JEFE_ANIO?.[key]||{}).sort((a,b)=>b[1]-a[1]);
+    }
     if(fz && CORR_ZONAL[fz]?.motivos){
       return Object.entries(CORR_ZONAL[fz].motivos).sort((a,b)=>b[1]-a[1]);
     }
-    return Object.entries(window.CORR_GLOBAL?.motivos||MOTIVOS_GLOBAL.reduce((o,m)=>{o[m.m]=m.n;return o;},{})).sort((a,b)=>b[1]-a[1]);
-  })();
-
-  const submotivosData = (() => {
-    if(fz && CORR_ZONAL[fz]?.submotivos){
-      return Object.entries(CORR_ZONAL[fz].submotivos).sort((a,b)=>b[1]-a[1]);
+    if(fanio && window.MOTIVOS_POR_ANIO?.[fanio]){
+      return Object.entries(window.MOTIVOS_POR_ANIO[fanio]).sort((a,b)=>b[1]-a[1]);
     }
-    return Object.entries(window.CORR_GLOBAL?.submotivos||{}).sort((a,b)=>b[1]-a[1]);
-  })();
+    // Global fallback
+    const g = window.CORR_GLOBAL?.motivos||{};
+    if(Object.keys(g).length>0) return Object.entries(g).sort((a,b)=>b[1]-a[1]);
+    return MOTIVOS_GLOBAL.map(m=>[m.m,m.n]);
+  };
 
-  const COLORS = ["#ef4444","#f97316","#f59e0b","#22c55e","#14b8a6","#4f8ef7","#7c3aed","#a855f7","#ec4899","#64748b","#8b8fa8"];
+  const motivosData = getMotivoData();
+  const totalMot = motivosData.reduce((s,[,n])=>s+n,0);
 
-  // ── Chart: Motivos principales ──
+  // ── KPIs ──
+  const kd = document.getElementById("k-motivos");
+  if(kd) kd.innerHTML=`
+    <div class="kc re"><span class="ki">🔴</span><div class="kl">Total sin cerrar</div><div class="kv">${totalMot}</div><div class="ks">${fz||"Toda la operación"} · ${fanio||"Todos los años"}</div></div>
+    <div class="kc am"><span class="ki">📋</span><div class="kl">Motivos distintos</div><div class="kv">${motivosData.length}</div></div>
+    <div class="kc bl"><span class="ki">🔝</span><div class="kl">Principal motivo</div><div class="kv" style="font-size:13px;">${motivosData[0]?motivosData[0][0].substring(0,20)+"…":"—"}</div><div class="ks">${motivosData[0]?motivosData[0][1]+" correctivos":""}</div></div>`;
+
+  // ── Chart barras motivos ──
   dc("ch-motivos-bar");
   if(motivosData.length>0){
     charts["ch-motivos-bar"]=new Chart(document.getElementById("ch-motivos-bar"),{
@@ -1078,8 +1136,8 @@ window.renderMotivos=function(){
       data:{labels:motivosData.map(([m])=>m.substring(0,40)),
         datasets:[{label:"Correctivos",data:motivosData.map(([,n])=>n),backgroundColor:"#ef444499",borderRadius:4}]},
       options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
-        plugins:{legend:{display:false}},
-        scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw} correctivos (${Math.round(c.raw/totalMot*100)}%)`}}},
+        scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
           y:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}}}}
     });
   }
@@ -1091,22 +1149,65 @@ window.renderMotivos=function(){
       type:"doughnut",
       data:{labels:motivosData.map(([m])=>m),
         datasets:[{data:motivosData.map(([,n])=>n),backgroundColor:COLORS.slice(0,motivosData.length),borderWidth:0}]},
-      options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"}}})
+      options:{responsive:true,maintainAspectRatio:false,cutout:"55%",
+        plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8},position:"right"},
+          tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${Math.round(c.raw/totalMot*100)}%)`}}}}
     });
   }
 
-  // ── Submotivos ──
-  // Check if submotivos chart exists in page, add if needed
+  // ── DESGLOSE MACRO → SUBCATEGORÍAS ──
+  const macroSub = window.MOTIVOS_MACRO_SUB||{};
+  // Filter macro data to only motivos in current filtered set
+  const macroKeys = motivosData.map(([m])=>m).filter(m=>macroSub[m]&&Object.keys(macroSub[m]).length>0);
+  const macroContainer = document.getElementById("macro-desglose-container");
+  if(macroContainer){
+    if(macroKeys.length===0){
+      macroContainer.innerHTML=`<div style="color:var(--mu);font-size:13px;padding:12px;">No hay subclasificaciones disponibles aún — se cargarán desde la planilla al actualizar.</div>`;
+    } else {
+      macroContainer.innerHTML=macroKeys.map((macro,i)=>{
+        const subs = Object.entries(macroSub[macro]).sort((a,b)=>b[1]-a[1]);
+        const totalSub = subs.reduce((s,[,n])=>s+n,0);
+        const macroColor = COLORS[i%COLORS.length];
+        const canvasId = "ch-macro-"+i;
+        return `<div class="card" style="margin-bottom:0;border-left:3px solid ${macroColor};">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:${macroColor};flex-shrink:0;"></div>
+            <div><div style="font-size:13px;font-weight:600;">${macro}</div>
+            <div style="font-size:11px;color:var(--mu);">${totalSub} correctivos · ${subs.length} subcategorías</div></div>
+          </div>
+          ${subs.map(([sub,n])=>{
+            const pct=Math.round(n/totalSub*100);
+            return `<div style="margin-bottom:6px;">
+              <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+                <span style="color:var(--txt);">${sub}</span>
+                <span style="color:var(--mu);font-family:'JetBrains Mono';">${n} (${pct}%)</span>
+              </div>
+              <div style="height:5px;background:var(--s2);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:${pct}%;background:${macroColor};border-radius:3px;opacity:0.8;"></div>
+              </div>
+            </div>`;
+          }).join("")}
+        </div>`;
+      }).join("");
+    }
+  }
+
+  // ── SUBCLASIFICACIÓN GLOBAL ──
+  const submotivosData = (() => {
+    if(fz && CORR_ZONAL[fz]?.submotivos) return Object.entries(CORR_ZONAL[fz].submotivos).sort((a,b)=>b[1]-a[1]);
+    return Object.entries(window.CORR_GLOBAL?.submotivos||{}).sort((a,b)=>b[1]-a[1]);
+  })();
+
   const subContainer = document.getElementById("submotivos-container");
   if(subContainer && submotivosData.length>0){
-    subContainer.innerHTML = `<div class="c2">
+    subContainer.innerHTML=`<div class="c2">
       <div class="card" style="margin-bottom:0;">
-        <div class="ch"><div><div class="ct">Subclasificación de motivos</div><div class="cs">Col U — Detalle de motivos de no cierre</div></div></div>
-        <div style="height:260px;position:relative;"><canvas id="ch-submotivos-bar"></canvas></div>
+        <div class="ch"><div><div class="ct">Subclasificación — Col U</div><div class="cs">Detalle de cada motivo de no cierre</div></div></div>
+        <div style="height:280px;position:relative;"><canvas id="ch-submotivos-bar"></canvas></div>
       </div>
       <div class="card" style="margin-bottom:0;">
         <div class="ch"><div><div class="ct">Distribución subclasificación</div></div></div>
-        <div style="height:260px;position:relative;"><canvas id="ch-submotivos-pie"></canvas></div>
+        <div style="height:280px;position:relative;"><canvas id="ch-submotivos-pie"></canvas></div>
       </div>
     </div>`;
     setTimeout(()=>{
@@ -1125,26 +1226,37 @@ window.renderMotivos=function(){
         type:"doughnut",
         data:{labels:submotivosData.map(([m])=>m),
           datasets:[{data:submotivosData.map(([,n])=>n),backgroundColor:COLORS.slice(0,submotivosData.length),borderWidth:0}]},
-        options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"}}})
+        options:{responsive:true,maintainAspectRatio:false,cutout:"55%",
+          plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8},position:"right"}}}
       });
     },50);
+  } else if(subContainer){
+    subContainer.innerHTML="";
   }
 
-  // ── Cards por jefe ──
+  // ── CARDS POR JEFE ──
   const jefes = fz?[fz]:RESP.filter(j=>CORR_ZONAL[j]&&Object.keys(CORR_ZONAL[j].motivos||{}).length>0);
   document.getElementById("motivos-cards").innerHTML=jefes.map(j=>{
-    const ms = Object.entries(CORR_ZONAL[j]?.motivos||{}).sort((a,b)=>b[1]-a[1]);
+    // Apply year filter to jefe cards
+    let ms;
+    if(fanio){
+      const key=j+"__"+fanio;
+      ms=Object.entries(window.MOTIVOS_JEFE_ANIO?.[key]||{}).sort((a,b)=>b[1]-a[1]);
+    } else {
+      ms=Object.entries(CORR_ZONAL[j]?.motivos||{}).sort((a,b)=>b[1]-a[1]);
+    }
     if(!ms.length) return "";
     const mx=ms[0]?.[1]||1;
     return `<div class="card" style="margin-bottom:0;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:var(--ac);">${ini(j)}</div>
-        <div style="font-size:13px;font-weight:600;">${j}</div>
+        <div><div style="font-size:13px;font-weight:600;">${j}</div><div style="font-size:11px;color:var(--mu);">${ms.reduce((s,[,n])=>s+n,0)} sin cerrar${fanio?" · "+fanio:""}</div></div>
       </div>
       ${ms.map(([m,n])=>`<div class="mb"><span class="mc">${n}</span><span class="ml" title="${m}">${m}</span><div class="mt"><div class="mf" style="width:${Math.round(n/mx*100)}%;"></div></div></div>`).join("")}
     </div>`;
   }).join("");
 };
+
 
 // ══ ZONALES ══
 window.renderZonales=function(){
@@ -1223,6 +1335,9 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
+  // Use real-time data if available, fallback to static
+  const useRT = CONTRATOS_RT.length > 0;
+
   const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
   const c=document.getElementById("contratos-cont");if(!c)return;
   c.innerHTML=RESP.map(r=>{
@@ -1267,16 +1382,52 @@ window.renderFlotaTabla=function(){
 };
 
 function renderFlotaTaller(){
-  const totalH=Object.values(HORAS_PAT).reduce((s,h)=>s+h,0);
+  const femp  = document.getElementById("f-taller-emp")?.value||"";
+  const fanio = document.getElementById("f-taller-anio")?.value||"";
+  const farea = document.getElementById("f-taller-area")?.value||"";
+  const ftipo = document.getElementById("f-taller-tipo")?.value||"";
+  const fasist= document.getElementById("f-taller-asistio")?.value||"";
+  const hasFilters = femp||fanio||farea||ftipo||fasist;
+
+  // Populate dynamic filters from TURNOS_DETALLE
+  const sel_area=document.getElementById("f-taller-area");
+  if(sel_area&&sel_area.options.length<=1){
+    [...new Set((window.TURNOS_DETALLE||[]).map(t=>t.area).filter(Boolean))].sort().forEach(a=>{sel_area.innerHTML+=`<option value="${a}">${a}</option>`;});
+  }
+  const sel_tipo=document.getElementById("f-taller-tipo");
+  if(sel_tipo&&sel_tipo.options.length<=1){
+    [...new Set((window.TURNOS_DETALLE||[]).map(t=>t.tipoArr).filter(Boolean))].sort().forEach(t=>{sel_tipo.innerHTML+=`<option value="${t}">${t}</option>`;});
+  }
+
+  // Build filtered aggregates if filters active
+  let useHP=HORAS_PAT, useHM=HORAS_MES, useTM=TURNOS_MES, useHA=HORAS_AREA;
+  if(hasFilters && window.TURNOS_DETALLE?.length){
+    const det=(window.TURNOS_DETALLE).filter(t=>{
+      if(femp&&t.empresa!==femp)return false;
+      if(fanio&&t.anio!==fanio)return false;
+      if(farea&&t.area!==farea)return false;
+      if(ftipo&&t.tipoArr!==ftipo)return false;
+      if(fasist){const a=(t.asistio||'').toUpperCase();if(fasist==="SI"&&!a.includes("SI"))return false;if(fasist==="NO"&&a.includes("SI"))return false;}
+      return true;
+    });
+    useHP={};useHM={};useTM={};useHA={};
+    det.forEach(t=>{
+      if(t.horas>0){useHP[t.pat]=(useHP[t.pat]||0)+t.horas;useHM[t.mesKey]=(useHM[t.mesKey]||0)+t.horas;useHA[t.area]=(useHA[t.area]||0)+t.horas;}
+      useTM[t.mesKey]=(useTM[t.mesKey]||0)+1;
+    });
+    Object.keys(useHP).forEach(k=>{useHP[k]=Math.round(useHP[k]*10)/10;});
+  }
+
+  const totalH=Object.values(useHP).reduce((s,h)=>s+h,0);
   document.getElementById("k-taller").innerHTML=`
     <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total horas hábiles</div><div class="kv">${Math.round(totalH)}</div><div class="ks">Gestión propia</div></div>
-    <div class="kc re"><span class="ki">🚐</span><div class="kl">Unidades con historial</div><div class="kv">${Object.keys(HORAS_PAT).length}</div></div>
-    <div class="kc am"><span class="ki">📋</span><div class="kl">Turnos gestionados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div></div>
+    <div class="kc re"><span class="ki">🚐</span><div class="kl">Unidades con historial</div><div class="kv">${Object.keys(useHP).length}</div></div>
+    <div class="kc am"><span class="ki">📋</span><div class="kl">Turnos gestionados</div><div class="kv">${Object.values(useTM).reduce((s,v)=>s+v,0)}</div></div>
     <div class="kc bl"><span class="ki">🔑</span><div class="kl">Máx. una unidad</div><div class="kv">691h</div><div class="ks">AC397XR</div></div>`;
-  dc("ch-taller-evo");charts["ch-taller-evo"]=new Chart(document.getElementById("ch-taller-evo"),{type:"line",data:{labels:Object.keys(HORAS_MES),datasets:[{label:"Horas hábiles",data:Object.values(HORAS_MES),borderColor:"#f97316",backgroundColor:"#f9731622",tension:0.4,fill:true,pointRadius:5,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  const allP=Object.entries(HORAS_PAT).sort((a,b)=>b[1]-a[1]);
+  dc("ch-taller-evo");charts["ch-taller-evo"]=new Chart(document.getElementById("ch-taller-evo"),{type:"line",data:{labels:Object.keys(useHM),datasets:[{label:"Horas hábiles",data:Object.values(useHM),borderColor:"#f97316",backgroundColor:"#f9731622",tension:0.4,fill:true,pointRadius:5,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  const allP=Object.entries(useHP).sort((a,b)=>b[1]-a[1]);
   dc("ch-taller-all");charts["ch-taller-all"]=new Chart(document.getElementById("ch-taller-all"),{type:"bar",data:{labels:allP.map(p=>p[0]),datasets:[{label:"Horas",data:allP.map(p=>p[1]),backgroundColor:allP.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9},maxRotation:70},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  dc("ch-turnos-mes");charts["ch-turnos-mes"]=new Chart(document.getElementById("ch-turnos-mes"),{type:"bar",data:{labels:Object.keys(TURNOS_MES),datasets:[{label:"Turnos",data:Object.values(TURNOS_MES),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  dc("ch-turnos-mes");charts["ch-turnos-mes"]=new Chart(document.getElementById("ch-turnos-mes"),{type:"bar",data:{labels:Object.keys(useTM),datasets:[{label:"Turnos",data:Object.values(useTM),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   document.getElementById("tb-taller").innerHTML=allP.map(([p,hs])=>{
     const v=FLOTA.find(x=>x.p===p)||{};const pct=Math.round(hs/totalH*100*10)/10;const bc=hs>400?"var(--err)":hs>200?"var(--warn)":"var(--ac)";const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":v.est?"p-err":"p-mu";
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${p}</td><td style="font-size:11px;">${v.j||"—"}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${v.est?pill(v.est,ec):"—"}</td><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,hs/691*100)}%;background:${bc};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;">${hs.toFixed(1)}h</span></div></td><td style="color:var(--mu);font-size:11px;">${pct}%</td></tr>`;
@@ -1486,6 +1637,7 @@ const GS_FLOTA       = "https://script.google.com/macros/s/AKfycbzQBuPLrw73naclh
 const GS_DOTACION    = "https://script.google.com/macros/s/AKfycbwy9wb-xeusjbqtQfC3l2T8U3kz-N3yISoh2-uaxJMxOuAzTR1-KCWv4eE0v8EM051t/exec";
 const GS_PREV        = "https://script.google.com/macros/s/AKfycby8xumMghsFwHw5Ua0EtJISVLJtYmPaI0HlMizp5tIUAEgRrB7D5JwYP19H7onMBy7O/exec";
 const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qxfKWPdopWMVn7uV2WDIpc0I6hLvoUImEJAaGwEnGbHaIvvy8_d7X6Q/exec";
+const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycbzmatWPtCklv397NEEFDcmEzsBOdk2bsVM4mTS7WnwpvaZckfyW6dALM2_BDjZljkBSJQ/exec";
 const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
 let lastUpdateCorr   = null;
 let lastUpdateFlota  = null;
@@ -1495,7 +1647,7 @@ let refreshTimer     = null;
 function setGsStatus(source, status){
   // source: 'corr' | 'flota' | 'dot' | 'prev'
   // status: 'loading' | 'ok' | 'error'
-  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status'};
+  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status'};
   const id = ids[source] || 'gs-corr-status';
   const el = document.getElementById(id);
   if(!el) return;
@@ -1562,6 +1714,13 @@ function parseCorrZonal(rows){
     const motivo = String(row[19]||'').trim();
     const submotivo = String(row[20]||'').trim();
     const diasDemora = parseFloat(row[22])||0;
+    // Extract year from fecha emision (col A) for year filter
+    let anioEmision = '';
+    try{
+      const fechaStr = String(row[0]||'');
+      const parts = fechaStr.split('/');
+      if(parts.length>=3) anioEmision = parts[2].length===4?parts[2]:'20'+parts[2].slice(-2);
+    }catch(e){}
     if(!jefe) return;
 
     if(!counts[jefe]) counts[jefe]={ab:0,ec:0,pend:0,fin:0,comp:0,an:0,rej:0};
@@ -1587,13 +1746,27 @@ function parseCorrZonal(rows){
     if(categoria) categoriasPorJefe[jefe][categoria]=(categoriasPorJefe[jefe][categoria]||0)+1;
     // Rubro
     if(rubro) rubrosPorJefe[jefe][rubro]=(rubrosPorJefe[jefe][rubro]||0)+1;
-    // Motivo (solo activos)
-    if(motivo && ['Abierto','En curso','Pendiente'].includes(estado)){
-      motivosPorJefe[jefe][motivo]=(motivosPorJefe[jefe][motivo]||0)+1;
-    }
-    // Submotivo
-    if(submotivo && ['Abierto','En curso','Pendiente'].includes(estado)){
-      submotivosPorJefe[jefe][submotivo]=(submotivosPorJefe[jefe][submotivo]||0)+1;
+    // Motivo + submotivo (solo activos)
+    if(['Abierto','En curso','Pendiente'].includes(estado)){
+      if(motivo){
+        motivosPorJefe[jefe][motivo]=(motivosPorJefe[jefe][motivo]||0)+1;
+        // Global macro→sub mapping with year
+        if(!window.MOTIVOS_MACRO_SUB) window.MOTIVOS_MACRO_SUB={};
+        if(!window.MOTIVOS_MACRO_SUB[motivo]) window.MOTIVOS_MACRO_SUB[motivo]={};
+        if(submotivo){
+          window.MOTIVOS_MACRO_SUB[motivo][submotivo]=(window.MOTIVOS_MACRO_SUB[motivo][submotivo]||0)+1;
+        }
+        // Track by year
+        if(!window.MOTIVOS_POR_ANIO) window.MOTIVOS_POR_ANIO={};
+        if(!window.MOTIVOS_POR_ANIO[anioEmision]) window.MOTIVOS_POR_ANIO[anioEmision]={};
+        window.MOTIVOS_POR_ANIO[anioEmision][motivo]=(window.MOTIVOS_POR_ANIO[anioEmision][motivo]||0)+1;
+        // Track jefe+year
+        if(!window.MOTIVOS_JEFE_ANIO) window.MOTIVOS_JEFE_ANIO={};
+        const jk=jefe+'__'+anioEmision;
+        if(!window.MOTIVOS_JEFE_ANIO[jk]) window.MOTIVOS_JEFE_ANIO[jk]={};
+        window.MOTIVOS_JEFE_ANIO[jk][motivo]=(window.MOTIVOS_JEFE_ANIO[jk][motivo]||0)+1;
+      }
+      if(submotivo) submotivosPorJefe[jefe][submotivo]=(submotivosPorJefe[jefe][submotivo]||0)+1;
     }
     // Lead time
     if(diasDemora>0) leadTimes[jefe].push(diasDemora);
@@ -1618,6 +1791,9 @@ function parseCorrZonal(rows){
   });
 
   // Also store global aggregates
+  window.MOTIVOS_MACRO_SUB = {};
+  window.MOTIVOS_POR_ANIO = {};
+  window.MOTIVOS_JEFE_ANIO = {};
   window.CORR_GLOBAL = {
     servicios: {},
     categorias: {},
@@ -1649,7 +1825,8 @@ function parseControlVehicular(rows){
       s: String(row[4]||'').trim(),
       est: String(row[5]||'Sin estado').trim(),
       m: String(row[6]||'').trim(),
-      e: empresa||'Sin empresa'
+      e: empresa||'Sin empresa',
+      tipo: String(row[22]||'').trim()||'Sin tipo'
     });
   });
   return result;
@@ -1665,25 +1842,26 @@ function parseTurnos(rows){
     const area = String(row[2]||'Sin área').trim();
     const horas = parseFloat(row[13])||0;
     const periodo = String(row[0]||'').trim();
-    if(!pat || horas<=0) return;
-
-    horasPat[pat] = (horasPat[pat]||0) + horas;
-    horasArea[area] = (horasArea[area]||0) + horas;
-
-    if(periodo){
-      // Formato puede ser "01/10/2025" o similar — convertir a etiqueta
-      let mesKey = periodo;
-      try{
-        const parts = periodo.split('/');
-        if(parts.length===3){
-          const mo = parseInt(parts[1]);
-          const yr = String(parts[2]).slice(2);
-          const mNames = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-          mesKey = mNames[mo]+"'"+yr;
-        }
-      }catch(e){}
-      horasMes[mesKey] = (horasMes[mesKey]||0) + horas;
-      turnosMes[mesKey] = (turnosMes[mesKey]||0) + 1;
+    const tipoArr = String(row[8]||'').trim();
+    const empresa = String(row[19]||'').trim();
+    if(!pat) return;
+    let mesKey = periodo, anio = '';
+    try{
+      const parts = periodo.split('/');
+      if(parts.length===3){
+        const mo=parseInt(parts[1]), yr=parts[2];
+        anio=yr.length===4?yr:'20'+yr;
+        const mN=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        mesKey=mN[mo]+"'"+String(yr).slice(-2);
+      }
+    }catch(e){}
+    window.TURNOS_DETALLE = window.TURNOS_DETALLE||[];
+    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,horas,asistio:String(row[15]||'').trim(),empresa,mesKey,anio,periodo});
+    if(horas>0){
+      horasPat[pat]=(horasPat[pat]||0)+horas;
+      horasArea[area]=(horasArea[area]||0)+horas;
+      horasMes[mesKey]=(horasMes[mesKey]||0)+horas;
+      turnosMes[mesKey]=(turnosMes[mesKey]||0)+1;
     }
   });
 
@@ -1920,16 +2098,50 @@ async function actualizarComplementarios(){
   }
 }
 
+// ── Actualizar Contratos ──
+async function actualizarContratos(){
+  setGsStatus('cont','loading');
+  try {
+    const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO/CECO, D(3)=ESTADO
+    const result = [];
+    rows.slice(1).forEach(row=>{
+      const empresa  = String(row[0]||'').trim();
+      const jefe     = String(row[1]||'').trim();
+      const servicio = String(row[2]||'').trim();
+      const estado   = String(row[3]||'').trim();
+      if(!jefe && !servicio) return;
+      result.push({empresa, jefe, servicio, estado});
+    });
+    if(result.length > 0){
+      CONTRATOS_RT = result;
+      // Populate jefe filter in contratos page
+      const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
+      const sel=document.getElementById("f-cont-resp");
+      if(sel && sel.options.length<=1){
+        jefes.forEach(j=>{ sel.innerHTML+=`<option value="${j}">${j}</option>`; });
+      }
+    }
+    setGsStatus('cont','ok');
+    renderContratos();
+    return true;
+  } catch(err) {
+    console.warn('Error contratos:', err);
+    setGsStatus('cont','error');
+    return false;
+  }
+}
+
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
-    actualizarComplementarios()
+    actualizarComplementarios(), actualizarContratos()
   ]);
   renderAll();
   if(showToast){
-    const all = ok1&&ok2&&ok3&&ok4&&ok5;
-    const none = !ok1&&!ok2&&!ok3&&!ok4&&!ok5;
+    const all = ok1&&ok2&&ok3&&ok4&&ok5&&ok6;
+    const none = !ok1&&!ok2&&!ok3&&!ok4&&!ok5&&!ok6;
     if(all) toast("✅ Todos los datos actualizados desde Google Sheets");
     else if(none) toast("⚠️ Sin conexión con Google Sheets — mostrando datos previos");
     else toast("⚠️ Actualización parcial — revisá el indicador de conexión");
@@ -1978,7 +2190,8 @@ function injectRefreshButton(){
       <div style="font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Flota:</span> <span id="gs-flota-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Dotación:</span> <span id="gs-dot-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Preventivos:</span> <span id="gs-prev-status" style="color:var(--warn);">⏳ Conectando...</span></div>
-      <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Complementarios:</span> <span id="gs-compl-status" style="color:var(--warn);">⏳ Conectando...</span></div>
+      <div style="font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Complementarios:</span> <span id="gs-compl-status" style="color:var(--warn);">⏳ Conectando...</span></div>
+      <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Contratos:</span> <span id="gs-contratos-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div id="last-update-label" style="font-size:10px;color:var(--mu);"></div>`;
     nav.appendChild(statusDiv);
   }
@@ -1992,6 +2205,7 @@ function injectRefreshButton(){
 let DOTACION_DATA = [];
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: []};
+let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 
 // ── Parser Dotación ──
 function parseDotacion(rows){
