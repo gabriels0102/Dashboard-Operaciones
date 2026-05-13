@@ -281,7 +281,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
     <div class="dash-header-right">
       <div class="dash-period-badge">📅 <span id="dash-periodo">Mayo 2026</span></div>
-      <button class="dash-refresh-btn" id="dash-refresh-btn" onclick="dashRefresh()">🔄 Actualizar</button>
+      <button class="dash-refresh-btn" id="dash-refresh-btn" onclick="window.dashRefresh()">🔄 Actualizar</button>
     </div>
   </div>
 
@@ -338,9 +338,9 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="evo-header">
         <div><div class="dash-chart-label">Evolución de Indicadores (%)</div></div>
         <div class="evo-tabs">
-          <button class="evo-tab active" onclick="switchEvoTab('pct',this)">% Correctivos</button>
-          <button class="evo-tab" onclick="switchEvoTab('np',this)">Abiertos vs Cerrados</button>
-          <button class="evo-tab" onclick="switchEvoTab('flujo',this)">Flujo</button>
+          <button class="evo-tab active" onclick="window.switchEvoTab('pct',this)">% Correctivos</button>
+          <button class="evo-tab" onclick="window.switchEvoTab('np',this)">Abiertos vs Cerrados</button>
+          <button class="evo-tab" onclick="window.switchEvoTab('flujo',this)">Flujo</button>
         </div>
       </div>
       <div id="evo-wrap" style="height:200px;position:relative;">
@@ -722,7 +722,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="topbar">
     <div><div class="ptitle">Complementarios — Seguimiento Comercial</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <select id="f-compl-jefe" onchange="renderComplementariosPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
+      <select id="f-compl-jefe" onchange="window.renderComplementariosPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
     </div>
   </div>
 
@@ -934,6 +934,26 @@ function empBadge(e){return `<span class="p ${e==="GRUB"?"p-pu":e==="PVP"?"p-ok"
 // ══════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════
+window.switchEvoTab = function(tab, btn){
+  const map = {pct:'ch-evo-pct', np:'ch-evo-np', flujo:'ch-evo-flujo'};
+  ['ch-evo-pct','ch-evo-np','ch-evo-flujo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  const el=document.getElementById(map[tab]);
+  if(el) el.style.display='block';
+  document.querySelectorAll('.evo-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+};
+
+window.dashRefresh = function(){
+  const btn=document.getElementById('dash-refresh-btn');
+  if(btn){btn.textContent='⏳ Actualizando...';btn.disabled=true;}
+  actualizarTodo(true).then(()=>{
+    if(btn){btn.innerHTML='🔄 Actualizar';btn.disabled=false;}
+  });
+};
+
 function renderDashboard(){
   const e = ESTADO_ACTUAL;
 
@@ -1036,7 +1056,7 @@ function renderDashboard(){
       {label:'Aumento',data:SERIE.FN.map(v=>v>0?v:0),backgroundColor:'#ef444480',borderRadius:1}
     ]},options:{...evoBase,scales:{...evoBase.scales,y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 
-  switchEvoTab('pct', document.querySelector('.evo-tab'));
+  window.switchEvoTab('pct', document.querySelector('.evo-tab'));
 
   // Estado por jefe zonal
   const jef=RESP.filter(j=>CORR_ZONAL[j]?.total>0),sh=jef.map(j=>j.split(' ')[0]);
