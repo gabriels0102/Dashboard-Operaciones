@@ -207,18 +207,13 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .evo-tab.active{background:var(--surface);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.2);}
 
 /* Bottom grid — 3 columnas */
-.dash-bottom-grid{display:grid;grid-template-columns:1.2fr 1fr 1.4fr;gap:14px;margin-bottom:16px;}
+.dash-bottom-grid{display:grid;grid-template-columns:1.4fr 1.6fr;gap:14px;margin-bottom:16px;}
 .dash-chart-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:14px;}
 .dash-chart-label{font-size:12px;font-weight:600;margin-bottom:2px;}
 .dash-chart-sub{font-size:11px;color:var(--mu);margin-bottom:10px;}
 .dash-chart-h{height:180px;position:relative;}
 
-/* Footer resumen */
-.dash-footer{display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:var(--surface);border:1px solid var(--b);border-radius:16px;overflow:hidden;margin-bottom:16px;}
-.dash-footer-item{padding:14px 10px;text-align:center;border-right:1px solid var(--b);}
-.dash-footer-item:last-child{border-right:none;}
-.dash-footer-num{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace;}
-.dash-footer-label{font-size:10px;color:var(--mu);margin-top:3px;line-height:1.2;}
+
 
 /* Tabla resumen */
 .dash-tabla-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:14px;}
@@ -348,17 +343,13 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
           <button class="evo-tab" onclick="switchEvoTab('flujo',this)">Flujo</button>
         </div>
       </div>
-      <div style="height:200px;position:relative;">
-        <canvas id="ch-evo-pct" style="position:absolute;top:0;left:0;"></canvas>
-        <canvas id="ch-evo-np" style="display:none;position:absolute;top:0;left:0;"></canvas>
-        <canvas id="ch-evo-flujo" style="display:none;position:absolute;top:0;left:0;"></canvas>
+      <div id="evo-wrap" style="height:200px;position:relative;">
+        <canvas id="ch-evo-pct" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+        <canvas id="ch-evo-np" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+        <canvas id="ch-evo-flujo" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
       </div>
     </div>
-    <div class="dash-chart-card">
-      <div class="dash-chart-label">Órdenes de Trabajo</div>
-      <div class="dash-chart-sub">Distribución por estado</div>
-      <div class="dash-chart-h"><canvas id="ch-ot-donut"></canvas></div>
-    </div>
+
     <div class="dash-chart-card">
       <div class="dash-chart-label">Estado por Jefe Zonal</div>
       <div class="dash-chart-sub">Activos vs Finalizados vs Complementario</div>
@@ -366,15 +357,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
   </div>
 
-  <!-- FOOTER RESUMEN GENERAL -->
-  <div class="dash-footer" id="dash-footer">
-    <div class="dash-footer-item"><div class="dash-footer-num" id="df-total" style="color:var(--ac);">—</div><div class="dash-footer-label">OT Generadas</div></div>
-    <div class="dash-footer-item"><div class="dash-footer-num" id="df-cerradas" style="color:var(--ok);">—</div><div class="dash-footer-label">OT Cerradas</div></div>
-    <div class="dash-footer-item"><div class="dash-footer-num" id="df-backlog" style="color:var(--err);">—</div><div class="dash-footer-label">Backlog OT</div></div>
-    <div class="dash-footer-item"><div class="dash-footer-num" id="df-flota" style="color:var(--warn);">—</div><div class="dash-footer-label">Flota Operativa</div></div>
-    <div class="dash-footer-item"><div class="dash-footer-num" id="df-prev" style="color:var(--ac2);">—</div><div class="dash-footer-label">Prev. Completados</div></div>
-    <div class="dash-footer-item"><div class="dash-footer-num" id="df-disp" style="color:var(--org);">—%</div><div class="dash-footer-label">Disponibilidad Flota</div></div>
-  </div>
+
 
   <!-- TABLA RESUMEN -->
   <div class="dash-tabla-card">
@@ -952,100 +935,141 @@ function empBadge(e){return `<span class="p ${e==="GRUB"?"p-pu":e==="PVP"?"p-ok"
 // DASHBOARD
 // ══════════════════════════════════════
 function renderDashboard(){
-  const e=ESTADO_ACTUAL;
-  document.getElementById("k-corr").innerHTML=`
-    <div class="kc or"><span class="ki">📂</span><div class="kl">Activos (Col N)</div><div class="kv">${e.act}</div><div class="ks">Ab+EC+Pend</div></div>
-    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (Col B)</div><div class="kv">${e.ab}</div></div>
-    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso (Col D)</div><div class="kv">${e.ec}</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Cerrados (Col P)</div><div class="kv">${e.cer.toLocaleString()}</div><div class="ks">Fin.+Compl.</div></div>
-    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementario (Col H)</div><div class="kv">${e.comp}</div></div>
-    <div class="kc te"><span class="ki">📈</span><div class="kl">% Cerrados</div><div class="kv">${e.pct_c}%</div><div class="ks">${e.total.toLocaleString()} acumulados (Col Y)</div></div>`;
+  const e = ESTADO_ACTUAL;
 
-  if(sitios.length){
-    let v=0,vp=0,nr=0,vig=0,tot=0;
-    sitios.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;tot++;if(est==="vencido")v++;else if(est==="vence pronto")vp++;else if(est==="No realizado")nr++;else if(est==="vigente")vig++;}));
-    document.getElementById("k-abonos").innerHTML=`
-      <div class="kc re"><span class="ki">🔴</span><div class="kl">Vencidos</div><div class="kv">${v}</div><div class="ks">de ${tot} asignados</div></div>
-      <div class="kc am"><span class="ki">🟡</span><div class="kl">Vence Pronto</div><div class="kv">${vp}</div></div>
-      <div class="kc or"><span class="ki">⚪</span><div class="kl">No Realizados</div><div class="kv">${nr}</div></div>
-      <div class="kc gr"><span class="ki">🟢</span><div class="kl">Vigentes</div><div class="kv">${vig}</div></div>`;
+  const lu = document.getElementById('dash-last-update');
+  if(lu) lu.textContent = 'Actualizado: '+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  // KPIs
+  const flotaActiva = FLOTA.filter(v=>!v.est?.toLowerCase().includes('fuera'));
+  const op = flotaActiva.filter(v=>v.est==="Operativa").length;
+  const flotaTot = flotaActiva.length||1;
+  const pctFlota = Math.round(op/flotaTot*100);
+  const dotAp = DOTACION_DATA.reduce((s,d)=>s+d.aprobada,0)||1;
+  const dotRe = DOTACION_DATA.reduce((s,d)=>s+d.real,0);
+  const pctDot = Math.min(150, Math.round(dotRe/dotAp*100));
+  const prevTot = PREV_DATA.length;
+  const prevComp = PREV_DATA.filter(d=>d.estado==='Completada').length;
+  const pctPrev = prevTot>0?Math.round(prevComp/prevTot*100):0;
+  let abonosVig=0, abonosTot=0;
+  if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;abonosTot++;if(est==="vigente")abonosVig++;}));
+  const pctAbonos = abonosTot>0?Math.round(abonosVig/abonosTot*100):0;
+
+  // Arc 0 — % cerrados from Col T (last value in SERIE.T)
+  const pctCorr = (SERIE.T&&SERIE.T.length>0) ? SERIE.T[SERIE.T.length-1] : e.pct_c;
+
+  // Draw arc donut
+  function drawArc(id, pct, color){
+    const el = document.getElementById(id);
+    if(!el) return;
+    const ex = Chart.getChart(el);
+    if(ex) ex.destroy();
+    new Chart(el,{type:'doughnut',data:{datasets:[{
+      data:[Math.max(0,Math.min(100,pct)),Math.max(0,100-pct)],
+      backgroundColor:[color,'rgba(255,255,255,0.05)'],borderWidth:0,
+      circumference:270,rotation:225
+    }]},options:{responsive:true,maintainAspectRatio:false,cutout:'78%',
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      animation:{duration:900,easing:'easeInOutQuart'}}});
   }
 
-  const op=FLOTA.filter(v=>v.est==="Operativa").length,tal=FLOTA.filter(v=>v.est==="En taller").length,fs=FLOTA.filter(v=>v.est==="Fuera de servicio").length;
-  const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
-  document.getElementById("k-flota-dash").innerHTML=`
-    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Total flota</div><div class="kv">${FLOTA.length}</div><div class="ks">Sin PREVIAL</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${Math.round(op/FLOTA.length*100)}% de la flota</div></div>
-    <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div></div>
-    <div class="kc re"><span class="ki">🚫</span><div class="kl">Fuera servicio</div><div class="kv">${fs}</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. taller</div><div class="kv">${totalH}</div><div class="ks">Gestión propia</div></div>
-    <div class="kc pu"><span class="ki">⚠️</span><div class="kl">Siniestros totales</div><div class="kv">105</div><div class="ks">2023—2026</div></div>`;
+  const arcs=[
+    {id:0,pct:pctCorr,color:'#4f8ef7',v1:e.cer.toLocaleString(),l1:'Cerrados',v2:e.total.toLocaleString(),l2:'Generados',trend:pctCorr>=90?'▲ Óptimo':pctCorr>=75?'→ En control':'▼ Revisar',trendCls:pctCorr>=90?'trend-up':pctCorr>=75?'trend-nt':'trend-dn'},
+    {id:1,pct:pctFlota,color:'#22c55e',v1:op,l1:'Operativas',v2:flotaTot,l2:'Total flota',trend:pctFlota>=90?'▲ Óptimo':pctFlota>=75?'→ Normal':'▼ Atención',trendCls:pctFlota>=90?'trend-up':pctFlota>=75?'trend-nt':'trend-dn'},
+    {id:2,pct:pctDot||95,color:'#f97316',v1:dotRe||'—',l1:'Relevada',v2:dotAp===1?'—':dotAp,l2:'Aprobada',trend:pctDot>=100?'▲ Cobertura':pctDot>=90?'→ Normal':'▼ Déficit',trendCls:pctDot>=100?'trend-up':pctDot>=90?'trend-nt':'trend-dn'},
+    {id:3,pct:pctPrev||0,color:'#7c3aed',v1:prevComp||'—',l1:'Completados',v2:prevTot||'—',l2:'Programados',trend:pctPrev>=85?'▲ Bueno':pctPrev>=70?'→ Normal':'▼ Revisar',trendCls:pctPrev>=85?'trend-up':pctPrev>=70?'trend-nt':'trend-dn'},
+    {id:4,pct:pctAbonos||0,color:'#14b8a6',v1:abonosVig||'—',l1:'Vigentes',v2:abonosTot||'—',l2:'Total',trend:pctAbonos>=75?'→ En control':'▼ Vencimientos',trendCls:pctAbonos>=75?'trend-nt':'trend-dn'},
+  ];
 
-  // Dotacion KPIs mini
-  if(DOTACION_DATA.length>0){
-    const totalAp=DOTACION_DATA.reduce((s,d)=>s+d.aprobada,0);
-    const totalRe=DOTACION_DATA.reduce((s,d)=>s+d.real,0);
-    const def=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-    const pctCob=totalAp>0?Math.round(totalRe/totalAp*100):0;
-    const kdd=document.getElementById('k-dot-dash');
-    if(kdd) kdd.innerHTML=`
-      <div class="kc bl"><span class="ki">👥</span><div class="kl">Dotación aprobada</div><div class="kv">${totalAp}</div></div>
-      <div class="kc ${totalRe>=totalAp?'gr':'re'}"><span class="ki">👤</span><div class="kl">Dotación real</div><div class="kv">${totalRe}</div></div>
-      <div class="kc ${totalRe-totalAp>=0?'gr':'re'}"><span class="ki">📊</span><div class="kl">Diferencia</div><div class="kv">${totalRe-totalAp>=0?'+':''}${totalRe-totalAp}</div></div>
-      <div class="kc re"><span class="ki">⚠️</span><div class="kl">Servicios con déficit</div><div class="kv">${def}</div></div>
-      <div class="kc te"><span class="ki">📈</span><div class="kl">% Cobertura</div><div class="kv">${pctCob}%</div></div>`;
-  }
+  arcs.forEach(a=>{
+    const pe=document.getElementById(`arc-pct-${a.id}`);
+    const te=document.getElementById(`arc-trend-${a.id}`);
+    const v1e=document.getElementById(`arc-v1-${a.id}`);
+    const v2e=document.getElementById(`arc-v2-${a.id}`);
+    if(pe) pe.textContent=Math.round(a.pct)+'%';
+    if(te){te.textContent=a.trend;te.className='kpi-arc-trend '+a.trendCls;}
+    if(v1e) v1e.textContent=a.v1;
+    if(v2e) v2e.textContent=a.v2;
+    setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color),60*a.id);
+  });
 
-  // Preventivos KPIs mini
-  if(PREV_DATA.length>0){
-    const tot=PREV_DATA.length;
-    const comp=PREV_DATA.filter(d=>d.estado==='Completada').length;
-    const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
-    const pctP=tot>0?Math.round(comp/tot*100):0;
-    const kpd=document.getElementById('k-prev-dash');
-    if(kpd) kpd.innerHTML=`
-      <div class="kc bl"><span class="ki">🛡️</span><div class="kl">Total preventivos</div><div class="kv">${tot}</div></div>
-      <div class="kc gr"><span class="ki">✅</span><div class="kl">Completados</div><div class="kv">${comp}</div><div class="ks">${pctP}%</div></div>
-      <div class="kc re"><span class="ki">❌</span><div class="kl">No completados</div><div class="kv">${noComp}</div></div>
-      <div class="kc te"><span class="ki">📈</span><div class="kl">% Completado</div><div class="kv">${pctP}%</div></div>`;
-  }
+  // Alertas
+  const alertas=[];
+  const enTaller=FLOTA.filter(v=>v.est==="En taller");
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
+  const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
+  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
+  const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
+  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
+  let abonosVenc=0;
+  if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
+  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
+  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
+  const strip=document.getElementById('alertas-strip');
+  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
-  // Complementarios mini KPIs
-  renderComplementarios();
+  // Evolución — % Cerrados y Abiertos (default tab)
+  const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:7}}},
+    scales:{x:{ticks:{color:'#8b8fa8',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:12},grid:{color:'rgba(255,255,255,0.04)'}},
+      y:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true,max:100}}};
 
-  // Correctivos cerrados y abiertos
-  dc("ch-ca");charts["ch-ca"]=new Chart(document.getElementById("ch-ca"),{type:"line",data:{labels:SERIE.f,datasets:[{label:"ABIERTO + EN CURSO + PENDIENTE",data:SERIE.N,borderColor:"#ef4444",backgroundColor:"#ef444418",tension:0.3,fill:true,pointRadius:1.5,borderWidth:2},{label:"FINALIZADO + CERRADO POR COMPLEMENTARIO",data:SERIE.P,borderColor:"#00e000",backgroundColor:"#00e00018",tension:0.3,fill:true,pointRadius:1.5,borderWidth:2}]},options:CO({interaction:{mode:"index",intersect:false},scales:scalesXY()})});
+  dc('ch-evo-pct');
+  charts['ch-evo-pct']=new Chart(document.getElementById('ch-evo-pct'),{type:'line',
+    data:{labels:SERIE.f,datasets:[
+      {label:'% Cerrados (Col T)',data:SERIE.T,borderColor:'#22c55e',backgroundColor:'#22c55e14',tension:0.3,fill:true,pointRadius:0,borderWidth:2.5},
+      {label:'% Abiertos (Col X)',data:SERIE.X,borderColor:'#ef4444',backgroundColor:'#ef444414',tension:0.3,fill:true,pointRadius:0,borderWidth:2.5}
+    ]},options:evoBase});
 
-  // % abiertos y cerrados
-  dc("ch-pct");charts["ch-pct"]=new Chart(document.getElementById("ch-pct"),{type:"line",data:{labels:SERIE.f,datasets:[{label:"%CERRADOS/TOTAL",data:SERIE.T,borderColor:"#4f8ef7",backgroundColor:"#4f8ef718",tension:0.3,fill:true,pointRadius:1.5,borderWidth:2},{label:"%ABIERTOS/TOTAL",data:SERIE.X,borderColor:"#a855f7",backgroundColor:"#a855f718",tension:0.3,fill:true,pointRadius:1.5,borderWidth:2}]},options:CO({interaction:{mode:"index",intersect:false},scales:{x:scalesXY().x,y:{ticks:{color:"#8b8fa8",font:{size:10},callback:v=>v+"%"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true,max:100}}})});
+  dc('ch-evo-np');
+  charts['ch-evo-np']=new Chart(document.getElementById('ch-evo-np'),{type:'line',
+    data:{labels:SERIE.f,datasets:[
+      {label:'Activos (Col N)',data:SERIE.N,borderColor:'#ef4444',backgroundColor:'#ef444414',tension:0.3,fill:true,pointRadius:0,borderWidth:2},
+      {label:'Cerrados (Col P)',data:SERIE.P,borderColor:'#22c55e',backgroundColor:'#22c55e14',tension:0.3,fill:true,pointRadius:0,borderWidth:2}
+    ]},options:{...evoBase,scales:{...evoBase.scales,y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 
-  // Estado zonal
-  const jef=RESP.filter(j=>CORR_ZONAL[j]?.total>0),sh=jef.map(j=>j.split(" ")[0]);
-  dc("ch-estado-zonal");charts["ch-estado-zonal"]=new Chart(document.getElementById("ch-estado-zonal"),{type:"bar",data:{labels:sh,datasets:[{label:"Activos",data:jef.map(j=>CORR_ZONAL[j].ab+CORR_ZONAL[j].ec),backgroundColor:"#ef444499",borderRadius:3},{label:"Finalizados",data:jef.map(j=>CORR_ZONAL[j].fin),backgroundColor:"#22c55e99",borderRadius:3},{label:"Complementario",data:jef.map(j=>CORR_ZONAL[j].comp),backgroundColor:"#f59e0b99",borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8}}},scales:{x:{stacked:true,ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}},y:{stacked:true,ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  dc('ch-evo-flujo');
+  charts['ch-evo-flujo']=new Chart(document.getElementById('ch-evo-flujo'),{type:'bar',
+    data:{labels:SERIE.f,datasets:[
+      {label:'Reducción',data:SERIE.FN.map(v=>v<0?Math.abs(v):0),backgroundColor:'#22c55e80',borderRadius:1},
+      {label:'Aumento',data:SERIE.FN.map(v=>v>0?v:0),backgroundColor:'#ef444480',borderRadius:1}
+    ]},options:{...evoBase,scales:{...evoBase.scales,y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 
-  // Horas taller mes
-  dc("ch-taller-mes-dash");charts["ch-taller-mes-dash"]=new Chart(document.getElementById("ch-taller-mes-dash"),{type:"bar",data:{labels:Object.keys(HORAS_MES),datasets:[{label:"Horas hábiles en taller",data:Object.values(HORAS_MES),backgroundColor:Object.values(HORAS_MES).map(h=>h>700?"#ef444499":h>500?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  switchEvoTab('pct', document.querySelector('.evo-tab'));
 
-  // Flujo
-  dc("ch-flujo");charts["ch-flujo"]=new Chart(document.getElementById("ch-flujo"),{type:"bar",data:{labels:SERIE.f,datasets:[{label:"Reducción de carga",data:SERIE.FN.map(v=>v<0?Math.abs(v):0),backgroundColor:"#22c55e99",borderRadius:2},{label:"Aumento de carga",data:SERIE.FN.map(v=>v>0?v:0),backgroundColor:"#ef444499",borderRadius:2}]},options:CO({interaction:{mode:"index",intersect:false},scales:scalesXY()})});
-
-  // Abonos zonal
-  if(sitios.length){
-    const sv={};sitios.forEach(s=>{if(!sv[s.jefe])sv[s.jefe]={v:0,vp:0,nr:0};ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;if(est==="vencido")sv[s.jefe].v++;else if(est==="vence pronto")sv[s.jefe].vp++;else if(est==="No realizado")sv[s.jefe].nr++;});});
-    const jS=Object.keys(sv);
-    dc("ch-abonos-zonal");charts["ch-abonos-zonal"]=new Chart(document.getElementById("ch-abonos-zonal"),{type:"bar",data:{labels:jS.map(j=>j.split(" ")[0]),datasets:[{label:"Vencidos",data:jS.map(j=>sv[j].v),backgroundColor:"#ef444499",borderRadius:3},{label:"Vence pronto",data:jS.map(j=>sv[j].vp),backgroundColor:"#f59e0b99",borderRadius:3},{label:"No realizados",data:jS.map(j=>sv[j].nr),backgroundColor:"#8b8fa833",borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8}}},scales:{x:{stacked:true,ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}},y:{stacked:true,ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  }
+  // Estado por jefe zonal
+  const jef=RESP.filter(j=>CORR_ZONAL[j]?.total>0),sh=jef.map(j=>j.split(' ')[0]);
+  dc('ch-estado-zonal');
+  if(jef.length) charts['ch-estado-zonal']=new Chart(document.getElementById('ch-estado-zonal'),{type:'bar',
+    data:{labels:sh,datasets:[
+      {label:'Activos',data:jef.map(j=>CORR_ZONAL[j].ab+CORR_ZONAL[j].ec),backgroundColor:'#ef444499',borderRadius:2},
+      {label:'Finalizados',data:jef.map(j=>CORR_ZONAL[j].fin),backgroundColor:'#22c55e99',borderRadius:2},
+      {label:'Complementario',data:jef.map(j=>CORR_ZONAL[j].comp),backgroundColor:'#f59e0b99',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b8fa8',font:{size:9},boxWidth:7}}},
+      scales:{x:{stacked:true,ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{stacked:true,ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}});
 
   // Tabla resumen
   document.getElementById("tb-resumen").innerHTML=RESP.map(r=>{
     const d=CORR_ZONAL[r];if(!d)return "";
     const cer=d.fin+d.comp,tasa=d.total>0?Math.round(cer/d.total*100):0;
     const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":d.lead>0?"var(--ok)":"var(--mu)";
-    return `<tr><td><strong>${r}</strong></td><td>${pill(d.ab+d.ec,"p-err")}</td><td>${pill(d.fin,"p-ok")}</td><td>${pill(d.comp,"p-warn")}</td><td style="color:var(--mu);">${d.an}</td><td><strong>${d.total}</strong></td><td>${pill(tasa+"%",tasa>=70?"p-ok":tasa>=40?"p-warn":"p-err")}</td><td style="color:${lc};font-family:'JetBrains Mono';">${d.lead>0?Math.round(d.lead)+"d":"—"}</td><td>${pill((CONTR[r]||[]).length+" ctos","p-mu")}</td></tr>`;
+    const nc=CONTRATOS_RT.length>0?CONTRATOS_RT.filter(c=>c.jefe===r).length:(CONTR[r]||[]).length;
+    return `<tr><td><strong>${r}</strong></td><td>${pill(d.ab+d.ec,"p-err")}</td><td>${pill(d.fin,"p-ok")}</td><td>${pill(d.comp,"p-warn")}</td><td><strong>${d.total}</strong></td><td>${pill(tasa+"%",tasa>=70?"p-ok":tasa>=40?"p-warn":"p-err")}</td><td style="color:${lc};font-family:'JetBrains Mono';">${d.lead>0?Math.round(d.lead)+"d":"—"}</td><td>${pill(nc,"p-mu")}</td></tr>`;
   }).join("");
+
+  // Populate hidden divs for abonos (used by renderAll)
+  if(sitios.length){
+    let v=0,vp=0,nr=0,vig=0,tot=0;
+    sitios.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;tot++;if(est==="vencido")v++;else if(est==="vence pronto")vp++;else if(est==="No realizado")nr++;else if(est==="vigente")vig++;}));
+    const kab=document.getElementById("k-abonos");
+    if(kab) kab.innerHTML=`<div class="kc re"><div class="kl">Vencidos</div><div class="kv">${v}</div></div>`;
+  }
 }
 
-// ══ CORRECTIVOS ══
+
 window.renderCorr=function(){
   const fz  = document.getElementById("f-corr-zonal")?.value||"";
 
@@ -2765,201 +2789,4 @@ actualizarTodo(false).then(()=>{
 });
 </script>
 </body>
-</html>// ══════════════════════════════════════
-// DASHBOARD — DISEÑO OPERATIVO
-// ══════════════════════════════════════
-let currentEvoTab = 'pct';
-let arcChartInstances = {};
-
-function drawArc(canvasId, pct, color){
-  const canvas = document.getElementById(canvasId);
-  if(!canvas) return;
-  const existing = Chart.getChart(canvas);
-  if(existing) existing.destroy();
-  new Chart(canvas, {
-    type:'doughnut',
-    data:{datasets:[{
-      data:[Math.max(0,Math.min(100,pct)), Math.max(0,100-pct)],
-      backgroundColor:[color, 'rgba(255,255,255,0.05)'],
-      borderWidth:0, circumference:270, rotation:225
-    }]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'78%',
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      animation:{duration:900,easing:'easeInOutQuart'}}
-  });
-}
-
-window.switchEvoTab = function(tab, btn){
-  currentEvoTab = tab;
-  document.querySelectorAll('.evo-tab').forEach(b=>b.classList.remove('active'));
-  if(btn) btn.classList.add('active');
-  ['ch-evo-pct','ch-evo-np','ch-evo-flujo'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.style.display='none';
-  });
-  const map={pct:'ch-evo-pct',np:'ch-evo-np',flujo:'ch-evo-flujo'};
-  const el=document.getElementById(map[tab]);
-  if(el) el.style.display='block';
-};
-
-window.dashRefresh = function(){
-  const btn=document.getElementById('dash-refresh-btn');
-  if(btn){btn.textContent='⏳ Actualizando...';btn.disabled=true;}
-  actualizarTodo(true).then(()=>{
-    if(btn){btn.innerHTML='🔄 Actualizar';btn.disabled=false;}
-  });
-};
-
-function renderDashboard(){
-  const e = ESTADO_ACTUAL;
-
-  // Update header
-  const lu = document.getElementById('dash-last-update');
-  if(lu) lu.textContent = 'Actualizado: '+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-
-  // ── Calculate all KPIs ──
-  const flotaActiva = FLOTA.filter(v=>!v.est?.toLowerCase().includes('fuera'));
-  const op = flotaActiva.filter(v=>v.est==="Operativa").length;
-  const flotaTot = flotaActiva.length||1;
-  const pctFlota = Math.round(op/flotaTot*100);
-
-  const dotAp = DOTACION_DATA.reduce((s,d)=>s+d.aprobada,0)||1;
-  const dotRe = DOTACION_DATA.reduce((s,d)=>s+d.real,0);
-  const pctDot = Math.min(150, Math.round(dotRe/dotAp*100));
-
-  const prevTot = PREV_DATA.length;
-  const prevComp = PREV_DATA.filter(d=>d.estado==='Completada').length;
-  const pctPrev = prevTot>0?Math.round(prevComp/prevTot*100):0;
-
-  let abonosVig=0, abonosTot=0;
-  if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;abonosTot++;if(est==="vigente")abonosVig++;}));
-  const pctAbonos = abonosTot>0?Math.round(abonosVig/abonosTot*100):0;
-
-  // ── ARC CARDS ──
-  const arcs = [
-    {id:0, pct:e.pct_c, color:'#4f8ef7', v1:e.cer.toLocaleString(), l1:'Cerrados', v2:e.total.toLocaleString(), l2:'Generados',
-     trend: e.pct_c >= 90 ? '▲ Óptimo' : e.pct_c >= 75 ? '→ En control' : '▼ Revisar',
-     trendCls: e.pct_c >= 90 ? 'trend-up' : e.pct_c >= 75 ? 'trend-nt' : 'trend-dn'},
-    {id:1, pct:pctFlota, color:'#22c55e', v1:op, l1:'Operativas', v2:flotaTot, l2:'Total flota',
-     trend: pctFlota >= 90 ? '▲ Óptimo' : pctFlota >= 75 ? '→ Normal' : '▼ Atención',
-     trendCls: pctFlota >= 90 ? 'trend-up' : pctFlota >= 75 ? 'trend-nt' : 'trend-dn'},
-    {id:2, pct:pctDot||95, color:'#f97316', v1:dotRe||'—', l1:'Relevada', v2:dotAp||'—', l2:'Aprobada',
-     trend: pctDot>=100?'▲ Cobertura total':pctDot>=90?'→ Normal':'▼ Déficit',
-     trendCls: pctDot>=100?'trend-up':pctDot>=90?'trend-nt':'trend-dn'},
-    {id:3, pct:pctPrev||0, color:'#7c3aed', v1:prevComp||'—', l1:'Completados', v2:prevTot||'—', l2:'Programados',
-     trend: pctPrev>=85?'▲ Bueno':pctPrev>=70?'→ Normal':'▼ Revisar',
-     trendCls: pctPrev>=85?'trend-up':pctPrev>=70?'trend-nt':'trend-dn'},
-    {id:4, pct:pctAbonos||0, color:'#14b8a6', v1:abonosVig||'—', l1:'Vigentes', v2:abonosTot||'—', l2:'Total',
-     trend: pctAbonos>=75?'→ En control':'▼ Vencimientos',
-     trendCls: pctAbonos>=75?'trend-nt':'trend-dn'},
-  ];
-
-  arcs.forEach(a=>{
-    const pctEl = document.getElementById(`arc-pct-${a.id}`);
-    const trendEl = document.getElementById(`arc-trend-${a.id}`);
-    const v1El = document.getElementById(`arc-v1-${a.id}`);
-    const v2El = document.getElementById(`arc-v2-${a.id}`);
-    if(pctEl) pctEl.textContent = Math.round(a.pct)+'%';
-    if(trendEl){ trendEl.textContent=a.trend; trendEl.className='kpi-arc-trend '+a.trendCls; }
-    if(v1El) v1El.textContent = a.v1;
-    if(v2El) v2El.textContent = a.v2;
-    setTimeout(()=>drawArc(`arc-canvas-${a.id}`, a.pct, a.color), 50*a.id);
-  });
-
-  // ── ALERTAS ──
-  const alertas = [];
-  const enTaller = FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total acumulado`,cls:'al-err'});
-  const defDot = DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
-  const noComp = PREV_DATA.filter(d=>d.estado==='No completada').length;
-  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
-  let abonosVenc=0; if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
-  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
-
-  const strip = document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML = alertas.slice(0,4).map(a=>`
-    <div class="alerta-item ${a.cls}">
-      <div class="alerta-icon">${a.icon}</div>
-      <div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div>
-    </div>`).join('');
-
-  // ── EVOLUCIÓN (3 tabs) ──
-  const evoOpts = (yMax,yCb) => ({
-    responsive:true, maintainAspectRatio:false,
-    interaction:{mode:'index',intersect:false},
-    plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:7}}},
-    scales:{
-      x:{ticks:{color:'#8b8fa8',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:12},grid:{color:'rgba(255,255,255,0.04)'}},
-      y:{ticks:{color:'#8b8fa8',font:{size:9},...(yCb?{callback:yCb}:{})},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true,...(yMax?{max:yMax}:{})}
-    }
-  });
-  dc('ch-evo-pct');
-  charts['ch-evo-pct']=new Chart(document.getElementById('ch-evo-pct'),{type:'line',
-    data:{labels:SERIE.f,datasets:[
-      {label:'% Cerrados',data:SERIE.T,borderColor:'#22c55e',backgroundColor:'#22c55e12',tension:0.3,fill:true,pointRadius:0,borderWidth:2},
-      {label:'% Abiertos',data:SERIE.X,borderColor:'#ef4444',backgroundColor:'#ef444412',tension:0.3,fill:true,pointRadius:0,borderWidth:2}
-    ]},options:evoOpts(100,v=>v+'%')});
-  dc('ch-evo-np');
-  charts['ch-evo-np']=new Chart(document.getElementById('ch-evo-np'),{type:'line',
-    data:{labels:SERIE.f,datasets:[
-      {label:'Activos (Col N)',data:SERIE.N,borderColor:'#ef4444',backgroundColor:'#ef444412',tension:0.3,fill:true,pointRadius:0,borderWidth:2},
-      {label:'Cerrados (Col P)',data:SERIE.P,borderColor:'#22c55e',backgroundColor:'#22c55e12',tension:0.3,fill:true,pointRadius:0,borderWidth:2}
-    ]},options:evoOpts()});
-  dc('ch-evo-flujo');
-  charts['ch-evo-flujo']=new Chart(document.getElementById('ch-evo-flujo'),{type:'bar',
-    data:{labels:SERIE.f,datasets:[
-      {label:'Reducción',data:SERIE.FN.map(v=>v<0?Math.abs(v):0),backgroundColor:'#22c55e80',borderRadius:1},
-      {label:'Aumento',data:SERIE.FN.map(v=>v>0?v:0),backgroundColor:'#ef444480',borderRadius:1}
-    ]},options:evoOpts()});
-  switchEvoTab(currentEvoTab, null);
-
-  // ── DONUT OT ──
-  dc('ch-ot-donut');
-  charts['ch-ot-donut']=new Chart(document.getElementById('ch-ot-donut'),{
-    type:'doughnut',
-    data:{labels:['Activos','Finalizados','Complementario','Anulados'],
-      datasets:[{data:[e.act,e.fin||0,e.comp,Object.values(CORR_ZONAL).reduce((s,v)=>s+(v.an||0),0)],
-        backgroundColor:['#ef444499','#22c55e99','#7c3aed99','#8b8fa855'],borderWidth:0}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
-      plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8},position:'right'},
-        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toLocaleString()}`}}}}
-  });
-
-  // ── ESTADO ZONAL ──
-  const jef=RESP.filter(j=>CORR_ZONAL[j]?.total>0), sh=jef.map(j=>j.split(' ')[0]);
-  dc('ch-estado-zonal');
-  if(jef.length) charts['ch-estado-zonal']=new Chart(document.getElementById('ch-estado-zonal'),{
-    type:'bar',
-    data:{labels:sh,datasets:[
-      {label:'Activos',data:jef.map(j=>CORR_ZONAL[j].ab+CORR_ZONAL[j].ec),backgroundColor:'#ef444499',borderRadius:2},
-      {label:'Finalizados',data:jef.map(j=>CORR_ZONAL[j].fin),backgroundColor:'#22c55e99',borderRadius:2},
-      {label:'Complementario',data:jef.map(j=>CORR_ZONAL[j].comp),backgroundColor:'#f59e0b99',borderRadius:2}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{labels:{color:'#8b8fa8',font:{size:9},boxWidth:7}}},
-      scales:{x:{stacked:true,ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{stacked:true,ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
-  });
-
-  // ── FOOTER ──
-  const dfTot=document.getElementById('df-total'), dfCer=document.getElementById('df-cerradas');
-  const dfBack=document.getElementById('df-backlog'), dfFlota=document.getElementById('df-flota');
-  const dfPrev=document.getElementById('df-prev'), dfDisp=document.getElementById('df-disp');
-  if(dfTot) dfTot.textContent=e.total.toLocaleString();
-  if(dfCer) dfCer.textContent=e.cer.toLocaleString();
-  if(dfBack) dfBack.textContent=e.act;
-  if(dfFlota) dfFlota.textContent=op+'/'+flotaTot;
-  if(dfPrev) dfPrev.textContent=prevComp||'—';
-  if(dfDisp) dfDisp.textContent=pctFlota+'%';
-
-  // ── TABLA ──
-  document.getElementById("tb-resumen").innerHTML=RESP.map(r=>{
-    const d=CORR_ZONAL[r];if(!d)return "";
-    const cer=d.fin+d.comp,tasa=d.total>0?Math.round(cer/d.total*100):0;
-    const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":d.lead>0?"var(--ok)":"var(--mu)";
-    return `<tr><td><strong>${r}</strong></td><td>${pill(d.ab+d.ec,"p-err")}</td><td>${pill(d.fin,"p-ok")}</td><td>${pill(d.comp,"p-warn")}</td><td><strong>${d.total}</strong></td><td>${pill(tasa+"%",tasa>=70?"p-ok":tasa>=40?"p-warn":"p-err")}</td><td style="color:${lc};font-family:'JetBrains Mono';">${d.lead>0?Math.round(d.lead)+"d":"—"}</td><td>${pill((CONTRATOS_RT.length>0?CONTRATOS_RT.filter(c=>c.jefe===r):(CONTR[r]||[])).length,"p-mu")}</td></tr>`;
-  }).join("");
-}
+</html>
