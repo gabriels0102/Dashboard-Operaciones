@@ -147,6 +147,84 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 @keyframes spin{to{transform:rotate(360deg);}}
 ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
 @media(max-width:900px){.sb{width:58px;}.logo-text,.ni-label,.nav-section{display:none;}.main{margin-left:58px;padding:14px 10px;}.c2{grid-template-columns:1fr;}}
+
+/* ══════════════════════════════════════
+   DASHBOARD REDESIGN — Estilo operativo
+   ══════════════════════════════════════ */
+
+/* Header del dashboard */
+.dash-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+.dash-header-left h1{font-size:22px;font-weight:700;letter-spacing:-0.3px;}
+.dash-header-left p{font-size:12px;color:var(--mu);margin-top:3px;}
+.dash-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.dash-period-badge{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--txt);}
+.dash-refresh-btn{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--mu);cursor:pointer;transition:all .15s;}
+.dash-refresh-btn:hover{background:var(--surface);color:var(--txt);}
+
+/* KPI Arc Cards Grid */
+.kpi-arc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;}
+.kpi-arc-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default;}
+.kpi-arc-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25);}
+.kpi-arc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 16px 16px;}
+.kpi-arc-card.kac-blue::after{background:linear-gradient(90deg,#4f8ef7,#60a5fa);}
+.kpi-arc-card.kac-green::after{background:linear-gradient(90deg,#22c55e,#4ade80);}
+.kpi-arc-card.kac-orange::after{background:linear-gradient(90deg,#f97316,#fb923c);}
+.kpi-arc-card.kac-purple::after{background:linear-gradient(90deg,#7c3aed,#a855f7);}
+.kpi-arc-card.kac-teal::after{background:linear-gradient(90deg,#14b8a6,#2dd4bf);}
+.kpi-arc-title{font-size:9.5px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.8px;text-align:center;margin-bottom:10px;line-height:1.3;}
+.kpi-arc-wrap{position:relative;width:100px;height:100px;margin-bottom:10px;}
+.kpi-arc-wrap canvas{position:absolute;top:0;left:0;width:100%!important;height:100%!important;}
+.kpi-arc-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.kpi-arc-pct{font-size:21px;font-weight:800;font-family:'JetBrains Mono',monospace;line-height:1;}
+.kpi-arc-icon{font-size:10px;margin-top:2px;}
+.kpi-arc-vals{display:flex;gap:14px;justify-content:center;}
+.kpi-arc-val{text-align:center;}
+.kpi-arc-val-n{font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.kpi-arc-val-l{font-size:10px;color:var(--mu);}
+.kpi-arc-trend{position:absolute;top:10px;right:10px;font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;}
+.trend-up{background:rgba(34,197,94,.15);color:var(--ok);}
+.trend-dn{background:rgba(239,68,68,.15);color:var(--err);}
+.trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
+
+/* Alertas strip */
+.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
+.alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
+.alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.alerta-item.al-err::before{background:var(--err);}
+.alerta-item.al-warn::before{background:var(--warn);}
+.alerta-item.al-ok::before{background:var(--ok);}
+.alerta-item.al-info::before{background:var(--ac);}
+.alerta-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.alerta-body strong{display:block;font-size:12px;font-weight:600;line-height:1.3;}
+.alerta-body span{font-size:11px;color:var(--mu);}
+
+/* Evolución de indicadores */
+.evo-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:16px;margin-bottom:16px;}
+.evo-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+.evo-title{font-size:13px;font-weight:600;}
+.evo-tabs{display:flex;gap:3px;background:var(--s2);border-radius:8px;padding:3px;}
+.evo-tab{padding:5px 11px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;color:var(--mu);border:none;background:none;font-family:'Inter',sans-serif;transition:all .15s;white-space:nowrap;}
+.evo-tab.active{background:var(--surface);color:var(--txt);box-shadow:0 1px 3px rgba(0,0,0,.2);}
+
+/* Bottom grid — 3 columnas */
+.dash-bottom-grid{display:grid;grid-template-columns:1.2fr 1fr 1.4fr;gap:14px;margin-bottom:16px;}
+.dash-chart-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:14px;}
+.dash-chart-label{font-size:12px;font-weight:600;margin-bottom:2px;}
+.dash-chart-sub{font-size:11px;color:var(--mu);margin-bottom:10px;}
+.dash-chart-h{height:180px;position:relative;}
+
+/* Footer resumen */
+.dash-footer{display:grid;grid-template-columns:repeat(6,1fr);gap:0;background:var(--surface);border:1px solid var(--b);border-radius:16px;overflow:hidden;margin-bottom:16px;}
+.dash-footer-item{padding:14px 10px;text-align:center;border-right:1px solid var(--b);}
+.dash-footer-item:last-child{border-right:none;}
+.dash-footer-num{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.dash-footer-label{font-size:10px;color:var(--mu);margin-top:3px;line-height:1.2;}
+
+/* Tabla resumen */
+.dash-tabla-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:14px;}
+
+@media(max-width:1200px){.kpi-arc-grid{grid-template-columns:repeat(3,1fr);}.dash-bottom-grid{grid-template-columns:1fr 1fr;}.dash-footer{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:800px){.kpi-arc-grid{grid-template-columns:repeat(2,1fr);}.dash-bottom-grid{grid-template-columns:1fr;}.dash-footer{grid-template-columns:repeat(2,1fr);}}
 </style>
 </head>
 <body>
@@ -199,60 +277,129 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <!-- DASHBOARD -->
 <section class="page active" id="page-dashboard">
-  <div class="topbar">
-    <div><div class="ptitle">Dashboard General</div><div class="psub">Estado operativo al 06/05/2026</div></div>
-    <span class="p p-bl" id="badge-total">2.304 trabajos totales</span>
-  </div>
-  <div class="sl">Correctivos — Estado actual</div>
-  <div class="kg" id="k-corr"></div>
-  <div class="sl">Abonos de ley — Estado global de sitios</div>
-  <div class="kg" id="k-abonos"></div>
-  <div class="sl">Flota vehicular — Estado actual</div>
-  <div class="kg" id="k-flota-dash"></div>
-  <div class="sl">Dotación de operaciones</div>
-  <div class="kg" id="k-dot-dash"></div>
-  <div class="sl">Trabajos preventivos</div>
-  <div class="kg" id="k-prev-dash"></div>
-  <div class="sl">Complementarios — Seguimiento comercial</div>
-  <div class="kg" id="k-compl-dash"></div>
 
-  <div class="card">
-    <div class="ch"><div><div class="ct">Correctivos Cerrados y Abiertos</div><div class="cs">Activos (N) vs Cerrados (P) · Mar 2025 — May 2026</div></div></div>
-    <div class="cwtall"><canvas id="ch-ca"></canvas></div>
-  </div>
-  <div class="card">
-    <div class="ch"><div><div class="ct">% Abiertos y Cerrados Totales</div><div class="cs">Col T vs Col X · Mar 2025 — May 2026</div></div></div>
-    <div class="cwtall"><canvas id="ch-pct"></canvas></div>
-  </div>
-  <div class="c2">
-    <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div><div class="ct">Estado por Jefe Zonal</div><div class="cs">Activos vs Finalizados vs Complementario</div></div></div>
-      <div class="cw"><canvas id="ch-estado-zonal"></canvas></div>
+  <!-- HEADER -->
+  <div class="dash-header">
+    <div class="dash-header-left">
+      <h1>Dashboard de Gestión Operativa</h1>
+      <p>Indicadores clave de mantenimiento · <span id="dash-last-update">Cargando...</span></p>
     </div>
-    <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div><div class="ct">Horas en Taller por Mes</div><div class="cs">Oct 2025 — May 2026</div></div></div>
-      <div class="cw"><canvas id="ch-taller-mes-dash"></canvas></div>
-    </div>
-  </div>
-  <div style="margin-top:14px;" class="c2">
-    <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div><div class="ct">Flujo de Trabajos</div><div class="cs">Reducción vs aumento de carga diaria</div></div></div>
-      <div class="cw"><canvas id="ch-flujo"></canvas></div>
-    </div>
-    <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div><div class="ct">Abonos de Ley por Zonal</div><div class="cs">Vencidos + No realizados</div></div></div>
-      <div class="cw"><canvas id="ch-abonos-zonal"></canvas></div>
+    <div class="dash-header-right">
+      <div class="dash-period-badge">📅 <span id="dash-periodo">Mayo 2026</span></div>
+      <button class="dash-refresh-btn" id="dash-refresh-btn" onclick="dashRefresh()">🔄 Actualizar</button>
     </div>
   </div>
 
-  <div class="card" style="margin-top:14px;">
-    <div class="ch"><div class="ct">Tabla resumen por responsable</div></div>
+  <!-- 5 KPI ARCOS -->
+  <div class="kpi-arc-grid" id="kpi-arc-grid">
+    <div class="kpi-arc-card kac-blue" id="arc-card-0">
+      <span class="kpi-arc-trend trend-nt" id="arc-trend-0">—</span>
+      <div class="kpi-arc-title">% CORRECTIVOS CERRADOS<br>SOBRE GENERADOS</div>
+      <div class="kpi-arc-wrap"><canvas id="arc-canvas-0"></canvas>
+        <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-0" style="color:#4f8ef7;">—%</div><div class="kpi-arc-icon">🔧</div></div>
+      </div>
+      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-0">—</div><div class="kpi-arc-val-l">Cerrados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-0">—</div><div class="kpi-arc-val-l">Generados</div></div></div>
+    </div>
+    <div class="kpi-arc-card kac-green" id="arc-card-1">
+      <span class="kpi-arc-trend trend-nt" id="arc-trend-1">—</span>
+      <div class="kpi-arc-title">% DE FLOTA ACTIVA<br>(OPERATIVAS SOBRE TOTAL)</div>
+      <div class="kpi-arc-wrap"><canvas id="arc-canvas-1"></canvas>
+        <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-1" style="color:#22c55e;">—%</div><div class="kpi-arc-icon">🚐</div></div>
+      </div>
+      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-1">—</div><div class="kpi-arc-val-l">Operativas</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-1">—</div><div class="kpi-arc-val-l">Total flota</div></div></div>
+    </div>
+    <div class="kpi-arc-card kac-orange" id="arc-card-2">
+      <span class="kpi-arc-trend trend-nt" id="arc-trend-2">—</span>
+      <div class="kpi-arc-title">% COBERTURA DE DOTACIÓN<br>(REAL SOBRE APROBADA)</div>
+      <div class="kpi-arc-wrap"><canvas id="arc-canvas-2"></canvas>
+        <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-2" style="color:#f97316;">—%</div><div class="kpi-arc-icon">👥</div></div>
+      </div>
+      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-2">—</div><div class="kpi-arc-val-l">Relevada</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-2">—</div><div class="kpi-arc-val-l">Aprobada</div></div></div>
+    </div>
+    <div class="kpi-arc-card kac-purple" id="arc-card-3">
+      <span class="kpi-arc-trend trend-nt" id="arc-trend-3">—</span>
+      <div class="kpi-arc-title">% CUMPLIMIENTO DE<br>PREVENTIVOS</div>
+      <div class="kpi-arc-wrap"><canvas id="arc-canvas-3"></canvas>
+        <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-3" style="color:#7c3aed;">—%</div><div class="kpi-arc-icon">🛡️</div></div>
+      </div>
+      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-3">—</div><div class="kpi-arc-val-l">Completados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-3">—</div><div class="kpi-arc-val-l">Programados</div></div></div>
+    </div>
+    <div class="kpi-arc-card kac-teal" id="arc-card-4">
+      <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
+      <div class="kpi-arc-title">% COBERTURA DE<br>ACTIVOS CRÍTICOS</div>
+      <div class="kpi-arc-wrap"><canvas id="arc-canvas-4"></canvas>
+        <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
+      </div>
+      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-4">—</div><div class="kpi-arc-val-l">Vigentes</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-4">—</div><div class="kpi-arc-val-l">Total</div></div></div>
+    </div>
+  </div>
+
+  <!-- ALERTAS Y DESVÍOS -->
+  <div class="alertas-strip" id="alertas-strip"></div>
+
+  <!-- EVOLUCIÓN + ÓRDENES DE TRABAJO + ESTADO ACTIVOS -->
+  <div class="dash-bottom-grid">
+    <div class="dash-chart-card">
+      <div class="evo-header">
+        <div><div class="dash-chart-label">Evolución de Indicadores (%)</div></div>
+        <div class="evo-tabs">
+          <button class="evo-tab active" onclick="switchEvoTab('pct',this)">% Correctivos</button>
+          <button class="evo-tab" onclick="switchEvoTab('np',this)">Abiertos vs Cerrados</button>
+          <button class="evo-tab" onclick="switchEvoTab('flujo',this)">Flujo</button>
+        </div>
+      </div>
+      <div style="height:200px;position:relative;">
+        <canvas id="ch-evo-pct" style="position:absolute;top:0;left:0;"></canvas>
+        <canvas id="ch-evo-np" style="display:none;position:absolute;top:0;left:0;"></canvas>
+        <canvas id="ch-evo-flujo" style="display:none;position:absolute;top:0;left:0;"></canvas>
+      </div>
+    </div>
+    <div class="dash-chart-card">
+      <div class="dash-chart-label">Órdenes de Trabajo</div>
+      <div class="dash-chart-sub">Distribución por estado</div>
+      <div class="dash-chart-h"><canvas id="ch-ot-donut"></canvas></div>
+    </div>
+    <div class="dash-chart-card">
+      <div class="dash-chart-label">Estado por Jefe Zonal</div>
+      <div class="dash-chart-sub">Activos vs Finalizados vs Complementario</div>
+      <div class="dash-chart-h"><canvas id="ch-estado-zonal"></canvas></div>
+    </div>
+  </div>
+
+  <!-- FOOTER RESUMEN GENERAL -->
+  <div class="dash-footer" id="dash-footer">
+    <div class="dash-footer-item"><div class="dash-footer-num" id="df-total" style="color:var(--ac);">—</div><div class="dash-footer-label">OT Generadas</div></div>
+    <div class="dash-footer-item"><div class="dash-footer-num" id="df-cerradas" style="color:var(--ok);">—</div><div class="dash-footer-label">OT Cerradas</div></div>
+    <div class="dash-footer-item"><div class="dash-footer-num" id="df-backlog" style="color:var(--err);">—</div><div class="dash-footer-label">Backlog OT</div></div>
+    <div class="dash-footer-item"><div class="dash-footer-num" id="df-flota" style="color:var(--warn);">—</div><div class="dash-footer-label">Flota Operativa</div></div>
+    <div class="dash-footer-item"><div class="dash-footer-num" id="df-prev" style="color:var(--ac2);">—</div><div class="dash-footer-label">Prev. Completados</div></div>
+    <div class="dash-footer-item"><div class="dash-footer-num" id="df-disp" style="color:var(--org);">—%</div><div class="dash-footer-label">Disponibilidad Flota</div></div>
+  </div>
+
+  <!-- TABLA RESUMEN -->
+  <div class="dash-tabla-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:600;">Resumen General por Responsable</div>
+    </div>
     <div class="tw"><table>
-      <thead><tr><th>Responsable</th><th>Activos</th><th>Finalizados</th><th>Compl.</th><th>Anulados</th><th>Total</th><th>Tasa</th><th>Lead time ⓘ</th><th>Contratos</th></tr></thead>
+      <thead><tr><th>Responsable</th><th>Activos</th><th>Finalizados</th><th>Compl.</th><th>Total</th><th>Tasa</th><th>Lead time ⓘ</th><th>Contratos</th></tr></thead>
       <tbody id="tb-resumen"></tbody>
     </table></div>
-    <p style="font-size:11px;color:var(--mu);margin-top:8px;">ⓘ Lead time = días promedio desde emisión hasta cierre efectivo. Valores altos reflejan tickets que permanecieron abiertos más de 1 año.</p>
+    <p style="font-size:11px;color:var(--mu);margin-top:8px;">ⓘ Lead time = días promedio desde emisión hasta cierre efectivo.</p>
   </div>
+
+  <!-- Hidden: canvases and divs needed by other render functions -->
+  <div style="display:none;">
+    <canvas id="ch-ca"></canvas>
+    <canvas id="ch-pct"></canvas>
+    <canvas id="ch-flujo"></canvas>
+    <canvas id="ch-taller-mes-dash"></canvas>
+    <canvas id="ch-abonos-zonal"></canvas>
+    <div id="k-corr"></div><div id="k-abonos"></div>
+    <div id="k-flota-dash"></div><div id="k-dot-dash"></div>
+    <div id="k-prev-dash"></div><div id="k-compl-dash"></div>
+  </div>
+
 </section>
 
 <!-- CORRECTIVOS -->
@@ -2618,4 +2765,201 @@ actualizarTodo(false).then(()=>{
 });
 </script>
 </body>
-</html>
+</html>// ══════════════════════════════════════
+// DASHBOARD — DISEÑO OPERATIVO
+// ══════════════════════════════════════
+let currentEvoTab = 'pct';
+let arcChartInstances = {};
+
+function drawArc(canvasId, pct, color){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if(existing) existing.destroy();
+  new Chart(canvas, {
+    type:'doughnut',
+    data:{datasets:[{
+      data:[Math.max(0,Math.min(100,pct)), Math.max(0,100-pct)],
+      backgroundColor:[color, 'rgba(255,255,255,0.05)'],
+      borderWidth:0, circumference:270, rotation:225
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'78%',
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      animation:{duration:900,easing:'easeInOutQuart'}}
+  });
+}
+
+window.switchEvoTab = function(tab, btn){
+  currentEvoTab = tab;
+  document.querySelectorAll('.evo-tab').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  ['ch-evo-pct','ch-evo-np','ch-evo-flujo'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.style.display='none';
+  });
+  const map={pct:'ch-evo-pct',np:'ch-evo-np',flujo:'ch-evo-flujo'};
+  const el=document.getElementById(map[tab]);
+  if(el) el.style.display='block';
+};
+
+window.dashRefresh = function(){
+  const btn=document.getElementById('dash-refresh-btn');
+  if(btn){btn.textContent='⏳ Actualizando...';btn.disabled=true;}
+  actualizarTodo(true).then(()=>{
+    if(btn){btn.innerHTML='🔄 Actualizar';btn.disabled=false;}
+  });
+};
+
+function renderDashboard(){
+  const e = ESTADO_ACTUAL;
+
+  // Update header
+  const lu = document.getElementById('dash-last-update');
+  if(lu) lu.textContent = 'Actualizado: '+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  // ── Calculate all KPIs ──
+  const flotaActiva = FLOTA.filter(v=>!v.est?.toLowerCase().includes('fuera'));
+  const op = flotaActiva.filter(v=>v.est==="Operativa").length;
+  const flotaTot = flotaActiva.length||1;
+  const pctFlota = Math.round(op/flotaTot*100);
+
+  const dotAp = DOTACION_DATA.reduce((s,d)=>s+d.aprobada,0)||1;
+  const dotRe = DOTACION_DATA.reduce((s,d)=>s+d.real,0);
+  const pctDot = Math.min(150, Math.round(dotRe/dotAp*100));
+
+  const prevTot = PREV_DATA.length;
+  const prevComp = PREV_DATA.filter(d=>d.estado==='Completada').length;
+  const pctPrev = prevTot>0?Math.round(prevComp/prevTot*100):0;
+
+  let abonosVig=0, abonosTot=0;
+  if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;abonosTot++;if(est==="vigente")abonosVig++;}));
+  const pctAbonos = abonosTot>0?Math.round(abonosVig/abonosTot*100):0;
+
+  // ── ARC CARDS ──
+  const arcs = [
+    {id:0, pct:e.pct_c, color:'#4f8ef7', v1:e.cer.toLocaleString(), l1:'Cerrados', v2:e.total.toLocaleString(), l2:'Generados',
+     trend: e.pct_c >= 90 ? '▲ Óptimo' : e.pct_c >= 75 ? '→ En control' : '▼ Revisar',
+     trendCls: e.pct_c >= 90 ? 'trend-up' : e.pct_c >= 75 ? 'trend-nt' : 'trend-dn'},
+    {id:1, pct:pctFlota, color:'#22c55e', v1:op, l1:'Operativas', v2:flotaTot, l2:'Total flota',
+     trend: pctFlota >= 90 ? '▲ Óptimo' : pctFlota >= 75 ? '→ Normal' : '▼ Atención',
+     trendCls: pctFlota >= 90 ? 'trend-up' : pctFlota >= 75 ? 'trend-nt' : 'trend-dn'},
+    {id:2, pct:pctDot||95, color:'#f97316', v1:dotRe||'—', l1:'Relevada', v2:dotAp||'—', l2:'Aprobada',
+     trend: pctDot>=100?'▲ Cobertura total':pctDot>=90?'→ Normal':'▼ Déficit',
+     trendCls: pctDot>=100?'trend-up':pctDot>=90?'trend-nt':'trend-dn'},
+    {id:3, pct:pctPrev||0, color:'#7c3aed', v1:prevComp||'—', l1:'Completados', v2:prevTot||'—', l2:'Programados',
+     trend: pctPrev>=85?'▲ Bueno':pctPrev>=70?'→ Normal':'▼ Revisar',
+     trendCls: pctPrev>=85?'trend-up':pctPrev>=70?'trend-nt':'trend-dn'},
+    {id:4, pct:pctAbonos||0, color:'#14b8a6', v1:abonosVig||'—', l1:'Vigentes', v2:abonosTot||'—', l2:'Total',
+     trend: pctAbonos>=75?'→ En control':'▼ Vencimientos',
+     trendCls: pctAbonos>=75?'trend-nt':'trend-dn'},
+  ];
+
+  arcs.forEach(a=>{
+    const pctEl = document.getElementById(`arc-pct-${a.id}`);
+    const trendEl = document.getElementById(`arc-trend-${a.id}`);
+    const v1El = document.getElementById(`arc-v1-${a.id}`);
+    const v2El = document.getElementById(`arc-v2-${a.id}`);
+    if(pctEl) pctEl.textContent = Math.round(a.pct)+'%';
+    if(trendEl){ trendEl.textContent=a.trend; trendEl.className='kpi-arc-trend '+a.trendCls; }
+    if(v1El) v1El.textContent = a.v1;
+    if(v2El) v2El.textContent = a.v2;
+    setTimeout(()=>drawArc(`arc-canvas-${a.id}`, a.pct, a.color), 50*a.id);
+  });
+
+  // ── ALERTAS ──
+  const alertas = [];
+  const enTaller = FLOTA.filter(v=>v.est==="En taller");
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total acumulado`,cls:'al-err'});
+  const defDot = DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
+  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
+  const noComp = PREV_DATA.filter(d=>d.estado==='No completada').length;
+  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
+  let abonosVenc=0; if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
+  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
+  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
+
+  const strip = document.getElementById('alertas-strip');
+  if(strip) strip.innerHTML = alertas.slice(0,4).map(a=>`
+    <div class="alerta-item ${a.cls}">
+      <div class="alerta-icon">${a.icon}</div>
+      <div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div>
+    </div>`).join('');
+
+  // ── EVOLUCIÓN (3 tabs) ──
+  const evoOpts = (yMax,yCb) => ({
+    responsive:true, maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:7}}},
+    scales:{
+      x:{ticks:{color:'#8b8fa8',font:{size:8},maxRotation:45,autoSkip:true,maxTicksLimit:12},grid:{color:'rgba(255,255,255,0.04)'}},
+      y:{ticks:{color:'#8b8fa8',font:{size:9},...(yCb?{callback:yCb}:{})},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true,...(yMax?{max:yMax}:{})}
+    }
+  });
+  dc('ch-evo-pct');
+  charts['ch-evo-pct']=new Chart(document.getElementById('ch-evo-pct'),{type:'line',
+    data:{labels:SERIE.f,datasets:[
+      {label:'% Cerrados',data:SERIE.T,borderColor:'#22c55e',backgroundColor:'#22c55e12',tension:0.3,fill:true,pointRadius:0,borderWidth:2},
+      {label:'% Abiertos',data:SERIE.X,borderColor:'#ef4444',backgroundColor:'#ef444412',tension:0.3,fill:true,pointRadius:0,borderWidth:2}
+    ]},options:evoOpts(100,v=>v+'%')});
+  dc('ch-evo-np');
+  charts['ch-evo-np']=new Chart(document.getElementById('ch-evo-np'),{type:'line',
+    data:{labels:SERIE.f,datasets:[
+      {label:'Activos (Col N)',data:SERIE.N,borderColor:'#ef4444',backgroundColor:'#ef444412',tension:0.3,fill:true,pointRadius:0,borderWidth:2},
+      {label:'Cerrados (Col P)',data:SERIE.P,borderColor:'#22c55e',backgroundColor:'#22c55e12',tension:0.3,fill:true,pointRadius:0,borderWidth:2}
+    ]},options:evoOpts()});
+  dc('ch-evo-flujo');
+  charts['ch-evo-flujo']=new Chart(document.getElementById('ch-evo-flujo'),{type:'bar',
+    data:{labels:SERIE.f,datasets:[
+      {label:'Reducción',data:SERIE.FN.map(v=>v<0?Math.abs(v):0),backgroundColor:'#22c55e80',borderRadius:1},
+      {label:'Aumento',data:SERIE.FN.map(v=>v>0?v:0),backgroundColor:'#ef444480',borderRadius:1}
+    ]},options:evoOpts()});
+  switchEvoTab(currentEvoTab, null);
+
+  // ── DONUT OT ──
+  dc('ch-ot-donut');
+  charts['ch-ot-donut']=new Chart(document.getElementById('ch-ot-donut'),{
+    type:'doughnut',
+    data:{labels:['Activos','Finalizados','Complementario','Anulados'],
+      datasets:[{data:[e.act,e.fin||0,e.comp,Object.values(CORR_ZONAL).reduce((s,v)=>s+(v.an||0),0)],
+        backgroundColor:['#ef444499','#22c55e99','#7c3aed99','#8b8fa855'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8},position:'right'},
+        tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw.toLocaleString()}`}}}}
+  });
+
+  // ── ESTADO ZONAL ──
+  const jef=RESP.filter(j=>CORR_ZONAL[j]?.total>0), sh=jef.map(j=>j.split(' ')[0]);
+  dc('ch-estado-zonal');
+  if(jef.length) charts['ch-estado-zonal']=new Chart(document.getElementById('ch-estado-zonal'),{
+    type:'bar',
+    data:{labels:sh,datasets:[
+      {label:'Activos',data:jef.map(j=>CORR_ZONAL[j].ab+CORR_ZONAL[j].ec),backgroundColor:'#ef444499',borderRadius:2},
+      {label:'Finalizados',data:jef.map(j=>CORR_ZONAL[j].fin),backgroundColor:'#22c55e99',borderRadius:2},
+      {label:'Complementario',data:jef.map(j=>CORR_ZONAL[j].comp),backgroundColor:'#f59e0b99',borderRadius:2}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#8b8fa8',font:{size:9},boxWidth:7}}},
+      scales:{x:{stacked:true,ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{stacked:true,ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
+  });
+
+  // ── FOOTER ──
+  const dfTot=document.getElementById('df-total'), dfCer=document.getElementById('df-cerradas');
+  const dfBack=document.getElementById('df-backlog'), dfFlota=document.getElementById('df-flota');
+  const dfPrev=document.getElementById('df-prev'), dfDisp=document.getElementById('df-disp');
+  if(dfTot) dfTot.textContent=e.total.toLocaleString();
+  if(dfCer) dfCer.textContent=e.cer.toLocaleString();
+  if(dfBack) dfBack.textContent=e.act;
+  if(dfFlota) dfFlota.textContent=op+'/'+flotaTot;
+  if(dfPrev) dfPrev.textContent=prevComp||'—';
+  if(dfDisp) dfDisp.textContent=pctFlota+'%';
+
+  // ── TABLA ──
+  document.getElementById("tb-resumen").innerHTML=RESP.map(r=>{
+    const d=CORR_ZONAL[r];if(!d)return "";
+    const cer=d.fin+d.comp,tasa=d.total>0?Math.round(cer/d.total*100):0;
+    const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":d.lead>0?"var(--ok)":"var(--mu)";
+    return `<tr><td><strong>${r}</strong></td><td>${pill(d.ab+d.ec,"p-err")}</td><td>${pill(d.fin,"p-ok")}</td><td>${pill(d.comp,"p-warn")}</td><td><strong>${d.total}</strong></td><td>${pill(tasa+"%",tasa>=70?"p-ok":tasa>=40?"p-warn":"p-err")}</td><td style="color:${lc};font-family:'JetBrains Mono';">${d.lead>0?Math.round(d.lead)+"d":"—"}</td><td>${pill((CONTRATOS_RT.length>0?CONTRATOS_RT.filter(c=>c.jefe===r):(CONTR[r]||[])).length,"p-mu")}</td></tr>`;
+  }).join("");
+}
