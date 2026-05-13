@@ -261,16 +261,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
-      <select id="f-corr-estado" onchange="renderCorr()" style="min-width:150px;">
-        <option value="">Todos los estados</option>
-        <option value="Abierto">Abierto</option>
-        <option value="En curso">En curso</option>
-        <option value="Pendiente">Pendiente</option>
-        <option value="Finalizado">Finalizado</option>
-        <option value="Cerrado por complementario">Cerrado por complementario</option>
-        <option value="Anulado">Anulado</option>
-      </select>
-      <select id="f-corr-categoria" onchange="renderCorr()" style="min-width:150px;"><option value="">Todas las categorías</option></select>
     </div>
   </div>
 
@@ -342,6 +332,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
   <!-- KPIs motivos -->
   <div class="kg" id="k-motivos"></div>
+  <!-- Principal submotivo highlight -->
+  <div id="principal-submotivo-highlight" style="margin-bottom:14px;"></div>
 
   <!-- MOTIVOS MACRO -->
   <div class="sl">Motivos macro — Col T</div>
@@ -450,8 +442,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <section class="page" id="page-flota-estado">
   <div class="topbar"><div><div class="ptitle">Estado de Unidades</div><div class="psub">Todas las unidades activas (sin PREVIAL)</div></div></div>
   <div class="fb">
-    <label>Tipo:</label><select id="f-fl-tipo" onchange="renderFlotaTabla()" style="min-width:130px;"><option value="">Todos</option><option value="Camioneta">Camionetas</option><option value="Maquinaria">Maquinaria</option><option value="Cliente">Del cliente</option></select>
-    <label>Estado:</label><select id="f-fl-est" onchange="renderFlotaTabla()" style="min-width:140px;"><option value="">Todos</option><option value="Operativa">Operativa</option><option value="En taller">En taller</option><option value="Fuera de servicio">Fuera de servicio</option></select>
+    <label>Estado:</label><select id="f-fl-est" onchange="renderFlotaTabla()" style="min-width:140px;"><option value="">Todos</option><option value="Operativa">Operativa</option><option value="En taller">En taller</option></select>
     <label>Empresa:</label><select id="f-fl-emp" onchange="renderFlotaTabla()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option></select>
     <label>Jefe:</label><select id="f-fl-jefe" onchange="renderFlotaTabla()" style="min-width:160px;"><option value="">Todos</option></select>
     <input type="text" id="f-fl-busq" placeholder="Patente o servicio..." style="width:160px;" oninput="renderFlotaTabla()"/>
@@ -486,7 +477,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2" style="margin-top:14px;">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por área</div></div></div><div class="cw"><canvas id="ch-taller-area-pie"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por área</div></div></div><div class="cw"></div></div>
   </div>
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div class="ct">Detalle por patente</div></div>
@@ -910,15 +901,6 @@ function renderDashboard(){
 // ══ CORRECTIVOS ══
 window.renderCorr=function(){
   const fz  = document.getElementById("f-corr-zonal")?.value||"";
-  const fest = document.getElementById("f-corr-estado")?.value||"";
-  const fcat = document.getElementById("f-corr-categoria")?.value||"";
-
-  // ── Populate categoria filter from real data ──
-  const selCat = document.getElementById("f-corr-categoria");
-  if(selCat && selCat.options.length<=1 && window.CORR_GLOBAL){
-    const cats = Object.keys(window.CORR_GLOBAL.categorias||{}).sort();
-    cats.forEach(c=>{ selCat.innerHTML+=`<option value="${c}">${c}</option>`; });
-  }
 
   // ── Get data scope ──
   const data = fz ? {[fz]: CORR_ZONAL[fz]||{}} : CORR_ZONAL;
@@ -1122,11 +1104,34 @@ window.renderMotivos=function(){
   const totalMot = motivosData.reduce((s,[,n])=>s+n,0);
 
   // ── KPIs ──
+  const topSubmotivo = (() => {
+    const subs = fz && CORR_ZONAL[fz]?.submotivos
+      ? Object.entries(CORR_ZONAL[fz].submotivos).sort((a,b)=>b[1]-a[1])
+      : Object.entries(window.CORR_GLOBAL?.submotivos||{}).sort((a,b)=>b[1]-a[1]);
+    return subs[0]||null;
+  })();
+
   const kd = document.getElementById("k-motivos");
   if(kd) kd.innerHTML=`
     <div class="kc re"><span class="ki">🔴</span><div class="kl">Total sin cerrar</div><div class="kv">${totalMot}</div><div class="ks">${fz||"Toda la operación"} · ${fanio||"Todos los años"}</div></div>
     <div class="kc am"><span class="ki">📋</span><div class="kl">Motivos distintos</div><div class="kv">${motivosData.length}</div></div>
-    <div class="kc bl"><span class="ki">🔝</span><div class="kl">Principal motivo</div><div class="kv" style="font-size:13px;">${motivosData[0]?motivosData[0][0].substring(0,20)+"…":"—"}</div><div class="ks">${motivosData[0]?motivosData[0][1]+" correctivos":""}</div></div>`;
+    <div class="kc bl"><span class="ki">🔝</span><div class="kl">Principal motivo (Col T)</div><div class="kv" style="font-size:13px;">${motivosData[0]?motivosData[0][0].substring(0,22)+"…":"—"}</div><div class="ks">${motivosData[0]?motivosData[0][1]+" correctivos":""}</div></div>
+    <div class="kc pu"><span class="ki">🔍</span><div class="kl">Principal submotivo (Col U)</div><div class="kv" style="font-size:13px;">${topSubmotivo?topSubmotivo[0].substring(0,22)+"…":"—"}</div><div class="ks">${topSubmotivo?topSubmotivo[1]+" correctivos":""}</div></div>`;
+
+  // Highlight principal submotivo
+  const highlightDiv = document.getElementById("principal-submotivo-highlight");
+  if(highlightDiv && topSubmotivo){
+    highlightDiv.innerHTML=`<div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.25);border-left:3px solid var(--ac2);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:16px;">
+      <div style="font-size:24px;">🔍</div>
+      <div>
+        <div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Principal subclasificación de motivo — Col U</div>
+        <div style="font-size:16px;font-weight:700;color:var(--txt);">${topSubmotivo[0]}</div>
+        <div style="font-size:12px;color:var(--mu);margin-top:2px;">${topSubmotivo[1]} correctivos · ${totalMot>0?Math.round(topSubmotivo[1]/totalMot*100):0}% del total activo</div>
+      </div>
+    </div>`;
+  } else if(highlightDiv){
+    highlightDiv.innerHTML="";
+  }
 
   // ── Chart barras motivos ──
   dc("ch-motivos-bar");
@@ -1435,18 +1440,56 @@ function renderFlotaTaller(){
 }
 
 function renderFlotaImpacto(){
+  if(!EST3.length){ document.getElementById("k-impacto").innerHTML="<div style='color:var(--mu);padding:10px;'>Cargando datos de Estadística 3...</div>"; return; }
   const avgD=Math.round(EST3.reduce((s,d)=>s+d.disp,0)/EST3.length);
   const avgI=(EST3.reduce((s,d)=>s+d.imp,0)/EST3.length).toFixed(2);
   const mw=EST3.reduce((a,b)=>a.disp<b.disp?a:b);
+  const totalHEst3=EST3.reduce((s,d)=>s+d.h,0);
   document.getElementById("k-impacto").innerHTML=`
-    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div></div>
-    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom.</div><div class="kv">${avgI}</div><div class="ks">Camionetas equiv./mes</div></div>
-    <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${mw.h.toFixed(0)}h taller</div></div>`;
+    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual</div></div>
+    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — equiv. por mes</div></div>
+    <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.h)}h taller</div></div>
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. taller (hist.)</div><div class="kv">${Math.round(totalHEst3)}</div><div class="ks">Col J acumulado</div></div>`;
   const mes=EST3.map(d=>d.mes);
-  dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{type:"line",data:{labels:mes,datasets:[{label:"% Disponibilidad",data:EST3.map(d=>d.disp),borderColor:"#22c55e",backgroundColor:"#22c55e22",tension:0.4,fill:true,pointRadius:5,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8",font:{size:10},callback:v=>v+"%"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true,max:110}}}});
-  dc("ch-impact-cam");charts["ch-impact-cam"]=new Chart(document.getElementById("ch-impact-cam"),{type:"bar",data:{labels:mes,datasets:[{label:"Cam. equiv. en taller",data:EST3.map(d=>d.imp),backgroundColor:EST3.map(d=>d.imp>4?"#ef444499":d.imp>3?"#f59e0b99":"#22c55e99"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  dc("ch-hs-est3");charts["ch-hs-est3"]=new Chart(document.getElementById("ch-hs-est3"),{type:"bar",data:{labels:mes,datasets:[{label:"Horas",data:EST3.map(d=>Math.round(d.h)),backgroundColor:EST3.map(d=>d.h>2000?"#ef444499":d.h>1000?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  document.getElementById("tb-est3").innerHTML=EST3.map(d=>{const dc2=d.disp<70?"p-err":d.disp<90?"p-warn":"p-ok";const ic=d.imp>4?"var(--err)":d.imp>2.5?"var(--warn)":"var(--ok)";return `<tr><td><strong>${d.mes}</strong></td><td>${d.cam}</td><td style="font-family:'JetBrains Mono';">${Math.round(d.h)}h</td><td style="color:${ic};font-family:'JetBrains Mono';font-weight:600;">${d.imp}</td><td>${pill(d.disp+"%",dc2)}</td><td>${d.corr}</td></tr>`;}).join("");
+  dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{
+    type:"bar",
+    data:{labels:mes,datasets:[{
+      label:"% Disponibilidad",
+      data:EST3.map(d=>d.disp),
+      backgroundColor:EST3.map(d=>d.disp>=90?"#22c55e99":d.disp>=75?"#f59e0b99":"#ef444499"),
+      borderRadius:5
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw}% disponible`}}},
+      scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}},
+        y:{ticks:{color:"#8b8fa8",font:{size:10},callback:v=>v+"%"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true,max:110}}}
+  });
+  dc("ch-impact-cam");charts["ch-impact-cam"]=new Chart(document.getElementById("ch-impact-cam"),{type:"bar",
+    data:{labels:mes,datasets:[{label:"Camionetas equivalentes en taller",data:EST3.map(d=>d.imp),
+      backgroundColor:EST3.map(d=>d.imp>4?"#ef444499":d.imp>3?"#f59e0b99":"#22c55e99"),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>`${c.raw} camionetas equivalentes`}}},
+      scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}},
+        y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  dc("ch-hs-est3");charts["ch-hs-est3"]=new Chart(document.getElementById("ch-hs-est3"),{type:"bar",
+    data:{labels:mes,datasets:[{label:"Horas hábiles en taller (Col J)",data:EST3.map(d=>Math.round(d.h)),
+      backgroundColor:EST3.map(d=>d.h>500?"#ef444499":d.h>300?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>`${c.raw}h hábiles en taller`}}},
+      scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"}},
+        y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  document.getElementById("tb-est3").innerHTML=EST3.map(d=>{
+    const dc2=d.disp<70?"p-err":d.disp<90?"p-warn":"p-ok";
+    const ic=d.imp>4?"var(--err)":d.imp>2.5?"var(--warn)":"var(--ok)";
+    return `<tr>
+      <td><strong>${d.mes}</strong></td>
+      <td>${d.cam}</td>
+      <td style="font-family:'JetBrains Mono';">${Math.round(d.hPot||0)}h pot. / ${Math.round(d.h)}h real</td>
+      <td style="color:${ic};font-family:'JetBrains Mono';font-weight:600;">${d.imp} cam.</td>
+      <td>${pill(d.disp+"%",dc2)}</td>
+      <td>${d.corr}</td>
+    </tr>`;
+  }).join("");
 }
 
 function renderSiniestros(){
@@ -1566,8 +1609,22 @@ window.renderComplementariosPage = function(){
     });
   }
 
-  // ── CHART: Venta por Servicio ──
-  const svcsDisplay = svcs.length > 0 ? svcs : COMPL_DATA.porServicio;
+  // ── CHART: Venta por Servicio — filter by jefe using rawRows if available ──
+  let svcsDisplay;
+  if(fj && COMPL_DATA.rawRows){
+    // Find which row corresponds to this jefe and get their services
+    const jefeRow = COMPL_DATA.rawRows.find(r=>String(r[3]||'').trim()===fj);
+    if(jefeRow){
+      // Get all service rows until next jefe — but since D+E=jefe/total and G+H=svc/total are parallel
+      // we can't filter services by jefe directly from this sheet structure
+      // Show all services but highlight the jefe's value
+      svcsDisplay = COMPL_DATA.porServicio;
+    } else {
+      svcsDisplay = COMPL_DATA.porServicio;
+    }
+  } else {
+    svcsDisplay = COMPL_DATA.porServicio;
+  }
   const svcsSort = [...svcsDisplay].sort((a,b)=>b.valor-a.valor);
   dc('ch-compl-svc');
   if(svcsSort.length>0){
@@ -1819,14 +1876,19 @@ function parseControlVehicular(rows){
     if(!pat || pat==='DOMINIO' || pat==='MAQUINARIA') return;
     const empresa = String(row[21]||'').trim();
     if(empresa.toUpperCase().includes('PREVIAL')) return;
+    const tipo22 = String(row[22]||'').trim();
+    const est22  = String(row[5]||'Sin estado').trim();
+    // Only mantenimiento type, exclude fuera de servicio
+    if(tipo22.toLowerCase() !== 'mantenimiento') return;
+    if(est22.toLowerCase().includes('fuera de servicio')) return;
     result.push({
       p: pat,
       j: String(row[2]||'Sin asignar').trim(),
       s: String(row[4]||'').trim(),
-      est: String(row[5]||'Sin estado').trim(),
+      est: est22,
       m: String(row[6]||'').trim(),
       e: empresa||'Sin empresa',
-      tipo: String(row[22]||'').trim()||'Sin tipo'
+      tipo: tipo22
     });
   });
   return result;
@@ -1843,7 +1905,7 @@ function parseTurnos(rows){
     const horas = parseFloat(row[13])||0;
     const periodo = String(row[0]||'').trim();
     const tipoArr = String(row[8]||'').trim();
-    const empresa = String(row[19]||'').trim();
+    const empresa = String(row[19]||'').trim(); // Col T = EMPRESA
     if(!pat) return;
     let mesKey = periodo, anio = '';
     try{
@@ -1855,12 +1917,16 @@ function parseTurnos(rows){
         mesKey=mN[mo]+"'"+String(yr).slice(-2);
       }
     }catch(e){}
-    window.TURNOS_DETALLE = window.TURNOS_DETALLE||[];
-    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,horas,asistio:String(row[15]||'').trim(),empresa,mesKey,anio,periodo});
+    const asistioVal = String(row[15]||'').trim().toUpperCase();
+    window.TURNOS_DETALLE = []; // Reset on each parse
+    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,horas,asistio:asistioVal,empresa,mesKey,anio,periodo});
     if(horas>0){
       horasPat[pat]=(horasPat[pat]||0)+horas;
       horasArea[area]=(horasArea[area]||0)+horas;
       horasMes[mesKey]=(horasMes[mesKey]||0)+horas;
+    }
+    // Turnos gestionados = col P = "SI" (vehículo asistió y finalizó)
+    if(asistioVal==='SI'){
       turnosMes[mesKey]=(turnosMes[mesKey]||0)+1;
     }
   });
@@ -1872,28 +1938,41 @@ function parseTurnos(rows){
 
 // ── Parser: "Estadistica 3" ──
 function parseEst3(rows){
+  // MAPEO EXACTO ESTADISTICA 3:
+  // A(0)=PERIODO, B(1)=CANTIDAD CAMIONETAS
+  // I(8)=HORAS HABILES POTENCIALES POR MES
+  // J(9)=HORAS TOTALES HABILES EN TALLER
+  // K(10)=IMPACTO DE LAS HORAS EN CANTIDAD DE CAMIONETAS
+  // M(12)=% CAMIONETAS FALTANTES
+  // N(13)=% CAMIONETAS DISPONIBLES
   const result=[];
   const mNames=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   rows.slice(1).forEach(row=>{
-    if(!row[0]||!row[1]) return;
+    if(!row[0]) return;
     try{
       let mesLabel = String(row[0]).trim();
       try{
         const parts = mesLabel.split('/');
         if(parts.length===3){
-          const mo=parseInt(parts[1]),yr=String(parts[2]).slice(2);
-          mesLabel=mNames[mo]+" 20"+yr;
+          const mo=parseInt(parts[1]),yr=String(parts[2]);
+          mesLabel=mNames[mo]+" "+(yr.length===4?yr:'20'+yr.slice(-2));
         }
       }catch(e){}
-      const cam=parseFloat(row[1])||0;
-      const h=parseFloat(row[2])||0;
-      const disp=parseFloat(row[7])||1;
-      const imp=parseFloat(row[10])||0;
-      const corr=parseInt(row[14])||0;
-      if(h>0||cam>0) result.push({
-        mes:mesLabel, cam, h:Math.round(h*10)/10,
-        disp:isNaN(disp)||disp>1?100:Math.round(disp*100),
-        imp:Math.round(imp*100)/100, corr
+      const cam  = parseFloat(row[1])||0;       // B - cantidad camionetas
+      const hPot = parseFloat(row[8])||0;       // I - hs habiles potenciales
+      const h    = parseFloat(row[9])||0;       // J - hs habiles en taller
+      const imp  = parseFloat(row[10])||0;      // K - impacto en cantidad camionetas
+      const pFalt= parseFloat(row[12])||0;      // M - % faltantes
+      const disp = parseFloat(row[13])||0;      // N - % disponibles
+      const corr = parseInt(row[14])||0;        // O - correctivos
+      if(cam>0||h>0) result.push({
+        mes: mesLabel, cam,
+        hPot: Math.round(hPot*10)/10,
+        h: Math.round(h*10)/10,
+        imp: Math.round(imp*100)/100,
+        pFalt: pFalt>1?Math.round(pFalt*10)/10:Math.round(pFalt*1000)/10,
+        disp: disp>1?Math.round(disp*10)/10:Math.round(disp*1000)/10,
+        corr
       });
     }catch(e){}
   });
@@ -1902,19 +1981,21 @@ function parseEst3(rows){
 
 // ── Parser: "Siniestros" ──
 function parseSiniestros(rows){
+  // MAPEO EXACTO SINIESTROS:
+  // A(0)=PATENTE, B(1)=FECHA, C(2)=SEMESTRE
+  // F(5)=TIPO DE SINIESTRO, G(6)=AREA
   const tipo={}, sem={}, pat={}, area={};
   rows.slice(1).forEach(row=>{
     if(!row[0]) return;
-    const t=String(row[5]||'').trim()||'Sin tipo';
-    const a=String(row[6]||'').trim()||'Sin área';
-    const s=String(row[2]||'').trim();
-    const p=String(row[0]||'').trim();
+    const p = String(row[0]||'').trim();
+    const t = String(row[5]||'').trim()||'Sin tipo';  // F - tipo siniestro
+    const a = String(row[6]||'').trim()||'Sin área';  // G - area
+    const s = String(row[2]||'').trim();               // C - semestre
     tipo[t]=(tipo[t]||0)+1;
     area[a]=(area[a]||0)+1;
-    if(s) sem[s]=(sem[s]||0)+1;
+    if(s&&s!=='Sin semestre') sem[s]=(sem[s]||0)+1;
     if(p) pat[p]=(pat[p]||0)+1;
   });
-  // Top 10 patentes
   const topPat={};
   Object.entries(pat).sort((a,b)=>b[1]-a[1]).slice(0,10).forEach(([k,v])=>topPat[k]=v);
   return {tipo, sem, topPat, area};
@@ -2085,8 +2166,9 @@ async function actualizarComplementarios(){
       });
       COMPL_DATA.porJefe = porJefe;
       COMPL_DATA.porServicio = porServicio;
-      // Keep detalle for backwards compat
       COMPL_DATA.detalle = porJefe;
+      // Store raw rows for jefe-service cross-reference
+      COMPL_DATA.rawRows = rows.slice(1);
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
@@ -2118,7 +2200,8 @@ async function actualizarContratos(){
       // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
       const sel=document.getElementById("f-cont-resp");
-      if(sel && sel.options.length<=1){
+      if(sel){
+        sel.innerHTML='<option value="">Todos</option>';
         jefes.forEach(j=>{ sel.innerHTML+=`<option value="${j}">${j}</option>`; });
       }
     }
