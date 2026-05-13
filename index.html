@@ -422,7 +422,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <!-- FLOTA RESUMEN -->
 <section class="page" id="page-flota-resumen">
-  <div class="topbar"><div><div class="ptitle">Resumen Flota Vehicular</div><div class="psub">Estado al 06/05/2026 · Sin PREVIAL · 45 unidades</div></div></div>
+  <div class="topbar"><div><div class="ptitle">Resumen Flota Vehicular</div><div class="psub" id="flota-res-psub">Cargando datos en tiempo real...</div></div></div>
   <div class="kg" id="k-flota-res"></div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Estado de la flota</div></div></div><div class="cw"><canvas id="ch-fl-estado"></canvas></div></div>
@@ -982,8 +982,7 @@ window.renderCorr=function(){
   const catData = fz
     ? CORR_ZONAL[fz]?.categorias||{}
     : window.CORR_GLOBAL?.categorias||{};
-  const catFilt = fcat ? {[fcat]: catData[fcat]||0} : catData;
-  const catSort = Object.entries(catFilt).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const catSort = Object.entries(catData).sort((a,b)=>b[1]-a[1]).slice(0,8);
   dc("ch-corr-categoria");
   if(catSort.length>0){
     charts["ch-corr-categoria"]=new Chart(document.getElementById("ch-corr-categoria"),{
@@ -1102,6 +1101,12 @@ window.renderMotivos=function(){
 
   const motivosData = getMotivoData();
   const totalMot = motivosData.reduce((s,[,n])=>s+n,0);
+  // Guard: if no data yet, show message
+  if(totalMot === 0 && !window.CORR_GLOBAL?.motivos){
+    const kd2=document.getElementById("k-motivos");
+    if(kd2) kd2.innerHTML=`<div style="color:var(--mu);font-size:13px;padding:12px;grid-column:1/-1;">Cargando datos de la planilla... Los motivos se poblarán automáticamente desde Hoja definitiva.</div>`;
+    return;
+  }
 
   // ── KPIs ──
   const topSubmotivo = (() => {
@@ -1270,7 +1275,11 @@ window.renderZonales=function(){
   const jefes=fz?[fz]:[...RESP];
   cont.innerHTML=jefes.map(j=>{
     const sj=sitios.filter(s=>{if(s.jefe!==j)return false;if(!fe)return true;return ABONOS.some(ab=>(s.servicios?.[ab.id]||"N/A")===fe);});
-    const contratos=(CONTR[j]||[]).filter(c=>!femp||c.e===femp);
+    // Use RT contratos if available, fallback to static
+    const contratosBase = CONTRATOS_RT.length>0
+      ? CONTRATOS_RT.filter(c=>c.jefe===j).map(c=>({c:c.servicio.substring(0,8),n:c.servicio,e:c.empresa,estado:c.estado}))
+      : (CONTR[j]||[]).map(c=>({...c,estado:'Activo'}));
+    const contratos = contratosBase.filter(c=>!femp||(c.e||'')===femp);
     const cd=CORR_ZONAL[j];const init=ini(j);const zid="z-"+j.replace(/\s/g,"_");
     let v=0,vp=0,nr=0,vig=0;
     sj.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;if(est==="vencido")v++;else if(est==="vence pronto")vp++;else if(est==="No realizado")nr++;else if(est==="vigente")vig++;}));
@@ -1284,7 +1293,14 @@ window.renderZonales=function(){
       <div><div style="font-size:9px;color:var(--mu);">CERRADOS</div><div style="font-size:15px;font-weight:700;font-family:'JetBrains Mono';color:var(--ok);">${cd.fin}</div></div>
       <div><div style="font-size:9px;color:var(--mu);">LEAD</div><div style="font-size:15px;font-weight:700;font-family:'JetBrains Mono';">${cd.lead>0?Math.round(cd.lead)+"d":"—"}</div></div>
     </div>`:"";
-    const contrH=contratos.length>0?`<div style="margin-top:10px;"><div class="sl">Contratos (${contratos.length})</div>${contratos.map(c=>`<div class="ci"><span class="cb">${c.c}</span><span class="cn">${c.n}</span>${empBadge(c.e)}</div>`).join("")}</div>`:"";
+    const contrH=contratos.length>0?`<div style="margin-top:10px;"><div class="sl">Contratos (${contratos.length})</div>${contratos.map(c=>{
+      const ceco=c.c||c.servicio?.substring(0,8)||'—';
+      const nombre=c.n||c.servicio||'—';
+      const emp=c.e||c.empresa||'—';
+      const est=c.estado||'';
+      const estadoCls=est.toLowerCase().includes('inactiv')?'p-err':'p-ok';
+      return `<div class="ci"><span class="cb">${ceco}</span><span class="cn">${nombre}</span>${empBadge(emp)}${est?`<span class="p ${estadoCls}" style="font-size:10px;">${est}</span>`:''}`;
+    }).join('')}</div>`:"";
     const mz=MOTIVOS_ZONAL[j]||[];
     const motH=mz.length>0?`<div style="margin-top:10px;"><div class="sl">Motivos de no cierre (${mz.reduce((s,m)=>s+m.n,0)})</div>${mz.slice(0,3).map(m=>`<div style="font-size:12px;color:var(--mu);padding:2px 0;">▸ ${m.m}: <strong style="color:var(--txt);">${m.n}</strong></div>`).join("")}</div>`:"";
     return `<div style="margin-bottom:14px;">
@@ -1358,19 +1374,36 @@ window.renderContratos=function(){
 
 // ══ FLOTA ══
 function renderFlotaResumen(){
-  const op=FLOTA.filter(v=>v.est==="Operativa").length,tal=FLOTA.filter(v=>v.est==="En taller").length,fs=FLOTA.filter(v=>v.est==="Fuera de servicio").length;
+  // Only show mantenimiento fleet (already filtered by parseControlVehicular)
+  // Exclude fuera de servicio from analysis
+  const flotaActiva = FLOTA.filter(v=>!v.est?.toLowerCase().includes('fuera'));
+  const op  = flotaActiva.filter(v=>v.est==="Operativa").length;
+  const tal = flotaActiva.filter(v=>v.est==="En taller").length;
+  const fs  = FLOTA.filter(v=>v.est?.toLowerCase().includes('fuera')).length;
   const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
+  const totalFlota = flotaActiva.length;
+  const psubFlota = document.getElementById("flota-res-psub");
+  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Col W = Mantenimiento) · ${op} operativas · ${tal} en taller`;
+  const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
-    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Total flota</div><div class="kv">${FLOTA.length}</div><div class="ks">Sin PREVIAL</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${Math.round(op/FLOTA.length*100)}%</div></div>
-    <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div></div>
-    <div class="kc re"><span class="ki">🚫</span><div class="kl">Fuera servicio</div><div class="kv">${fs}</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. taller</div><div class="kv">${totalH}</div></div>
-    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos gestionados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div></div>`;
+    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks">Col W = Mantenimiento</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${pctOp}%</div></div>
+    <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div><div class="ks">${totalFlota>0?Math.round(tal/totalFlota*100):0}%</div></div>
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Col N acumulado</div></div>
+    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Col P = SI</div></div>`;
 
-  dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{type:"doughnut",data:{labels:["Operativa","En taller","Fuera de servicio"],datasets:[{data:[op,tal,fs],backgroundColor:["#22c55e99","#f59e0b99","#ef444499"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
-  const emp2={};FLOTA.forEach(v=>{emp2[v.e]=(emp2[v.e]||0)+1;});
-  dc("ch-fl-emp");charts["ch-fl-emp"]=new Chart(document.getElementById("ch-fl-emp"),{type:"doughnut",data:{labels:Object.keys(emp2),datasets:[{data:Object.values(emp2),backgroundColor:["#4f8ef799","#7c3aed99","#8b8fa899","#14b8a699"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
+  dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{
+    type:"doughnut",
+    data:{labels:["Operativa","En taller"],datasets:[{data:[op,tal],backgroundColor:["#22c55e99","#f59e0b99"],borderWidth:0}]},
+    options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"},
+      tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} (${totalFlota>0?Math.round(c.raw/totalFlota*100):0}%)`}}}})
+  });
+  const emp2={};flotaActiva.forEach(v=>{emp2[v.e]=(emp2[v.e]||0)+1;});
+  dc("ch-fl-emp");charts["ch-fl-emp"]=new Chart(document.getElementById("ch-fl-emp"),{
+    type:"doughnut",
+    data:{labels:Object.keys(emp2),datasets:[{data:Object.values(emp2),backgroundColor:["#4f8ef799","#7c3aed99","#8b8fa899","#14b8a699"],borderWidth:0}]},
+    options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})
+  });
   dc("ch-fl-mes");charts["ch-fl-mes"]=new Chart(document.getElementById("ch-fl-mes"),{type:"bar",data:{labels:Object.keys(HORAS_MES),datasets:[{label:"Horas hábiles",data:Object.values(HORAS_MES),backgroundColor:Object.values(HORAS_MES).map(h=>h>700?"#ef444499":h>500?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   const top10=Object.entries(HORAS_PAT).sort((a,b)=>b[1]-a[1]).slice(0,10);
   dc("ch-fl-top10");charts["ch-fl-top10"]=new Chart(document.getElementById("ch-fl-top10"),{type:"bar",data:{labels:top10.map(p=>p[0]),datasets:[{label:"Horas",data:top10.map(p=>p[1]),backgroundColor:top10.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
@@ -1735,12 +1768,16 @@ function parseCorrEstado(rows){
     FIN.push(parseFloat(row[9])||0);     // Col J - Finalizado
     N.push(parseFloat(row[13])||0);      // Col N - Activos totales
     P.push(parseFloat(row[15])||0);      // Col P - Cerrados totales
-    // % cerrados: col U (index 20) — viene como decimal (0.9171), multiplicar x100
-    const tRaw = parseFloat(row[20])||0;
-    T.push(tRaw > 1 ? Math.round(tRaw*100)/100 : Math.round(tRaw*10000)/100);
-    // % abiertos: col X (index 23) — igual
-    const xRaw = parseFloat(row[23])||0;
-    X.push(xRaw > 1 ? Math.round(xRaw*100)/100 : Math.round(xRaw*10000)/100);
+    // Col T(19) = %CERRADOS/TOTAL, Col X(23) = %ABIERTOS/TOTAL
+    // Valores vienen como decimal (0.9171) → multiplicar x100
+    // Si ya vienen como porcentaje (>1), usarlos directamente
+    const tRaw = parseFloat(row[19])||0;  // Col T index 19
+    const xRaw = parseFloat(row[23])||0;  // Col X index 23
+    // Safe conversion: if > 1 assume already %, else multiply
+    const tVal = tRaw > 1 ? Math.round(tRaw*10)/10 : Math.round(tRaw*1000)/10;
+    const xVal = xRaw > 1 ? Math.round(xRaw*10)/10 : Math.round(xRaw*1000)/10;
+    T.push(tVal);
+    X.push(xVal);
     FN.push(parseFloat(row[22])||0);     // Col W - Flujo negativo
     TOTAL_ACUM.push(parseFloat(row[24])||0); // Col Y - Total acumulado
   });
