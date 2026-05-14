@@ -1884,60 +1884,61 @@ function renderComplementarios(){
 // ── Render Complementarios PAGE ──
 window.renderComplementariosPage = function(){
   const fj = document.getElementById('f-compl-jefe')?.value||'';
-  const ventaTotal = COMPL_DATA.venta_total;
-  if(!ventaTotal && !COMPL_DATA.porJefe.length) return;
-
+  const ventaTotal = COMPL_DATA.venta_total || 0;
   const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
 
-  // Populate jefe filter
+  // Populate jefe filter from porJefe (col D data)
   const sel = document.getElementById('f-compl-jefe');
   if(sel && sel.options.length <= 1){
-    COMPL_DATA.porJefe.forEach(j=>{ sel.innerHTML+=`<option value="${j.jefe}">${j.jefe}</option>`; });
+    COMPL_DATA.porJefe.forEach(j=>{
+      sel.innerHTML += `<option value="${j.jefe}">${j.jefe}</option>`;
+    });
   }
 
-  // ── Aplicar filtro por jefe ──
-  // porJefe y porServicio son tablas INDEPENDIENTES en la planilla
-  // No hay link directo jefe->servicio en la hoja "Resumen comercial"
-  // Al filtrar por jefe: mostramos solo ese jefe en el gráfico de jefes
-  // Los servicios siempre muestran todos (son independientes)
+  // ── Datos filtrados ──
   const jefes = fj
     ? COMPL_DATA.porJefe.filter(j=>j.jefe===fj)
     : COMPL_DATA.porJefe;
 
-  const svcs = COMPL_DATA.porServicio;
-  const ventas = fj
-    ? jefes.reduce((s,j)=>s+j.valor,0)
+  // Venta del filtro actual
+  const ventaFiltrada = fj
+    ? jefes.reduce((s,j)=>s+j.valor, 0)
     : ventaTotal;
 
-  // KPIs
-  const topJefe = jefes.length ? [...jefes].sort((a,b)=>b.valor-a.valor)[0] : null;
-  const topSvc  = svcs.length  ? [...svcs].sort((a,b)=>b.valor-a.valor)[0]  : null;
+  // Servicios: cuando hay filtro de jefe, usar detallePorJefe (col F→G→H)
+  // Cuando no hay filtro, usar porServicio (col G+H totales)
+  let svcsData;
+  if(fj){
+    svcsData = COMPL_DATA.detallePorJefe?.[fj] || [];
+  } else {
+    svcsData = COMPL_DATA.porServicio || [];
+  }
+
+  // ── KPIs ──
+  const topJefe = [...COMPL_DATA.porJefe].sort((a,b)=>b.valor-a.valor)[0];
+  const topSvc  = [...svcsData].sort((a,b)=>b.valor-a.valor)[0];
   const kp = document.getElementById('k-compl-page');
   if(kp) kp.innerHTML = `
-    <div class="kc bl"><span class="ki">📑</span><div class="kl">Adicionales aprobados</div><div class="kv">${COMPL_DATA.adicionales}</div><div class="ks">Complementarios activos</div></div>
-    <div class="kc gr"><span class="ki">💰</span><div class="kl">${fj?'Venta '+fj.split(' ')[0]:'Venta total'}</div><div class="kv" style="font-size:18px;">${fmtARS(fj?ventaFiltrada:ventas)}</div><div class="ks">${fj?Math.round(ventaFiltrada/ventaTotal*100)+'% del total':'Total acumulado'}</div></div>
-    <div class="kc pu"><span class="ki">👤</span><div class="kl">Jefes</div><div class="kv">${jefes.length}</div><div class="ks">${topJefe&&!fj?'Top: '+topJefe.jefe.split(' ')[0]+' '+fmtARS(topJefe.valor):''}</div></div>
-    <div class="kc or"><span class="ki">🏢</span><div class="kl">Servicios</div><div class="kv">${svcs.length||COMPL_DATA.porServicio.length}</div><div class="ks">${topSvc?'Top: '+topSvc.servicio:''}</div></div>
-    <div class="kc te"><span class="ki">🏆</span><div class="kl">Mayor venta (servicio)</div><div class="kv" style="font-size:14px;">${topSvc?topSvc.servicio:'—'}</div><div class="ks">${topSvc?fmtARS(topSvc.valor):''}</div></div>`;
+    <div class="kc bl"><span class="ki">📑</span><div class="kl">Adicionales aprobados</div><div class="kv">${COMPL_DATA.adicionales}</div><div class="ks">Total</div></div>
+    <div class="kc gr"><span class="ki">💰</span><div class="kl">${fj ? 'Venta — '+fj.split(' ')[0] : 'Venta total'}</div><div class="kv" style="font-size:18px;">${fmtARS(ventaFiltrada)}</div><div class="ks">${fj ? Math.round(ventaFiltrada/ventaTotal*100)+'% del total' : 'Acumulado'}</div></div>
+    <div class="kc pu"><span class="ki">👤</span><div class="kl">Jefes con adicionales</div><div class="kv">${COMPL_DATA.porJefe.length}</div><div class="ks">${topJefe ? 'Top: '+topJefe.jefe.split(' ')[0] : ''}</div></div>
+    <div class="kc or"><span class="ki">🏢</span><div class="kl">Servicios${fj?' ('+fj.split(' ')[0]+')':''}</div><div class="kv">${svcsData.length}</div><div class="ks">${topSvc ? 'Top: '+topSvc.servicio : '—'}</div></div>
+    <div class="kc te"><span class="ki">🏆</span><div class="kl">Mayor venta</div><div class="kv" style="font-size:13px;">${topSvc ? topSvc.servicio : '—'}</div><div class="ks">${topSvc ? fmtARS(topSvc.valor) : ''}</div></div>`;
 
-  // ── CHART: Venta por Jefe Zonal ──
+  // ── Chart: Barras por Jefe ──
   const jefesSort = [...jefes].sort((a,b)=>b.valor-a.valor);
   dc('ch-compl-jefe');
   if(jefesSort.length>0){
-    charts['ch-compl-jefe']=new Chart(document.getElementById('ch-compl-jefe'),{
-      type:'bar',
-      data:{
+    charts['ch-compl-jefe'] = new Chart(document.getElementById('ch-compl-jefe'), {
+      type: 'bar',
+      data: {
         labels: jefesSort.map(j=>j.jefe.split(' ').slice(0,2).join(' ')),
-        datasets:[{
-          label:'Venta por jefe',
-          data: jefesSort.map(j=>j.valor),
-          backgroundColor: COLORS.slice(0,jefesSort.length),
-          borderRadius:6
-        }]
+        datasets: [{ label:'Venta', data: jefesSort.map(j=>j.valor),
+          backgroundColor: COLORS.slice(0,jefesSort.length), borderRadius:6 }]
       },
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{label:c=>` ${fmtARS(c.raw)} (${Math.round(c.raw/ventas*100)}%)`}}},
+      options: { responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        plugins:{ legend:{display:false},
+          tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/ventaTotal*100)+'%)'}}},
         scales:{
           x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},
           y:{ticks:{color:'#8b8fa8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}
@@ -1945,54 +1946,44 @@ window.renderComplementariosPage = function(){
     });
   }
 
-  // ── CHART: Pie por Jefe ──
+  // ── Chart: Donut por Jefe ──
   dc('ch-compl-pie');
   if(jefesSort.length>0){
-    charts['ch-compl-pie']=new Chart(document.getElementById('ch-compl-pie'),{
-      type:'doughnut',
-      data:{
-        labels: jefesSort.map(j=>j.jefe.split(' ')[0]+' '+j.jefe.split(' ')[1]),
-        datasets:[{data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderWidth:0}]
+    charts['ch-compl-pie'] = new Chart(document.getElementById('ch-compl-pie'), {
+      type: 'doughnut',
+      data: {
+        labels: jefesSort.map(j=>j.jefe.split(' ')[0]),
+        datasets: [{ data: jefesSort.map(j=>j.valor),
+          backgroundColor: COLORS.slice(0,jefesSort.length), borderWidth:0 }]
       },
-      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',
-        plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:10},position:'right'},
-          tooltip:{callbacks:{label:c=>` ${fmtARS(c.raw)} · ${Math.round(c.raw/ventas*100)}%`}}}}
+      options: { responsive:true, maintainAspectRatio:false, cutout:'60%',
+        plugins:{ legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:10},position:'right'},
+          tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' · '+Math.round(c.raw/ventaTotal*100)+'%'}}}}
     });
   }
 
-  // ── CHART: Venta por Servicio ──
-  // When jefe filter active: use detallePorJefe (from "Complementarios y presupuestos")
-  // Otherwise: use porServicio (from "Resumen comercial" summary table)
-  let svcsDisplay;
-  if(fj && COMPL_DATA.detallePorJefe?.[fj]?.length>0){
-    svcsDisplay = COMPL_DATA.detallePorJefe[fj];
-  } else if(fj) {
-    // Jefe selected but no detail data yet — show empty with message
-    svcsDisplay = [];
-  } else {
-    svcsDisplay = COMPL_DATA.porServicio;
-  }
-  const svcsSort = [...svcsDisplay].sort((a,b)=>b.valor-a.valor);
+  // ── Chart: Top servicios por valor ──
+  const svcsSort = [...svcsData].sort((a,b)=>b.valor-a.valor);
   dc('ch-compl-svc');
-  // Show message if no service data for selected jefe
-  const noSvcMsg = document.getElementById('ch-compl-svc')?.parentElement;
-  if(svcsSort.length===0 && fj){
-    if(noSvcMsg) noSvcMsg.innerHTML=`<div style="color:var(--mu);font-size:12px;padding:20px;text-align:center;">Sin datos de servicios para ${fj}<br><span style="font-size:11px;">Los datos de detalle cargan desde "Complementarios y presupuestos"</span></div>`;
-  } else if(svcsSort.length>0){
-    charts['ch-compl-svc']=new Chart(document.getElementById('ch-compl-svc'),{
-      type:'bar',
-      data:{
+  const svcContainer = document.getElementById('ch-compl-svc');
+  if(svcsSort.length === 0 && fj){
+    if(svcContainer) svcContainer.parentElement.innerHTML =
+      `<div style="color:var(--mu);font-size:12px;padding:20px;text-align:center;">
+        Sin datos de servicios para <strong>${fj}</strong><br>
+        <span style="font-size:11px;">Cargando desde hoja Resumen comercial col F→G→H</span>
+      </div>`;
+  } else if(svcsSort.length>0 && svcContainer){
+    const ventaRef = ventaFiltrada || ventaTotal || 1;
+    charts['ch-compl-svc'] = new Chart(svcContainer, {
+      type: 'bar',
+      data: {
         labels: svcsSort.map(d=>d.servicio),
-        datasets:[{
-          label:'Venta por servicio',
-          data: svcsSort.map(d=>d.valor),
-          backgroundColor: svcsSort.map((_,i)=>COLORS[i%COLORS.length]),
-          borderRadius:5
-        }]
+        datasets: [{ label:'Venta', data: svcsSort.map(d=>d.valor),
+          backgroundColor: svcsSort.map((_,i)=>COLORS[i%COLORS.length]), borderRadius:5 }]
       },
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
-        plugins:{legend:{display:false},
-          tooltip:{callbacks:{label:c=>` ${fmtARS(c.raw)} (${Math.round(c.raw/ventas*100)}%)`}}},
+      options: { responsive:true, maintainAspectRatio:false, indexAxis:'y',
+        plugins:{ legend:{display:false},
+          tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/ventaRef*100)+'%)'}}},
         scales:{
           x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},
           y:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}
@@ -2000,30 +1991,30 @@ window.renderComplementariosPage = function(){
     });
   }
 
-  // ── TABLAS LADO A LADO ──
+  // ── Tabla lado a lado: jefes | servicios ──
   const tbody = document.getElementById('tb-compl');
   if(tbody){
-    // Combine both tables side by side using HTML
     const maxRows = Math.max(jefesSort.length, svcsSort.length);
-    const ventaRef = ventas || ventaTotal;
+    const ventaRef = ventaFiltrada || ventaTotal || 1;
     let rows = '';
     for(let i=0; i<maxRows; i++){
       const j = jefesSort[i];
       const s = svcsSort[i];
-      const pctJ = j ? Math.round(j.valor/ventas*100) : 0;
-      const pctS = s ? Math.round(s.valor/ventas*100) : 0;
+      const pctJ = j ? Math.round(j.valor/ventaTotal*100) : 0;
+      const pctS = s ? Math.round(s.valor/ventaRef*100) : 0;
       rows += `<tr>
         <td style="font-weight:600;">${j?j.jefe:'—'}</td>
         <td style="font-family:'JetBrains Mono';color:var(--ok);">${j?fmtARS(j.valor):'—'}</td>
-        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctJ*3)}%;background:var(--ok);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctJ}%</span></div></td>
+        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctJ*2)}%;background:var(--ok);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctJ}%</span></div></td>
         <td style="border-left:1px solid var(--b);padding-left:16px;color:var(--ac);">${s?s.servicio:'—'}</td>
         <td style="font-family:'JetBrains Mono';color:var(--ac);">${s?fmtARS(s.valor):'—'}</td>
-        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctS*3)}%;background:var(--ac);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctS}%</span></div></td>
+        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctS*2)}%;background:var(--ac);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctS}%</span></div></td>
       </tr>`;
     }
     tbody.innerHTML = rows;
   }
 };
+
 
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
