@@ -883,7 +883,7 @@ onSnapshot(collection(db,"sitios"),snap=>{
   else{sitios=snap.docs.map(d=>({fid:d.id,...d.data()}));}
   document.getElementById("loading").style.display="none";
   setSyncStatus("online");
-  renderAll();
+  try { renderAll(); } catch(e) { console.error('renderAll error (snapshot):', e); }
 });
 
 async function seedSitios(){
@@ -2495,11 +2495,14 @@ async function actualizarFlota(){
 async function actualizarComplementarios(){
   setGsStatus('compl','loading');
   try {
-    // Fetch both sheets in parallel
-    const [rows, rowsDetalle] = await Promise.all([
-      fetchSheet(GS_COMPL, 'Resumen comercial'),
-      fetchSheet(GS_COMPL, 'Complementarios y presupuestos')
-    ]);
+    // Fetch Resumen comercial (required) + Complementarios y presupuestos (optional)
+    const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
+    let rowsDetalle = [];
+    try {
+      rowsDetalle = await fetchSheet(GS_COMPL, 'Complementarios y presupuestos');
+    } catch(e2) {
+      console.warn('Complementarios y presupuestos no disponible:', e2);
+    }
     if(rows.length >= 2){
       // Row 1 (index 1): col A = adicionales, col B = venta total
       const vals = rows[1];
@@ -2971,9 +2974,9 @@ injectRefreshButton();
 
 // Carga inicial: primero renderiza con datos estáticos (instantáneo),
 // luego actualiza desde Google Sheets en segundo plano
-renderAll();
+try { renderAll(); } catch(e) { console.error('renderAll error:', e); }
 actualizarTodo(false).then(()=>{
-  renderAll();
+  try { renderAll(); } catch(e) { console.error('renderAll error (post-update):', e); }
   startAutoRefresh();
 });
 </script>
