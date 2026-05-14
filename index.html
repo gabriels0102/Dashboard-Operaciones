@@ -242,7 +242,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="nav-section">Correctivos</div>
     <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
     <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
-    <button class="ni" data-page="zonales"><span class="ni-icon">🗺️</span><span class="ni-label">Resumen por Jefe Zonal</span></button>
+    <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
@@ -492,15 +492,16 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 </section>
 
 <!-- RESUMEN POR JEFE ZONAL -->
+<!-- RESUMEN ZONALES -->
 <section class="page" id="page-zonales">
   <div class="topbar">
-    <div><div class="ptitle">Resumen por Jefe Zonal</div><div class="psub">Abonos de ley, correctivos y contratos</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <select id="f-zonal" onchange="window.renderZonales()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
-      <select id="f-emp-zonal" onchange="window.renderZonales()" style="min-width:110px;"><option value="">Todas las empresas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option></select>
-    </div>
+    <div><div class="ptitle">Resumen por Jefe Zonal</div><div class="psub">En mantenimiento — próximamente disponible</div></div>
   </div>
-  <div id="zonales-cont"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;">
+    <div style="font-size:48px;margin-bottom:16px;">🔧</div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Módulo en revisión</div>
+    <div style="font-size:14px;color:var(--mu);max-width:400px;">Este módulo está siendo mejorado. Estará disponible en la próxima actualización.</div>
+  </div>
 </section>
 
 <!-- SITIOS -->
@@ -2506,28 +2507,48 @@ async function actualizarComplementarios(){
       COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
       COMPL_DATA.venta_total = parseFloat(vals[1]) || 0;
 
-        // Col D+E = jefes zonales con su venta total
-      // Col G+H = servicios con su venta total (independientes)
+        // Resumen comercial estructura:
+      // D(3)=jefe zonal (tabla jefes), E(4)=venta total jefe
+      // F(5)=jefe zonal del servicio, G(6)=servicio, H(7)=valor servicio
+      // Suma total rows are skipped
       const porJefe = [];
       const porServicio = [];
+      const detallePorJefeMap = {}; // jefe → [{servicio, valor}]
+
       rows.slice(1).forEach(row => {
-        // Jefes: col D (index 3) = nombre, col E (index 4) = valor
+        // Tabla jefes: col D(3) = jefe, col E(4) = venta total
         const jefe = String(row[3]||'').trim();
         const valorJefe = parseFloat(row[4])||0;
         if(jefe && jefe !== 'Suma total' && valorJefe > 0){
           porJefe.push({jefe, valor: valorJefe});
         }
-        // Servicios: col G (index 6) = nombre, col H (index 7) = valor
-        const svc = String(row[6]||'').trim();
-        const valorSvc = parseFloat(row[7])||0;
+
+        // Tabla servicios: col F(5) = jefe del servicio, col G(6) = servicio, col H(7) = valor
+        const jefesSvc = String(row[5]||'').trim(); // F = jefe asociado al servicio
+        const svc      = String(row[6]||'').trim(); // G = nombre servicio
+        const valorSvc = parseFloat(row[7])||0;     // H = valor venta
+
         if(svc && svc !== 'Suma total' && valorSvc > 0){
           porServicio.push({servicio: svc, valor: valorSvc});
+          // Col F = jefe del servicio — link service to jefe
+          const jefeKey = (jefesSvc && jefesSvc !== 'Suma total' && jefesSvc !== 'JEFE ZONAL') ? jefesSvc : null;
+          if(jefeKey){
+            if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
+            detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
+          }
         }
       });
+
       COMPL_DATA.porJefe = porJefe;
       COMPL_DATA.porServicio = porServicio;
       COMPL_DATA.detalle = porJefe;
       COMPL_DATA.rawRows = rows.slice(1);
+      // Build detallePorJefe from Resumen comercial col F(jefe)→G(servicio)→H(valor)
+      // This is the authoritative source — always overwrite
+      COMPL_DATA.detallePorJefe = {};
+      Object.entries(detallePorJefeMap).forEach(([j,svcs])=>{
+        COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
+      });
 
     // Parse "Complementarios y presupuestos": A(0)=jefe, C(2)=servicio, AD(29)=valor
     const detallePorJefe = {};
