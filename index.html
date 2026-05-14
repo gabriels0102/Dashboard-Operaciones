@@ -2099,7 +2099,6 @@ function parseCorrEstado(rows){
     FN.push(parseFloat(row[22])||0);     // Col W - Flujo negativo
     TOTAL_ACUM.push(parseFloat(row[24])||0); // Col Y - Total acumulado
   });
-  }
   return {f:fechas, AB, EC, PEND, COMPL, FIN, N, P, T, X, FN, TOTAL_ACUM};
 }
 
