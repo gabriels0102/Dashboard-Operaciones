@@ -994,7 +994,7 @@ function renderDashboard(){
   const arcs=[
     {id:0,pct:pctCorr,color:'#4f8ef7',v1:e.cer.toLocaleString(),l1:'Cerrados',v2:e.total.toLocaleString(),l2:'Generados',trend:pctCorr>=90?'▲ Óptimo':pctCorr>=75?'→ En control':'▼ Revisar',trendCls:pctCorr>=90?'trend-up':pctCorr>=75?'trend-nt':'trend-dn'},
     {id:1,pct:pctFlota,color:'#22c55e',v1:op,l1:'Operativas',v2:flotaTot,l2:'Total flota',trend:pctFlota>=90?'▲ Óptimo':pctFlota>=75?'→ Normal':'▼ Atención',trendCls:pctFlota>=90?'trend-up':pctFlota>=75?'trend-nt':'trend-dn'},
-    {id:2,pct:pctDot||95,color:'#f97316',v1:dotRe||'—',l1:'Relevada',v2:dotAp===1?'—':dotAp,l2:'Aprobada',trend:pctDot>=100?'▲ Cobertura':pctDot>=90?'→ Normal':'▼ Déficit',trendCls:pctDot>=100?'trend-up':pctDot>=90?'trend-nt':'trend-dn'},
+    {id:2,pct:pctDot||95,color:'#f97316',v1:dotRe||'—',l1:'Cumplida',v2:dotAp===1?'—':dotAp,l2:'Aprobada',trend:pctDot>=100?'▲ Cobertura':pctDot>=90?'→ Normal':'▼ Déficit',trendCls:pctDot>=100?'trend-up':pctDot>=90?'trend-nt':'trend-dn'},
     {id:3,pct:pctPrev||0,color:'#7c3aed',v1:prevComp||'—',l1:'Completados',v2:prevTot||'—',l2:'Programados',trend:pctPrev>=85?'▲ Bueno':pctPrev>=70?'→ Normal':'▼ Revisar',trendCls:pctPrev>=85?'trend-up':pctPrev>=70?'trend-nt':'trend-dn'},
     {id:4,pct:pctAbonos||0,color:'#14b8a6',v1:abonosVig||'—',l1:'Vigentes',v2:abonosTot||'—',l2:'Total',trend:pctAbonos>=75?'→ En control':'▼ Vencimientos',trendCls:pctAbonos>=75?'trend-nt':'trend-dn'},
   ];
