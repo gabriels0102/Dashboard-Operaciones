@@ -309,7 +309,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-2"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-2" style="color:#f97316;">—%</div><div class="kpi-arc-icon">👥</div></div>
       </div>
-      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-2">—</div><div class="kpi-arc-val-l">Relevada</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-2">—</div><div class="kpi-arc-val-l">Aprobada</div></div></div>
+      <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-2">—</div><div class="kpi-arc-val-l">Cumplida</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-2">—</div><div class="kpi-arc-val-l">Aprobada</div></div></div>
     </div>
     <div class="kpi-arc-card kac-purple" id="arc-card-3">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-3">—</span>
@@ -1861,9 +1861,7 @@ function renderSiniestros(){
 // ══ EXPORT ══
 // ── Format ARS currency ──
 function fmtARS(n){
-  if(n >= 1e9) return '$' + (n/1e9).toFixed(2).replace('.',',') + 'B';
-  if(n >= 1e6) return '$' + (n/1e6).toFixed(1).replace('.',',') + 'M';
-  if(n >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
+  if(!n || isNaN(n)) return '$0';
   return '$' + Math.round(n).toLocaleString('es-AR');
 }
 
