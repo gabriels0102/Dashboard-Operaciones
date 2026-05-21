@@ -187,7 +187,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
+.alertas-strip{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -1025,7 +1025,7 @@ function renderDashboard(){
   if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
   if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
   const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  if(strip) strip.innerHTML=alertas.slice(0,5).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
