@@ -1014,8 +1014,8 @@ function renderDashboard(){
   // Alertas
   const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
   if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
   if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
