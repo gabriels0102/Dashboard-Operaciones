@@ -1186,7 +1186,7 @@ window.renderCorr=function(){
   const rubData = fz
     ? CORR_ZONAL[fz]?.rubros||{}
     : window.CORR_GLOBAL?.rubros||{};
-  const rubSort = Object.entries(rubData).filter(([k])=>k).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const rubSort = Object.entries(rubData).filter(([k])=>k && k.toLowerCase()!=='limpieza').sort((a,b)=>b[1]-a[1]).slice(0,10);
   dc("ch-corr-rubros");
   if(rubSort.length>0){
     charts["ch-corr-rubros"]=new Chart(document.getElementById("ch-corr-rubros"),{
