@@ -1664,7 +1664,7 @@ window.renderContratos=function(){
   const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
   const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
   let html="<div class='kg' style='margin-bottom:14px;'>"
-    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+filtered.length+"</div></div>"
+    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
     +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
     +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
     +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
