@@ -1646,8 +1646,8 @@ window.renderContratos=function(){
   if(!cont) return;
   const psub = document.getElementById("cont-psub");
   if(psub && CONTRATOS_RT.length>0){
-    const act=CONTRATOS_RT.filter(c=>(c.estado||"").toLowerCase().includes("activ")).length;
-    const inact=CONTRATOS_RT.filter(c=>(c.estado||"").toLowerCase().includes("inactiv")).length;
+    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
+    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
     const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
     psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
   }
@@ -1655,12 +1655,12 @@ window.renderContratos=function(){
   const filtered=CONTRATOS_RT.filter(ct=>{
     if(fr&&ct.jefe!==fr)return false;
     if(femp&&ct.empresa!==femp)return false;
-    if(fest&&(ct.estado||"").toLowerCase()!==fest.toLowerCase())return false;
+    if(fest&&ct.estado!==fest)return false;
     if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
     return true;
   });
-  const actF=filtered.filter(c=>(c.estado||"").toLowerCase().includes("activ")).length;
-  const inactF=filtered.filter(c=>(c.estado||"").toLowerCase().includes("inactiv")).length;
+  const actF=filtered.filter(c=>c.estado==="Activo").length;
+  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
   const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
   const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
   let html="<div class='kg' style='margin-bottom:14px;'>"
@@ -1671,8 +1671,8 @@ window.renderContratos=function(){
     +"</div>";
   Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
     const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
-    const aJ=cts.filter(c=>(c.estado||"").toLowerCase().includes("activ")).length;
-    const iJ=cts.filter(c=>(c.estado||"").toLowerCase().includes("inactiv")).length;
+    const aJ=cts.filter(c=>c.estado==="Activo").length;
+    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
     html+="<div class='card' style='margin-bottom:10px;'>"
       +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
       +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
