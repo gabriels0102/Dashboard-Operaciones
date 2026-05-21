@@ -1072,10 +1072,13 @@ function renderDashboard(){
   // Tabla resumen
   document.getElementById("tb-resumen").innerHTML=RESP.map(r=>{
     const d=CORR_ZONAL[r];if(!d)return "";
-    const cer=d.fin+d.comp,tasa=d.total>0?Math.round(cer/d.total*100):0;
+    const cer=d.fin+d.comp;
+    // Total meaningful = activos + finalizados + complementarios (exclude anulados/rechazados)
+    const totalMean=(d.ab||0)+(d.ec||0)+(d.pend||0)+d.fin+d.comp;
+    const tasa=totalMean>0?Math.round(cer/totalMean*100):0;
     const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":d.lead>0?"var(--ok)":"var(--mu)";
-    const nc=CONTRATOS_RT.length>0?CONTRATOS_RT.filter(c=>c.jefe===r).length:(CONTR[r]||[]).length;
-    return `<tr><td><strong>${r}</strong></td><td>${pill(d.ab+d.ec,"p-err")}</td><td>${pill(d.fin,"p-ok")}</td><td>${pill(d.comp,"p-warn")}</td><td><strong>${d.total}</strong></td><td>${pill(tasa+"%",tasa>=70?"p-ok":tasa>=40?"p-warn":"p-err")}</td><td style="color:${lc};font-family:'JetBrains Mono';">${d.lead>0?Math.round(d.lead)+"d":"—"}</td><td>${pill(nc,"p-mu")}</td></tr>`;
+    const nc=CONTRATOS_RT.length>0?CONTRATOS_RT.filter(c=>c.jefe===r&&c.estado==="Activo").length:(CONTR[r]||[]).length;
+    return `<tr><td><strong>${r}</strong></td><td>${pill(d.ab+d.ec,"p-err")}</td><td>${pill(d.fin,"p-ok")}</td><td>${pill(d.comp,"p-warn")}</td><td><strong>${totalMean}</strong></td><td>${pill(tasa+"%",tasa>=70?"p-ok":tasa>=40?"p-warn":"p-err")}</td><td style="color:${lc};font-family:'JetBrains Mono';">${d.lead>0?Math.round(d.lead)+"d":"—"}</td><td>${pill(nc,"p-mu")}</td></tr>`;
   }).join("");
 
   // Populate hidden divs for abonos (used by renderAll)
@@ -2187,7 +2190,7 @@ function parseCorrZonal(rows){
     // Categoría
     if(categoria) categoriasPorJefe[jefe][categoria]=(categoriasPorJefe[jefe][categoria]||0)+1;
     // Rubro
-    if(rubro) rubrosPorJefe[jefe][rubro]=(rubrosPorJefe[jefe][rubro]||0)+1;
+    if(rubro && rubro.toLowerCase()!=='limpieza') rubrosPorJefe[jefe][rubro]=(rubrosPorJefe[jefe][rubro]||0)+1;
     // Motivo + submotivo (solo activos)
     if(['Abierto','En curso','Pendiente'].includes(estado)){
       if(motivo){
