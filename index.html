@@ -542,10 +542,10 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div><div class="ptitle">Contratos por Responsable</div><div class="psub" id="cont-psub">Cargando desde Google Sheets...</div></div>
   </div>
   <div class="fb">
-    <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:190px;"><option value="">Todos</option></select>
-    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option><option value="PVP">PVP</option></select>
-    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activos</option><option value="Inactivo">Inactivos</option></select>
-    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o nombre..." style="width:180px;" oninput="renderContratos()"/>
+    <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:200px;"><option value="">Todos los responsables</option></select>
+    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option></select>
+    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select>
+    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o CECO..." style="width:190px;" oninput="renderContratos()"/>
   </div>
   <div id="contratos-cont"></div>
 </section>
@@ -1638,20 +1638,58 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  // Use real-time data if available, fallback to static
-  const useRT = CONTRATOS_RT.length > 0;
-
-  const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const c=document.getElementById("contratos-cont");if(!c)return;
-  c.innerHTML=RESP.map(r=>{
-    if(fr&&r!==fr)return "";
-    let cs=CONTR[r]||[];
-    if(femp)cs=cs.filter(c2=>c2.e===femp);
-    if(busq)cs=cs.filter(c2=>c2.n.toLowerCase().includes(busq)||c2.c.toLowerCase().includes(busq));
-    if(!cs.length)return `<div class="card" style="margin-bottom:8px;opacity:.35;"><div style="font-size:13px;font-weight:600;">${r}</div><div style="font-size:12px;color:var(--mu);">${(CONTR[r]||[]).length===0?"Sin contratos.":"Sin contratos para los filtros."}</div></div>`;
-    const init=ini(r);const emp2={};cs.forEach(c2=>{emp2[c2.e]=(emp2[c2.e]||0)+1;});
-    return `<div class="card" style="margin-bottom:10px;"><div class="ch"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${init}</div><div><div class="ct">${r}</div><div class="cs">${cs.length} contratos · ${Object.entries(emp2).map(([e,n])=>n+" "+e).join(" · ")}</div></div></div></div><div style="display:grid;gap:4px;">${cs.map(c2=>`<div class="ci"><span class="cb">${c2.c}</span><span class="cn">${c2.n}</span>${empBadge(c2.e)}</div>`).join("")}</div></div>`;
-  }).join("");
+  const fr   = document.getElementById("f-cont-resp")?.value||"";
+  const femp = document.getElementById("f-cont-emp")?.value||"";
+  const fest = document.getElementById("f-cont-estado")?.value||"";
+  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const cont = document.getElementById("contratos-cont");
+  if(!cont) return;
+  const psub = document.getElementById("cont-psub");
+  if(psub && CONTRATOS_RT.length>0){
+    const act=CONTRATOS_RT.filter(c=>(c.estado||"").toLowerCase().includes("activ")).length;
+    const inact=CONTRATOS_RT.filter(c=>(c.estado||"").toLowerCase().includes("inactiv")).length;
+    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
+    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
+  }
+  if(CONTRATOS_RT.length===0){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando contratos...</div>";return;}
+  const filtered=CONTRATOS_RT.filter(ct=>{
+    if(fr&&ct.jefe!==fr)return false;
+    if(femp&&ct.empresa!==femp)return false;
+    if(fest&&(ct.estado||"").toLowerCase()!==fest.toLowerCase())return false;
+    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
+    return true;
+  });
+  const actF=filtered.filter(c=>(c.estado||"").toLowerCase().includes("activ")).length;
+  const inactF=filtered.filter(c=>(c.estado||"").toLowerCase().includes("inactiv")).length;
+  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
+  const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
+  let html="<div class='kg' style='margin-bottom:14px;'>"
+    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+filtered.length+"</div></div>"
+    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
+    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
+    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
+    +"</div>";
+  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
+    const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
+    const aJ=cts.filter(c=>(c.estado||"").toLowerCase().includes("activ")).length;
+    const iJ=cts.filter(c=>(c.estado||"").toLowerCase().includes("inactiv")).length;
+    html+="<div class='card' style='margin-bottom:10px;'>"
+      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
+      +"<div><div class='ct'>"+jefe+"</div>"
+      +"<div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div>"
+      +"</div></div></div><div style='display:grid;gap:4px;'>";
+    cts.forEach(function(ct){
+      const ecl=(ct.estado||"").toLowerCase().includes("inactiv")?"p-err":"p-ok";
+      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
+      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
+        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
+        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
+        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span></div>";
+    });
+    html+="</div></div>";
+  });
+  cont.innerHTML=html;
 };
 
 // ══ FLOTA ══
@@ -2034,7 +2072,7 @@ const GS_FLOTA       = "https://script.google.com/macros/s/AKfycbzQBuPLrw73naclh
 const GS_DOTACION    = "https://script.google.com/macros/s/AKfycbwy9wb-xeusjbqtQfC3l2T8U3kz-N3yISoh2-uaxJMxOuAzTR1-KCWv4eE0v8EM051t/exec";
 const GS_PREV        = "https://script.google.com/macros/s/AKfycby8xumMghsFwHw5Ua0EtJISVLJtYmPaI0HlMizp5tIUAEgRrB7D5JwYP19H7onMBy7O/exec";
 const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qxfKWPdopWMVn7uV2WDIpc0I6hLvoUImEJAaGwEnGbHaIvvy8_d7X6Q/exec";
-const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycby4uQ4OiPkTrY96Puy8d5vPaO77Qv2QtFzJP4gc26BWfLUexXm5T0pekMkrtsum69N7Ew/exec";
+const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycbxyz5Jo012oNdhv41C8SHkr8--mbSUoX1ssFTGFFyHdshd73tAxGywIwHOL3D4D3qKd7g/exec";
 const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
 let lastUpdateCorr   = null;
 let lastUpdateFlota  = null;
@@ -2574,25 +2612,26 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO/CECO, D(3)=ESTADO
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO
     const result = [];
     rows.slice(1).forEach(row=>{
       const empresa  = String(row[0]||'').trim();
       const jefe     = String(row[1]||'').trim();
       const servicio = String(row[2]||'').trim();
-      const estado   = String(row[3]||'').trim();
+      const ceco     = String(row[3]||'').trim();
+      const estado   = String(row[4]||'').trim();
       if(!jefe && !servicio) return;
-      result.push({empresa, jefe, servicio, estado});
+      result.push({empresa, jefe, servicio, ceco, estado});
     });
     if(result.length > 0){
       CONTRATOS_RT = result;
       // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
-      const sel=document.getElementById("f-cont-resp");
-      if(sel){
-        sel.innerHTML='<option value="">Todos</option>';
-        jefes.forEach(j=>{ sel.innerHTML+=`<option value="${j}">${j}</option>`; });
-      }
+      const emps=[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
+      const selR=document.getElementById("f-cont-resp");
+      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
+      const selE=document.getElementById("f-cont-emp");
+      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
     }
     setGsStatus('cont','ok');
     renderContratos();
