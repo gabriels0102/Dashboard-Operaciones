@@ -187,7 +187,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
+.alertas-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -542,10 +542,10 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div><div class="ptitle">Contratos por Responsable</div><div class="psub" id="cont-psub">Cargando desde Google Sheets...</div></div>
   </div>
   <div class="fb">
-    <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:190px;"><option value="">Todos</option></select>
-    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option><option value="PVP">PVP</option></select>
-    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activos</option><option value="Inactivo">Inactivos</option></select>
-    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o nombre..." style="width:180px;" oninput="renderContratos()"/>
+    <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:200px;"><option value="">Todos los responsables</option></select>
+    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option></select>
+    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select>
+    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o CECO..." style="width:190px;" oninput="renderContratos()"/>
   </div>
   <div id="contratos-cont"></div>
 </section>
@@ -1014,18 +1014,18 @@ function renderDashboard(){
   // Alertas
   const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err',col:1});
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn',col:2});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
+  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn',col:3});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
-  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
+  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn',col:4});
   let abonosVenc=0;
   if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
+  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err',col:5});
   if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
   const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  if(strip) strip.innerHTML=alertas.slice(0,5).map(a=>`<div class="alerta-item ${a.cls}" style="${a.col?'grid-column:'+a.col:''}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1073,6 +1073,7 @@ function renderDashboard(){
   document.getElementById("tb-resumen").innerHTML=RESP.map(r=>{
     const d=CORR_ZONAL[r];if(!d)return "";
     const cer=d.fin+d.comp;
+    // Total meaningful = activos + finalizados + complementarios (exclude anulados/rechazados)
     const totalMean=(d.ab||0)+(d.ec||0)+(d.pend||0)+d.fin+d.comp;
     const tasa=totalMean>0?Math.round(cer/totalMean*100):0;
     const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":d.lead>0?"var(--ok)":"var(--mu)";
@@ -1188,7 +1189,7 @@ window.renderCorr=function(){
   const rubData = fz
     ? CORR_ZONAL[fz]?.rubros||{}
     : window.CORR_GLOBAL?.rubros||{};
-  const rubSort = Object.entries(rubData).filter(([k])=>k).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const rubSort = Object.entries(rubData).filter(([k])=>k && k.toLowerCase()!=='limpieza').sort((a,b)=>b[1]-a[1]).slice(0,10);
   dc("ch-corr-rubros");
   if(rubSort.length>0){
     charts["ch-corr-rubros"]=new Chart(document.getElementById("ch-corr-rubros"),{
@@ -1640,20 +1641,131 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  // Use real-time data if available, fallback to static
-  const useRT = CONTRATOS_RT.length > 0;
-
-  const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const c=document.getElementById("contratos-cont");if(!c)return;
-  c.innerHTML=RESP.map(r=>{
-    if(fr&&r!==fr)return "";
-    let cs=CONTR[r]||[];
-    if(femp)cs=cs.filter(c2=>c2.e===femp);
-    if(busq)cs=cs.filter(c2=>c2.n.toLowerCase().includes(busq)||c2.c.toLowerCase().includes(busq));
-    if(!cs.length)return `<div class="card" style="margin-bottom:8px;opacity:.35;"><div style="font-size:13px;font-weight:600;">${r}</div><div style="font-size:12px;color:var(--mu);">${(CONTR[r]||[]).length===0?"Sin contratos.":"Sin contratos para los filtros."}</div></div>`;
-    const init=ini(r);const emp2={};cs.forEach(c2=>{emp2[c2.e]=(emp2[c2.e]||0)+1;});
-    return `<div class="card" style="margin-bottom:10px;"><div class="ch"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${init}</div><div><div class="ct">${r}</div><div class="cs">${cs.length} contratos · ${Object.entries(emp2).map(([e,n])=>n+" "+e).join(" · ")}</div></div></div></div><div style="display:grid;gap:4px;">${cs.map(c2=>`<div class="ci"><span class="cb">${c2.c}</span><span class="cn">${c2.n}</span>${empBadge(c2.e)}</div>`).join("")}</div></div>`;
-  }).join("");
+  const fr   = document.getElementById("f-cont-resp")?.value||"";
+  const femp = document.getElementById("f-cont-emp")?.value||"";
+  const fest = document.getElementById("f-cont-estado")?.value||"";
+  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const cont = document.getElementById("contratos-cont");
+  if(!cont) return;
+  const psub = document.getElementById("cont-psub");
+  if(psub && CONTRATOS_RT.length>0){
+    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
+    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
+    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
+    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
+  }
+  if(CONTRATOS_RT.length===0){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando contratos...</div>";return;}
+  const filtered=CONTRATOS_RT.filter(ct=>{
+    if(fr&&ct.jefe!==fr)return false;
+    if(femp&&ct.empresa!==femp)return false;
+    if(fest&&ct.estado!==fest)return false;
+    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
+    return true;
+  });
+  const actF=filtered.filter(c=>c.estado==="Activo").length;
+  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
+  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
+  const hoy2=new Date();
+  function pF(s){try{const p=(s||'').split('/');return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
+  function dD(s){const d=pF(s);return d?Math.round((d-hoy2)/864e5):null;}
+  const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
+  const vence30 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
+  const vence90 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
+  const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
+  let html="<div class='kg' style='margin-bottom:14px;'>"
+    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
+    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
+    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
+    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
+    +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
+    +(vence30>0?"<div class='kc am'><span class='ki'>⚠️</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+vence30+"</div></div>":"")
+    +(vence90>0?"<div class='kc or'><span class='ki'>📅</span><div class='kl'>Vence ≤90d</div><div class='kv'>"+vence90+"</div></div>":"")
+    +"</div>";
+  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
+    const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
+    const aJ=cts.filter(c=>c.estado==="Activo").length;
+    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
+    html+="<div class='card' style='margin-bottom:10px;'>"
+      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
+      +"<div><div class='ct'>"+jefe+"</div>"
+      +"<div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div>"
+      +"</div></div></div><div style='display:grid;gap:4px;'>";
+    cts.forEach(function(ct){
+      const ecl=(ct.estado||"").toLowerCase().includes("inactiv")?"p-err":"p-ok";
+      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
+            const dd=dD(ct.vence||"");
+      let vcl="p-mu",vl=ct.vence||"Sin fecha";
+      if(dd!==null){if(dd<0){vcl="p-err";vl="Vencido "+Math.abs(dd)+"d";}else if(dd<=30){vcl="p-err";vl="Vence "+dd+"d";}else if(dd<=90){vcl="p-warn";vl="Vence "+dd+"d";}else{vcl="p-mu";vl=ct.vence;}}
+      else if(!ct.vence||ct.vence==="Sin información"||ct.vence==="Sin informacion"){vcl="p-mu";vl="Sin fecha";}
+      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
+        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
+        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
+        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
+        +"<span class='p "+vcl+"' style='font-size:10px;'>📅 "+vl+"</span>"
+        +"</div>";
+    });ratos=function(){
+  const fr   = document.getElementById("f-cont-resp")?.value||"";
+  const femp = document.getElementById("f-cont-emp")?.value||"";
+  const fest = document.getElementById("f-cont-estado")?.value||"";
+  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const cont = document.getElementById("contratos-cont");
+  if(!cont) return;
+  const psub = document.getElementById("cont-psub");
+  if(psub && CONTRATOS_RT.length>0){
+    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
+    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
+    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
+    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
+  }
+  if(CONTRATOS_RT.length===0){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando contratos...</div>";return;}
+  const filtered=CONTRATOS_RT.filter(ct=>{
+    if(fr&&ct.jefe!==fr)return false;
+    if(femp&&ct.empresa!==femp)return false;
+    if(fest&&ct.estado!==fest)return false;
+    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
+    return true;
+  });
+  const actF=filtered.filter(c=>c.estado==="Activo").length;
+  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
+  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
+  const hoy2=new Date();
+  function pF(s){try{const p=(s||'').split('/');return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
+  function dD(s){const d=pF(s);return d?Math.round((d-hoy2)/864e5):null;}
+  const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
+  const vence30 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
+  const vence90 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
+  const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
+  let html="<div class='kg' style='margin-bottom:14px;'>"
+    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
+    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
+    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
+    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
+    +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
+    +(vence30>0?"<div class='kc am'><span class='ki'>⚠️</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+vence30+"</div></div>":"")
+    +(vence90>0?"<div class='kc or'><span class='ki'>📅</span><div class='kl'>Vence ≤90d</div><div class='kv'>"+vence90+"</div></div>":"")
+    +"</div>";
+  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
+    const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
+    const aJ=cts.filter(c=>c.estado==="Activo").length;
+    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
+    html+="<div class='card' style='margin-bottom:10px;'>"
+      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
+      +"<div><div class='ct'>"+jefe+"</div>"
+      +"<div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div>"
+      +"</div></div></div><div style='display:grid;gap:4px;'>";
+    cts.forEach(function(ct){
+      const ecl=(ct.estado||"").toLowerCase().includes("inactiv")?"p-err":"p-ok";
+      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
+      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
+        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
+        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
+        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span></div>";
+    });
+    html+="</div></div>";
+  });
+  cont.innerHTML=html;
 };
 
 // ══ FLOTA ══
@@ -2286,73 +2398,31 @@ function parseTurnos(rows){
 }
 
 // ── Parser: "Estadistica 3" ──
-// ── Parser: "Dashboard" hoja flota → datos pre-agregados mantenimiento ══
+// ── parseDashboard: hoja "Dashboard" FLOTA — solo mantenimiento ──
 function parseDashboard(rows){
   if(!rows||rows.length<2) return;
-  const mNames=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  function toMesLabel(str){
-    try{const p=String(str).split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]);return mNames[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return str;}catch(e){return str;}
-  }
-
-  // Reset global data
-  const newHM={}, newTM={}, newEst3=[], newHorasPat={};
-
+  const M=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  function lbl(s){try{const p=String(s||'').split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]);return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}catch(e){return '';}}
+  const nHM={},nTM={},nHP={},nE3=[];
   rows.slice(1).forEach(row=>{
-    // Col F(5)+G(6): periodo → hs hábiles en taller por mes
-    const periodoFG = String(row[5]||'').trim();
-    const hsHabTaller = parseFloat(row[6])||0;
-    if(periodoFG && periodoFG!=='Total hs. hábiles taller' && hsHabTaller>0){
-      const mk = toMesLabel(periodoFG);
-      if(mk) newHM[mk]=(newHM[mk]||0)+hsHabTaller;
-    }
-
-    // Col I(8)+J(9)+K(10)+L(11)+M(12)+N(13): impacto operativo por mes
-    const periodoIJ = String(row[8]||'').trim();
-    const hsPot     = parseFloat(row[9])||0;
-    const impacto   = parseFloat(row[10])||0;
-    const camiones  = parseFloat(row[11])||0;
-    const pFalt     = parseFloat(row[12])||0;
-    const pDisp     = parseFloat(row[13])||0;
-    if(periodoIJ && hsPot>0 && camiones>0){
-      const mk2 = toMesLabel(periodoIJ);
-      const hsT = newHM[mk2]||0;
-      const dispVal = pDisp>1 ? Math.round(pDisp*10)/10 : Math.round(pDisp*10000)/100;
-      newEst3.push({mes:mk2, cam:camiones, hPot:hsPot, h:hsT, imp:Math.round(impacto*100)/100, disp:dispVal, corr:0});
-    }
-
-    // Col T(20)+U(21): turnos por mes
-    const periodoTU = String(row[20]||'').trim();
-    const turnosMes = parseFloat(row[21])||0;
-    if(periodoTU && turnosMes>0){
-      const mk3 = toMesLabel(periodoTU);
-      if(mk3) newTM[mk3]=(newTM[mk3]||0)+turnosMes;
-    }
-
-    // Col R(17)+S(18): horas por patente
-    const patente = String(row[17]||'').trim();
-    const hsPat   = parseFloat(row[18])||0;
-    if(patente && hsPat>0 && patente!=='PATENTE' && patente!=='Total'){
-      newHorasPat[patente]=(newHorasPat[patente]||0)+hsPat;
+    const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
+    if(pfg&&hsg>0&&!/total/i.test(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
+    const ptu=String(row[20]||'').trim(),tmu=parseFloat(row[21])||0;
+    if(ptu&&tmu>0&&!/total/i.test(ptu)){const mk=lbl(ptu);if(mk)nTM[mk]=(nTM[mk]||0)+tmu;}
+    const pat=String(row[17]||'').trim(),hsp=parseFloat(row[18])||0;
+    if(pat&&hsp>0&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER'&&!/total/i.test(pat))nHP[pat]=(nHP[pat]||0)+hsp;
+    const pij=String(row[8]||'').trim(),hsPot=parseFloat(row[9])||0;
+    const imp=parseFloat(row[10])||0,cam=parseFloat(row[11])||0,pDisp=parseFloat(row[13])||0;
+    if(pij&&cam>0&&hsPot>0&&!/total/i.test(pij)){
+      const mk=lbl(pij);
+      if(mk){const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;nE3.push({mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0});}
     }
   });
-
-  // Update globals if we got data
-  if(Object.keys(newHM).length>0){
-    Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);
-    Object.assign(HORAS_MES, newHM);
-  }
-  if(Object.keys(newTM).length>0){
-    Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);
-    Object.assign(TURNOS_MES, newTM);
-  }
-  if(newEst3.length>0){
-    EST3.length=0;
-    newEst3.forEach(d=>EST3.push(d));
-  }
-  if(Object.keys(newHorasPat).length>0){
-    Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);
-    Object.assign(HORAS_PAT, newHorasPat);
-  }
+  nE3.forEach(d=>{d.h=nHM[d.mes]||0;});
+  if(Object.keys(nHM).length>0){Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);Object.assign(HORAS_MES,nHM);}
+  if(Object.keys(nTM).length>0){Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);Object.assign(TURNOS_MES,nTM);}
+  if(Object.keys(nHP).length>0){Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);Object.assign(HORAS_PAT,nHP);}
+  if(nE3.length>0){EST3.length=0;nE3.forEach(d=>EST3.push(d));}
 }
 
 function parseEst3(rows){
@@ -2517,6 +2587,9 @@ async function actualizarFlota(){
       Object.assign(HORAS_AREA, horasArea);
     }
 
+    // Dashboard (tabla dinámica — solo mantenimiento)
+    try { const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard'); parseDashboard(rowsDash); } catch(e2){console.warn('Dashboard:',e2);}
+
     // Estadistica 3
     const rowsEst3 = await fetchSheet(GS_FLOTA, 'Estadistica 3');
     const nuevoEst3 = parseEst3(rowsEst3);
@@ -2524,10 +2597,6 @@ async function actualizarFlota(){
       EST3.length = 0;
       nuevoEst3.forEach(d => EST3.push(d));
     }
-
-    // Dashboard sheet (tabla dinámica con datos pre-agregados)
-    const rowsDash = await fetchSheet(GS_FLOTA, 'Dashboard');
-    parseDashboard(rowsDash);
 
     // Siniestros
     const rowsSin = await fetchSheet(GS_FLOTA, 'Siniestros');
@@ -2649,7 +2718,7 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=VENCE
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO
     const result = [];
     rows.slice(1).forEach(row=>{
       const empresa  = String(row[0]||'').trim();
@@ -2666,8 +2735,10 @@ async function actualizarContratos(){
       // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
       const emps=[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
-      const selR=document.getElementById("f-cont-resp");if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
-      const selE=document.getElementById("f-cont-emp");if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
+      const selR=document.getElementById("f-cont-resp");
+      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
+      const selE=document.getElementById("f-cont-emp");
+      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
     }
     setGsStatus('cont','ok');
     renderContratos();
