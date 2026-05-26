@@ -1704,69 +1704,13 @@ window.renderContratos=function(){
         +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
         +"<span class='p "+vcl+"' style='font-size:10px;'>📅 "+vl+"</span>"
         +"</div>";
-    });ratos=function(){
-  const fr   = document.getElementById("f-cont-resp")?.value||"";
-  const femp = document.getElementById("f-cont-emp")?.value||"";
-  const fest = document.getElementById("f-cont-estado")?.value||"";
-  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const cont = document.getElementById("contratos-cont");
-  if(!cont) return;
-  const psub = document.getElementById("cont-psub");
-  if(psub && CONTRATOS_RT.length>0){
-    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
-    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
-    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
-    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
-  }
-  if(CONTRATOS_RT.length===0){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando contratos...</div>";return;}
-  const filtered=CONTRATOS_RT.filter(ct=>{
-    if(fr&&ct.jefe!==fr)return false;
-    if(femp&&ct.empresa!==femp)return false;
-    if(fest&&ct.estado!==fest)return false;
-    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
-    return true;
-  });
-  const actF=filtered.filter(c=>c.estado==="Activo").length;
-  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
-  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
-  const hoy2=new Date();
-  function pF(s){try{const p=(s||'').split('/');return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
-  function dD(s){const d=pF(s);return d?Math.round((d-hoy2)/864e5):null;}
-  const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
-  const vence30 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
-  const vence90 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
-  const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
-  let html="<div class='kg' style='margin-bottom:14px;'>"
-    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
-    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
-    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
-    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
-    +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
-    +(vence30>0?"<div class='kc am'><span class='ki'>⚠️</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+vence30+"</div></div>":"")
-    +(vence90>0?"<div class='kc or'><span class='ki'>📅</span><div class='kl'>Vence ≤90d</div><div class='kv'>"+vence90+"</div></div>":"")
-    +"</div>";
-  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
-    const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
-    const aJ=cts.filter(c=>c.estado==="Activo").length;
-    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
-    html+="<div class='card' style='margin-bottom:10px;'>"
-      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
-      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
-      +"<div><div class='ct'>"+jefe+"</div>"
-      +"<div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div>"
-      +"</div></div></div><div style='display:grid;gap:4px;'>";
-    cts.forEach(function(ct){
-      const ecl=(ct.estado||"").toLowerCase().includes("inactiv")?"p-err":"p-ok";
-      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
-      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
-        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
-        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
-        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span></div>";
     });
     html+="</div></div>";
   });
   cont.innerHTML=html;
 };
+
+// (renderContratos end — duplicate stub removed)
 
 // ══ FLOTA ══
 function renderFlotaResumen(){
