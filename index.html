@@ -1814,11 +1814,12 @@ function renderFlotaImpacto(){
   // Mes crítico = menor disponibilidad (col N)
   const mw = EST3.reduce((a,b)=>a.disp<b.disp?a:b);
   // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota)
-  const totalHTurnos = Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
+  // Total hs hábiles taller = sum of HORAS_MES (col G Dashboard, por mes)
+  const totalHTurnos = Math.round(Object.values(HORAS_MES).reduce((s,h)=>s+h,0));
   document.getElementById("k-impacto").innerHTML=`
     <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual (Est. 3)</div></div>
     <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — camionetas equiv./mes</div></div>
-    <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.h)}h taller</div></div>
+    <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.imp*100)/100} cam. equiv.</div></div>
     <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks">Col N — Turnos unidades</div></div>`;
   const mes=EST3.map(d=>d.mes);
   dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{
@@ -2531,16 +2532,16 @@ async function actualizarFlota(){
       Object.assign(HORAS_AREA, horasArea);
     }
 
-    // Dashboard (tabla dinámica — solo mantenimiento)
-    try { const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard'); parseDashboard(rowsDash); } catch(e2){console.warn('Dashboard:',e2);}
-
-    // Estadistica 3
+    // Estadistica 3 (fallback — Dashboard overrides this below)
     const rowsEst3 = await fetchSheet(GS_FLOTA, 'Estadistica 3');
     const nuevoEst3 = parseEst3(rowsEst3);
     if(nuevoEst3.length > 0){
       EST3.length = 0;
       nuevoEst3.forEach(d => EST3.push(d));
     }
+
+    // Dashboard (tabla dinámica — solo mantenimiento) — runs AFTER Est3 to override
+    try { const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard'); parseDashboard(rowsDash); } catch(e2){console.warn('Dashboard sheet:',e2);}
 
     // Siniestros
     const rowsSin = await fetchSheet(GS_FLOTA, 'Siniestros');
