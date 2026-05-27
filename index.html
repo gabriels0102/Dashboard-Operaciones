@@ -601,7 +601,12 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por patente — acumulado</div><div class="cs">Ordenado de mayor a menor</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipo de arreglo</div><div class="cs">Col I — distribución por tipo de trabajo</div></div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Datos del Dashboard — clasificación por tipo y detalle</div></div>
+    <div style="display:flex;gap:6px;">
+      <button id="btn-tipo-cat" onclick="window.setTipoView('cat')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--ac);color:#fff;">Tipo</button>
+      <button id="btn-tipo-det" onclick="window.setTipoView('det')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">Detalle</button>
+    </div>
+  </div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
   </div>
   <div class="c2" style="margin-top:14px;">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
@@ -2347,27 +2352,81 @@ function parseTurnos(rows){
 function parseDashboard(rows){
   if(!rows||rows.length<2) return;
   const M=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  function lbl(s){try{const p=String(s||'').split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]);return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}catch(e){return '';}}
+  function lbl(s){
+    try{const p=String(s||'').trim().split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]).trim();return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}
+    catch(e){return '';}
+  }
+  function isTotal(s){return /total|suma|prom/i.test(String(s||''));}
+
   const nHM={},nTM={},nHP={},nE3=[];
+  // For turnos detail: col B=tipo, col C=detalle, col D=cantidad
+  const nTipos={}, nDetalle={};
+  let curMesTurnos='';
+
   rows.slice(1).forEach(row=>{
+    // Col A: track current month for turnos (sparse — only filled on first row of month)
+    const colA = String(row[0]||'').trim();
+    if(colA && !isTotal(colA) && lbl(colA)) curMesTurnos = lbl(colA);
+
+    // Col B+C+D: tipo de arreglo, detalle, cantidad (turnos detail)
+    const tipo   = String(row[1]||'').trim();
+    const detalle= String(row[2]||'').trim();
+    const cant   = parseFloat(row[3])||0;
+    if(tipo && !isTotal(tipo) && cant>0){
+      nTipos[tipo]=(nTipos[tipo]||0)+cant;
+    }
+    if(detalle && !isTotal(detalle) && cant>0){
+      nDetalle[detalle]=(nDetalle[detalle]||0)+cant;
+    }
+
+    // Col F(5)+G(6): hs hábiles en taller por mes
     const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
-    if(pfg&&hsg>0&&!/total/i.test(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
+    if(pfg&&hsg>0&&!isTotal(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
+
+    // Col T(20)+U(21): turnos finalizados por mes
     const ptu=String(row[20]||'').trim(),tmu=parseFloat(row[21])||0;
-    if(ptu&&tmu>0&&!/total/i.test(ptu)){const mk=lbl(ptu);if(mk)nTM[mk]=(nTM[mk]||0)+tmu;}
+    if(ptu&&tmu>0&&!isTotal(ptu)){const mk=lbl(ptu);if(mk)nTM[mk]=(nTM[mk]||0)+tmu;}
+
+    // Col R(17)+S(18): horas por patente
     const pat=String(row[17]||'').trim(),hsp=parseFloat(row[18])||0;
-    if(pat&&hsp>0&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER'&&!/total/i.test(pat))nHP[pat]=(nHP[pat]||0)+hsp;
+    if(pat&&hsp>0&&!isTotal(pat)&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER')
+      nHP[pat]=(nHP[pat]||0)+hsp;
+
+    // Col I(8)+J(9)+K(10)+L(11)+N(13): impacto por mes
     const pij=String(row[8]||'').trim(),hsPot=parseFloat(row[9])||0;
     const imp=parseFloat(row[10])||0,cam=parseFloat(row[11])||0,pDisp=parseFloat(row[13])||0;
-    if(pij&&cam>0&&hsPot>0&&!/total/i.test(pij)){
+    if(pij&&!isTotal(pij)&&cam>0&&hsPot>0){
       const mk=lbl(pij);
-      if(mk){const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;nE3.push({mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0});}
+      if(mk){
+        const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;
+        nE3.push({mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0});
+      }
     }
   });
+
+  // Fill h (hs taller) into EST3 entries from nHM
   nE3.forEach(d=>{d.h=nHM[d.mes]||0;});
-  if(Object.keys(nHM).length>0){Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);Object.assign(HORAS_MES,nHM);}
-  if(Object.keys(nTM).length>0){Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);Object.assign(TURNOS_MES,nTM);}
-  if(Object.keys(nHP).length>0){Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);Object.assign(HORAS_PAT,nHP);}
-  if(nE3.length>0){EST3.length=0;nE3.forEach(d=>EST3.push(d));}
+
+  // Update globals only if we got real data
+  if(Object.keys(nHM).length>0){
+    Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);
+    Object.assign(HORAS_MES,nHM);
+  }
+  if(Object.keys(nTM).length>0){
+    Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);
+    Object.assign(TURNOS_MES,nTM);
+  }
+  if(Object.keys(nHP).length>0){
+    Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);
+    Object.assign(HORAS_PAT,nHP);
+  }
+  if(nE3.length>0){
+    EST3.length=0;
+    nE3.forEach(d=>EST3.push(d));
+  }
+  // Store turnos breakdown for chart
+  window.TURNOS_TIPOS   = nTipos;
+  window.TURNOS_DETALLE_DASH = nDetalle;
 }
 
 function parseEst3(rows){
