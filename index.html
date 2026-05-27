@@ -15,7 +15,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.6;}
-.layout{display:flex;min-height:100vh;}
+.layout{display:flex;min-height:100vh;overflow-x:hidden;}
 
 /* SIDEBAR */
 .sb{width:240px;background:var(--surface);border-right:1px solid var(--b);display:flex;flex-direction:column;padding:20px 0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:width 0.2s;}
@@ -38,7 +38,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--t
 .sb-toggle button{background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--mu);padding:5px 10px;cursor:pointer;font-size:11px;}
 
 /* MAIN */
-.main{margin-left:240px;flex:1;padding:24px 28px;min-height:100vh;transition:margin-left 0.2s;}
+.main{margin-left:240px;padding:24px 28px;min-height:100vh;transition:margin-left 0.2s;overflow-x:hidden;box-sizing:border-box;width:calc(100% - 240px);}
 .main.collapsed{margin-left:60px;}
 .page{display:none;} .page.active{display:block;}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
@@ -68,7 +68,7 @@ input{width:100%;} input:focus,select:focus{border-color:var(--ac);} select opti
 
 /* TABLE */
 .tw{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;min-width:500px;}
+table{width:100%;border-collapse:collapse;}
 th{font-size:10px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--b);}
 td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--b);color:var(--txt);}
 tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.02);}
@@ -146,7 +146,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .spin{width:30px;height:30px;border:3px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
-@media(max-width:900px){.sb{width:58px;}.logo-text,.ni-label,.nav-section{display:none;}.main{margin-left:58px;padding:14px 10px;}.c2{grid-template-columns:1fr;}}
+@media(max-width:900px){.sb{width:58px;}.logo-text,.ni-label,.nav-section{display:none;}.main{margin-left:58px;padding:14px 10px;width:calc(100% - 58px);}.c2{grid-template-columns:1fr;}}
 
 /* ══════════════════════════════════════
    DASHBOARD REDESIGN — Estilo operativo
