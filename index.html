@@ -14,8 +14,8 @@
 }
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html{overflow-y:scroll;}body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.6;}
-.layout{display:flex;min-height:100vh;overflow-x:hidden;}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;font-size:14px;line-height:1.6;}
+.layout{display:flex;min-height:100vh;}
 
 /* SIDEBAR */
 .sb{width:240px;background:var(--surface);border-right:1px solid var(--b);display:flex;flex-direction:column;padding:20px 0;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;transition:width 0.2s;}
@@ -38,7 +38,7 @@ html{overflow-y:scroll;}body{font-family:'Inter',system-ui,sans-serif;background
 .sb-toggle button{background:var(--s2);border:1px solid var(--b2);border-radius:6px;color:var(--mu);padding:5px 10px;cursor:pointer;font-size:11px;}
 
 /* MAIN */
-.main{margin-left:240px;padding:24px 28px;min-height:100vh;transition:margin-left 0.2s;overflow-x:hidden;box-sizing:border-box;width:calc(100% - 240px);}
+.main{margin-left:240px;flex:1;padding:24px 28px;min-height:100vh;transition:margin-left 0.2s;}
 .main.collapsed{margin-left:60px;}
 .page{display:none;} .page.active{display:block;}
 .topbar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
@@ -68,7 +68,7 @@ input{width:100%;} input:focus,select:focus{border-color:var(--ac);} select opti
 
 /* TABLE */
 .tw{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;}
+table{width:100%;border-collapse:collapse;min-width:500px;}
 th{font-size:10px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--b);}
 td{padding:9px 10px;font-size:12px;border-bottom:1px solid var(--b);color:var(--txt);}
 tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.02);}
@@ -146,7 +146,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .spin{width:30px;height:30px;border:3px solid var(--b2);border-top-color:var(--ac);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 ::-webkit-scrollbar{width:5px;height:5px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px;}
-@media(max-width:900px){.sb{width:58px;}.logo-text,.ni-label,.nav-section{display:none;}.main{margin-left:58px;padding:14px 10px;width:calc(100% - 58px);}.c2{grid-template-columns:1fr;}}
+@media(max-width:900px){.sb{width:58px;}.logo-text,.ni-label,.nav-section{display:none;}.main{margin-left:58px;padding:14px 10px;}.c2{grid-template-columns:1fr;}}
 
 /* ══════════════════════════════════════
    DASHBOARD REDESIGN — Estilo operativo
@@ -187,7 +187,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -542,10 +542,10 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div><div class="ptitle">Contratos por Responsable</div><div class="psub" id="cont-psub">Cargando desde Google Sheets...</div></div>
   </div>
   <div class="fb">
-    <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:200px;"><option value="">Todos los responsables</option></select>
-    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option></select>
-    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activo</option><option value="Inactivo">Inactivo</option></select>
-    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o CECO..." style="width:190px;" oninput="renderContratos()"/>
+    <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:190px;"><option value="">Todos</option></select>
+    <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option><option value="PVP">PVP</option></select>
+    <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activos</option><option value="Inactivo">Inactivos</option></select>
+    <input type="text" id="f-cont-busq" placeholder="Buscar servicio o nombre..." style="width:180px;" oninput="renderContratos()"/>
   </div>
   <div id="contratos-cont"></div>
 </section>
@@ -601,7 +601,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por patente — acumulado</div><div class="cs">Ordenado de mayor a menor</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Datos del Dashboard — clasificación por tipo y detalle</div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Dashboard — tipo y detalle</div></div>
     <div style="display:flex;gap:6px;">
       <button id="btn-tipo-cat" onclick="window.setTipoView('cat')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--ac);color:#fff;">Tipo</button>
       <button id="btn-tipo-det" onclick="window.setTipoView('det')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">Detalle</button>
@@ -1019,8 +1019,8 @@ function renderDashboard(){
   // Alertas
   const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err',col:1});
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn',col:2});
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
   if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn',col:3});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
@@ -1030,7 +1030,7 @@ function renderDashboard(){
   if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err',col:5});
   if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
   const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,5).map(a=>`<div class="alerta-item ${a.cls}" style="${a.col?'grid-column:'+a.col:''}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1078,7 +1078,6 @@ function renderDashboard(){
   document.getElementById("tb-resumen").innerHTML=RESP.map(r=>{
     const d=CORR_ZONAL[r];if(!d)return "";
     const cer=d.fin+d.comp;
-    // Total meaningful = activos + finalizados + complementarios (exclude anulados/rechazados)
     const totalMean=(d.ab||0)+(d.ec||0)+(d.pend||0)+d.fin+d.comp;
     const tasa=totalMean>0?Math.round(cer/totalMean*100):0;
     const lc=d.lead>100?"var(--err)":d.lead>50?"var(--warn)":d.lead>0?"var(--ok)":"var(--mu)";
@@ -1194,7 +1193,7 @@ window.renderCorr=function(){
   const rubData = fz
     ? CORR_ZONAL[fz]?.rubros||{}
     : window.CORR_GLOBAL?.rubros||{};
-  const rubSort = Object.entries(rubData).filter(([k])=>k && k.toLowerCase()!=='limpieza').sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const rubSort = Object.entries(rubData).filter(([k])=>k).sort((a,b)=>b[1]-a[1]).slice(0,10);
   dc("ch-corr-rubros");
   if(rubSort.length>0){
     charts["ch-corr-rubros"]=new Chart(document.getElementById("ch-corr-rubros"),{
@@ -1671,7 +1670,7 @@ window.renderContratos=function(){
   const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
   const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
   const hoy2=new Date();
-  function pF(s){try{const p=(s||'').split('/');return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
+  function pF(s){try{const p=(s||"").split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
   function dD(s){const d=pF(s);return d?Math.round((d-hoy2)/864e5):null;}
   const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
   const vence30 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
@@ -1697,9 +1696,9 @@ window.renderContratos=function(){
       +"<div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div>"
       +"</div></div></div><div style='display:grid;gap:4px;'>";
     cts.forEach(function(ct){
-      const ecl=(ct.estado||"").toLowerCase().includes("inactiv")?"p-err":"p-ok";
+      const ecl=ct.estado==="Inactivo"?"p-err":"p-ok";
       const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
-            const dd=dD(ct.vence||"");
+      const dd=dD(ct.vence||"");
       let vcl="p-mu",vl=ct.vence||"Sin fecha";
       if(dd!==null){if(dd<0){vcl="p-err";vl="Vencido "+Math.abs(dd)+"d";}else if(dd<=30){vcl="p-err";vl="Vence "+dd+"d";}else if(dd<=90){vcl="p-warn";vl="Vence "+dd+"d";}else{vcl="p-mu";vl=ct.vence;}}
       else if(!ct.vence||ct.vence==="Sin información"||ct.vence==="Sin informacion"){vcl="p-mu";vl="Sin fecha";}
@@ -1714,8 +1713,6 @@ window.renderContratos=function(){
   });
   cont.innerHTML=html;
 };
-
-// (renderContratos end — duplicate stub removed)
 
 // ══ FLOTA ══
 function renderFlotaResumen(){
@@ -1819,12 +1816,11 @@ function renderFlotaImpacto(){
   // Mes crítico = menor disponibilidad (col N)
   const mw = EST3.reduce((a,b)=>a.disp<b.disp?a:b);
   // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota)
-  // Total hs hábiles taller = sum of HORAS_MES (col G Dashboard, por mes)
   const totalHTurnos = Math.round(Object.values(HORAS_MES).reduce((s,h)=>s+h,0));
   document.getElementById("k-impacto").innerHTML=`
     <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual (Est. 3)</div></div>
     <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — camionetas equiv./mes</div></div>
-    <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.imp*100)/100} cam. equiv.</div></div>
+    <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.h)}h taller</div></div>
     <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks">Col N — Turnos unidades</div></div>`;
   const mes=EST3.map(d=>d.mes);
   dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{
@@ -2077,6 +2073,29 @@ window.renderComplementariosPage = function(){
   }
 };
 
+
+// ── Tipo/Detalle toggle for taller ──
+window._tipoView='cat';
+window.setTipoView=function(v){
+  window._tipoView=v;
+  const bc=document.getElementById('btn-tipo-cat'),bd=document.getElementById('btn-tipo-det');
+  if(bc){bc.style.background=v==='cat'?'var(--ac)':'var(--s2)';bc.style.color=v==='cat'?'#fff':'var(--mu)';}
+  if(bd){bd.style.background=v==='det'?'var(--ac)':'var(--s2)';bd.style.color=v==='det'?'#fff':'var(--mu)';}
+  window.renderTipoChart();
+};
+window.renderTipoChart=function(){
+  const src=window._tipoView==='cat'?(window.TURNOS_TIPOS||{}):(window.TURNOS_DETALLE_DASH||{});
+  const entries=Object.entries(src).sort((a,b)=>b[1]-a[1]);
+  const COLORS=["#4f8ef799","#22c55e99","#f59e0b99","#ef444499","#7c3aed99","#14b8a699","#f9731699","#06b6d499"];
+  dc("ch-taller-tipo");
+  const canvas=document.getElementById("ch-taller-tipo");
+  if(!canvas||entries.length===0) return;
+  if(window._tipoView==='cat'){
+    charts["ch-taller-tipo"]=new Chart(canvas,{type:"doughnut",data:{labels:entries.map(d=>d[0]),datasets:[{data:entries.map(d=>d[1]),backgroundColor:COLORS.slice(0,entries.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"},tooltip:{callbacks:{label:c=>`${c.raw} turnos`}}}}});
+  } else {
+    charts["ch-taller-tipo"]=new Chart(canvas,{type:"bar",data:{labels:entries.map(d=>d[0]),datasets:[{label:"Turnos",data:entries.map(d=>d[1]),backgroundColor:entries.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+  }
+};
 
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
@@ -2352,81 +2371,29 @@ function parseTurnos(rows){
 function parseDashboard(rows){
   if(!rows||rows.length<2) return;
   const M=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  function lbl(s){
-    try{const p=String(s||'').trim().split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]).trim();return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}
-    catch(e){return '';}
-  }
+  function lbl(s){try{const p=String(s||'').trim().split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]).trim();return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}catch(e){return '';}}
   function isTotal(s){return /total|suma|prom/i.test(String(s||''));}
-
-  const nHM={},nTM={},nHP={},nE3=[];
-  // For turnos detail: col B=tipo, col C=detalle, col D=cantidad
-  const nTipos={}, nDetalle={};
-  let curMesTurnos='';
-
+  const nHM={},nTM={},nHP={},nE3=[],nTipos={},nDetalle={};
   rows.slice(1).forEach(row=>{
-    // Col A: track current month for turnos (sparse — only filled on first row of month)
-    const colA = String(row[0]||'').trim();
-    if(colA && !isTotal(colA) && lbl(colA)) curMesTurnos = lbl(colA);
-
-    // Col B+C+D: tipo de arreglo, detalle, cantidad (turnos detail)
-    const tipo   = String(row[1]||'').trim();
-    const detalle= String(row[2]||'').trim();
-    const cant   = parseFloat(row[3])||0;
-    if(tipo && !isTotal(tipo) && cant>0){
-      nTipos[tipo]=(nTipos[tipo]||0)+cant;
-    }
-    if(detalle && !isTotal(detalle) && cant>0){
-      nDetalle[detalle]=(nDetalle[detalle]||0)+cant;
-    }
-
-    // Col F(5)+G(6): hs hábiles en taller por mes
+    const tipo=String(row[1]||'').trim(),det=String(row[2]||'').trim(),cant=parseFloat(row[3])||0;
+    if(tipo&&!isTotal(tipo)&&cant>0) nTipos[tipo]=(nTipos[tipo]||0)+cant;
+    if(det&&!isTotal(det)&&cant>0) nDetalle[det]=(nDetalle[det]||0)+cant;
     const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
     if(pfg&&hsg>0&&!isTotal(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
-
-    // Col T(20)+U(21): turnos finalizados por mes
     const ptu=String(row[20]||'').trim(),tmu=parseFloat(row[21])||0;
     if(ptu&&tmu>0&&!isTotal(ptu)){const mk=lbl(ptu);if(mk)nTM[mk]=(nTM[mk]||0)+tmu;}
-
-    // Col R(17)+S(18): horas por patente
     const pat=String(row[17]||'').trim(),hsp=parseFloat(row[18])||0;
-    if(pat&&hsp>0&&!isTotal(pat)&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER')
-      nHP[pat]=(nHP[pat]||0)+hsp;
-
-    // Col I(8)+J(9)+K(10)+L(11)+N(13): impacto por mes
+    if(pat&&hsp>0&&!isTotal(pat)&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER') nHP[pat]=(nHP[pat]||0)+hsp;
     const pij=String(row[8]||'').trim(),hsPot=parseFloat(row[9])||0;
     const imp=parseFloat(row[10])||0,cam=parseFloat(row[11])||0,pDisp=parseFloat(row[13])||0;
-    if(pij&&!isTotal(pij)&&cam>0&&hsPot>0){
-      const mk=lbl(pij);
-      if(mk){
-        const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;
-        nE3.push({mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0});
-      }
-    }
+    if(pij&&!isTotal(pij)&&cam>0&&hsPot>0){const mk=lbl(pij);if(mk){const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;nE3.push({mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0});}}
   });
-
-  // Fill h (hs taller) into EST3 entries from nHM
   nE3.forEach(d=>{d.h=nHM[d.mes]||0;});
-
-  // Update globals only if we got real data
-  if(Object.keys(nHM).length>0){
-    Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);
-    Object.assign(HORAS_MES,nHM);
-  }
-  if(Object.keys(nTM).length>0){
-    Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);
-    Object.assign(TURNOS_MES,nTM);
-  }
-  if(Object.keys(nHP).length>0){
-    Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);
-    Object.assign(HORAS_PAT,nHP);
-  }
-  if(nE3.length>0){
-    EST3.length=0;
-    nE3.forEach(d=>EST3.push(d));
-  }
-  // Store turnos breakdown for chart
-  window.TURNOS_TIPOS   = nTipos;
-  window.TURNOS_DETALLE_DASH = nDetalle;
+  if(Object.keys(nHM).length>0){Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);Object.assign(HORAS_MES,nHM);}
+  if(Object.keys(nTM).length>0){Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);Object.assign(TURNOS_MES,nTM);}
+  if(Object.keys(nHP).length>0){Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);Object.assign(HORAS_PAT,nHP);}
+  if(nE3.length>0){EST3.length=0;nE3.forEach(d=>EST3.push(d));}
+  window.TURNOS_TIPOS=nTipos;window.TURNOS_DETALLE_DASH=nDetalle;
 }
 
 function parseEst3(rows){
@@ -2591,7 +2558,7 @@ async function actualizarFlota(){
       Object.assign(HORAS_AREA, horasArea);
     }
 
-    // Estadistica 3 (fallback — Dashboard overrides this below)
+    // Estadistica 3
     const rowsEst3 = await fetchSheet(GS_FLOTA, 'Estadistica 3');
     const nuevoEst3 = parseEst3(rowsEst3);
     if(nuevoEst3.length > 0){
@@ -2599,8 +2566,8 @@ async function actualizarFlota(){
       nuevoEst3.forEach(d => EST3.push(d));
     }
 
-    // Dashboard (tabla dinámica — solo mantenimiento) — runs AFTER Est3 to override
-    try { const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard'); parseDashboard(rowsDash); } catch(e2){console.warn('Dashboard sheet:',e2);}
+    // Dashboard (solo mantenimiento) — override EST3/HORAS after Est3
+    try{const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard');parseDashboard(rowsDash);}catch(e2){console.warn('Dashboard:',e2);}
 
     // Siniestros
     const rowsSin = await fetchSheet(GS_FLOTA, 'Siniestros');
@@ -2722,7 +2689,7 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=VENCE
     const result = [];
     rows.slice(1).forEach(row=>{
       const empresa  = String(row[0]||'').trim();
@@ -2739,10 +2706,8 @@ async function actualizarContratos(){
       // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
       const emps=[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
-      const selR=document.getElementById("f-cont-resp");
-      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
-      const selE=document.getElementById("f-cont-emp");
-      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
+      const selR=document.getElementById("f-cont-resp");if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
+      const selE=document.getElementById("f-cont-emp");if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
     }
     setGsStatus('cont','ok');
     renderContratos();
