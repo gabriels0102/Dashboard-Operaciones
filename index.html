@@ -1019,8 +1019,8 @@ function renderDashboard(){
   // Alertas
   const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err',col:1});
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn',col:2});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
   if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn',col:3});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
@@ -2656,23 +2656,9 @@ async function actualizarComplementarios(){
         COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
       });
 
-    // Parse "Complementarios y presupuestos": A(0)=jefe, C(2)=servicio, AD(29)=valor
-    const detallePorJefe = {};
-    rowsDetalle.slice(1).forEach(row=>{
-      const jefe    = String(row[0]||'').trim();
-      const servicio= String(row[2]||'').trim();
-      const valor   = parseFloat(row[29])||0;
-      if(!jefe || !servicio || valor<=0) return;
-      if(!detallePorJefe[jefe]) detallePorJefe[jefe]={};
-      detallePorJefe[jefe][servicio]=(detallePorJefe[jefe][servicio]||0)+valor;
-    });
-    // Convert to sorted arrays per jefe
-    COMPL_DATA.detallePorJefe = {};
-    Object.entries(detallePorJefe).forEach(([j,svcs])=>{
-      COMPL_DATA.detallePorJefe[j] = Object.entries(svcs)
-        .map(([servicio,valor])=>({servicio,valor}))
-        .sort((a,b)=>b.valor-a.valor);
-    });
+    // detallePorJefe already built from Resumen comercial col F→G→H above
+    // "Complementarios y presupuestos" col AD has individual work values, not totals
+    // so we do NOT override detallePorJefe from that sheet
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
