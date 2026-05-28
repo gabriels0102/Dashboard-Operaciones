@@ -2364,37 +2364,52 @@ function parseDashboard(rows){
 // ── renderTipoChart: 2 fixed charts ──
 window.renderTipoChart=function(){
   const COLORS=["#4f8ef7cc","#22c55ecc","#f59e0bcc","#ef4444cc","#7c3aedcc","#14b8a6cc","#f97316cc","#06b6d4cc"];
+
   // Chart 1: donut tipos
   const tipos=Object.entries(window.TURNOS_TIPOS||{}).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
   const totalT=tipos.reduce((s,[,v])=>s+v,0);
   dc("ch-taller-tipo");
-  const c1=document.getElementById("ch-taller-tipo");
-  if(c1){
-    if(tipos.length>0){
-      charts["ch-taller-tipo"]=new Chart(c1,{
-        type:"doughnut",
-        data:{labels:tipos.map(([k,v])=>k+' ('+v+')'),datasets:[{data:tipos.map(([,v])=>v),backgroundColor:COLORS.slice(0,tipos.length),borderWidth:2,borderColor:'#1a1d27'}]},
-        options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalT*100)+'%)'}}}}
-      });
-    } else {
-      c1.parentElement.innerHTML='<div style="color:var(--mu);font-size:12px;padding:20px;text-align:center;">Cargando datos del Dashboard...</div>';
+  // Always recreate canvas if it was replaced by a div
+  const cw1=document.querySelector('#ch-taller-tipo')?.closest('.cw') || document.querySelector('[data-taller-tipo]');
+  const card1=document.getElementById("ch-taller-tipo")?.closest('.card') || document.querySelector('.cw:has(#ch-taller-tipo)');
+  // Find the cw div containing ch-taller-tipo or the placeholder text
+  const cards=document.querySelectorAll('#page-flota-taller .card');
+  let tipoCard=null,corrCard=null;
+  cards.forEach(c=>{
+    if(c.querySelector('#ch-taller-tipo')||c.querySelector('.ct')?.textContent?.includes('Tipos')) tipoCard=c;
+    if(c.querySelector('#ch-taller-correctivo')||c.querySelector('.ct')?.textContent?.includes('Correctivo')) corrCard=c;
+  });
+
+  function getOrCreateCanvas(card, canvasId){
+    let canvas=document.getElementById(canvasId);
+    if(!canvas){
+      // Canvas was replaced — restore it
+      const cw=card?.querySelector('.cw');
+      if(cw){cw.innerHTML='<canvas id="'+canvasId+'"></canvas>';canvas=document.getElementById(canvasId);}
     }
+    return canvas;
   }
+
+  const c1=getOrCreateCanvas(tipoCard,'ch-taller-tipo');
+  if(c1&&tipos.length>0){
+    charts["ch-taller-tipo"]=new Chart(c1,{
+      type:"doughnut",
+      data:{labels:tipos.map(([k,v])=>k+' ('+v+')'),datasets:[{data:tipos.map(([,v])=>v),backgroundColor:COLORS.slice(0,tipos.length),borderWidth:2,borderColor:'#1a1d27'}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalT*100)+'%)'}}}}
+    });
+  }
+
   // Chart 2: desglose correctivos
   const corrDet=Object.entries((window.TURNOS_TIPO_DETALLE||{})["Correctivo"]||{}).sort((a,b)=>b[1]-a[1]);
   const totalC=corrDet.reduce((s,[,v])=>s+v,0);
   dc("ch-taller-correctivo");
-  const c2=document.getElementById("ch-taller-correctivo");
-  if(c2){
-    if(corrDet.length>0){
-      charts["ch-taller-correctivo"]=new Chart(c2,{
-        type:"bar",
-        data:{labels:corrDet.map(([k])=>k),datasets:[{label:"Turnos",data:corrDet.map(([,v])=>v),backgroundColor:COLORS.slice(0,corrDet.length),borderRadius:5}]},
-        options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalC*100)+'%)'}}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}
-      });
-    } else {
-      c2.parentElement.innerHTML='<div style="color:var(--mu);font-size:12px;padding:20px;text-align:center;">Cargando datos del Dashboard...</div>';
-    }
+  const c2=getOrCreateCanvas(corrCard,'ch-taller-correctivo');
+  if(c2&&corrDet.length>0){
+    charts["ch-taller-correctivo"]=new Chart(c2,{
+      type:"bar",
+      data:{labels:corrDet.map(([k])=>k),datasets:[{label:"Turnos",data:corrDet.map(([,v])=>v),backgroundColor:COLORS.slice(0,corrDet.length),borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalC*100)+'%)'}}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+    });
   }
 };
 
