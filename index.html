@@ -1776,7 +1776,15 @@ window.renderFlotaTaller = function renderFlotaTaller(){
   const allP=Object.entries(useHP).sort((a,b)=>b[1]-a[1]);
   dc("ch-taller-all");charts["ch-taller-all"]=new Chart(document.getElementById("ch-taller-all"),{type:"bar",data:{labels:allP.map(p=>p[0]),datasets:[{label:"Horas",data:allP.map(p=>p[1]),backgroundColor:allP.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9},maxRotation:70},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   dc("ch-turnos-mes");charts["ch-turnos-mes"]=new Chart(document.getElementById("ch-turnos-mes"),{type:"bar",data:{labels:Object.keys(useTM),datasets:[{label:"Turnos",data:Object.values(useTM),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  document.getElementById("tb-taller").innerHTML=allP.map(([p,hs])=>{
+  // Only show mantenimiento vehicles that are not fuera de servicio
+  const allPFiltered=allP.filter(([p])=>{
+    const v=FLOTA.find(x=>x.p===p);
+    if(!v) return false;
+    if((v.est||'').toLowerCase().includes('fuera')) return false;
+    if((v.tipo||'').toLowerCase()!=='mantenimiento') return false;
+    return true;
+  });
+  document.getElementById("tb-taller").innerHTML=allPFiltered.map(([p,hs])=>{
     const v=FLOTA.find(x=>x.p===p)||{};const pct=Math.round(hs/totalH*100*10)/10;const bc=hs>400?"var(--err)":hs>200?"var(--warn)":"var(--ac)";const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":v.est?"p-err":"p-mu";
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${p}</td><td style="font-size:11px;">${v.j||"—"}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${v.est?pill(v.est,ec):"—"}</td><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,hs/691*100)}%;background:${bc};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;">${hs.toFixed(1)}h</span></div></td><td style="color:var(--mu);font-size:11px;">${pct}%</td></tr>`;
   }).join("");
@@ -2284,6 +2292,7 @@ function parseTurnos(rows){
   // col 0=periodo, 1=patente, 2=area, 13=horas_habiles
   const horasPat={}, horasMes={}, turnosMes={}, horasArea={};
 
+  window.TURNOS_DETALLE = [];
   rows.slice(1).forEach(row=>{
     const pat = String(row[1]||'').trim();
     const area = String(row[2]||'Sin área').trim();
@@ -2303,7 +2312,6 @@ function parseTurnos(rows){
       }
     }catch(e){}
     const asistioVal = String(row[15]||'').trim().toUpperCase();
-    window.TURNOS_DETALLE = []; // Reset on each parse
     window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,horas,asistio:asistioVal,empresa,mesKey,anio,periodo});
     if(horas>0){
       horasPat[pat]=(horasPat[pat]||0)+horas;
@@ -2332,13 +2340,19 @@ function parseDashboard(rows){
   rows.slice(1).forEach(row=>{
     const colB=String(row[1]||'').trim(),colC=String(row[2]||'').trim(),cant=parseFloat(row[3])||0;
     // Tipo totals: "Total Correctivo" → Correctivo
-    if(colB.startsWith('Total ')&&!colC&&cant>0){nTipos[colB.slice(6).trim()]=(nTipos[colB.slice(6).trim()]||0)+cant;curTipo='';}
-    // Detail rows
+    if(colB.startsWith('Total ')&&!colC&&cant>0){
+      nTipos[colB.slice(6).trim()]=(nTipos[colB.slice(6).trim()]||0)+cant;
+      curTipo='';
+    }
+    // Update curTipo FIRST, then use it
+    if(colB&&!colB.startsWith('Total ')&&!isTotal(colB)) curTipo=colB;
     const activeTipo=colB&&!colB.startsWith('Total ')&&!isTotal(colB)?colB:curTipo;
-    if(!colB.startsWith('Total ')&&!isTotal(colB)&&colB) curTipo=colB;
     if(colC&&!isTotal(colC)&&cant>0){
       nDetalle[colC]=(nDetalle[colC]||0)+cant;
-      if(activeTipo){if(!nTipoDetalle[activeTipo])nTipoDetalle[activeTipo]={};nTipoDetalle[activeTipo][colC]=(nTipoDetalle[activeTipo][colC]||0)+cant;}
+      if(activeTipo){
+        if(!nTipoDetalle[activeTipo])nTipoDetalle[activeTipo]={};
+        nTipoDetalle[activeTipo][colC]=(nTipoDetalle[activeTipo][colC]||0)+cant;
+      }
     }
     // F+G: hs mes
     const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
