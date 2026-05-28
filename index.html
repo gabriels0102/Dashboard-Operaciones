@@ -1780,6 +1780,8 @@ window.renderFlotaTaller = function renderFlotaTaller(){
     const v=FLOTA.find(x=>x.p===p)||{};const pct=Math.round(hs/totalH*100*10)/10;const bc=hs>400?"var(--err)":hs>200?"var(--warn)":"var(--ac)";const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":v.est?"p-err":"p-mu";
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${p}</td><td style="font-size:11px;">${v.j||"—"}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${v.est?pill(v.est,ec):"—"}</td><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,hs/691*100)}%;background:${bc};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;">${hs.toFixed(1)}h</span></div></td><td style="color:var(--mu);font-size:11px;">${pct}%</td></tr>`;
   }).join("");
+
+  if(window.renderTipoChart) window.renderTipoChart();
 }
 
 function renderFlotaImpacto(){
