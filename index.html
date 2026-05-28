@@ -2365,13 +2365,35 @@ window.renderTipoChart=function(){
   // Chart 1: donut tipos
   const tipos=Object.entries(window.TURNOS_TIPOS||{}).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
   const totalT=tipos.reduce((s,[,v])=>s+v,0);
-  dc("ch-taller-tipo");const c1=document.getElementById("ch-taller-tipo");
-  if(c1&&tipos.length>0)charts["ch-taller-tipo"]=new Chart(c1,{type:"doughnut",data:{labels:tipos.map(([k,v])=>k+' ('+v+')'),datasets:[{data:tipos.map(([,v])=>v),backgroundColor:COLORS.slice(0,tipos.length),borderWidth:2,borderColor:'#1a1d27'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalT*100)+'%)'}}}}});
+  dc("ch-taller-tipo");
+  const c1=document.getElementById("ch-taller-tipo");
+  if(c1){
+    if(tipos.length>0){
+      charts["ch-taller-tipo"]=new Chart(c1,{
+        type:"doughnut",
+        data:{labels:tipos.map(([k,v])=>k+' ('+v+')'),datasets:[{data:tipos.map(([,v])=>v),backgroundColor:COLORS.slice(0,tipos.length),borderWidth:2,borderColor:'#1a1d27'}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalT*100)+'%)'}}}}
+      });
+    } else {
+      c1.parentElement.innerHTML='<div style="color:var(--mu);font-size:12px;padding:20px;text-align:center;">Cargando datos del Dashboard...</div>';
+    }
+  }
   // Chart 2: desglose correctivos
   const corrDet=Object.entries((window.TURNOS_TIPO_DETALLE||{})["Correctivo"]||{}).sort((a,b)=>b[1]-a[1]);
   const totalC=corrDet.reduce((s,[,v])=>s+v,0);
-  dc("ch-taller-correctivo");const c2=document.getElementById("ch-taller-correctivo");
-  if(c2&&corrDet.length>0)charts["ch-taller-correctivo"]=new Chart(c2,{type:"bar",data:{labels:corrDet.map(([k])=>k),datasets:[{label:"Turnos",data:corrDet.map(([,v])=>v),backgroundColor:COLORS.slice(0,corrDet.length),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalC*100)+'%)'}}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+  dc("ch-taller-correctivo");
+  const c2=document.getElementById("ch-taller-correctivo");
+  if(c2){
+    if(corrDet.length>0){
+      charts["ch-taller-correctivo"]=new Chart(c2,{
+        type:"bar",
+        data:{labels:corrDet.map(([k])=>k),datasets:[{label:"Turnos",data:corrDet.map(([,v])=>v),backgroundColor:COLORS.slice(0,corrDet.length),borderRadius:5}]},
+        options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalC*100)+'%)'}}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}
+      });
+    } else {
+      c2.parentElement.innerHTML='<div style="color:var(--mu);font-size:12px;padding:20px;text-align:center;">Cargando datos del Dashboard...</div>';
+    }
+  }
 };
 
 
@@ -2545,7 +2567,7 @@ async function actualizarFlota(){
       nuevoEst3.forEach(d => EST3.push(d));
     }
 
-    try{const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard');parseDashboard(rowsDash);}catch(e2){console.warn('Dashboard:',e2);}
+    try{const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard');parseDashboard(rowsDash);if(window.renderTipoChart)window.renderTipoChart();}catch(e2){console.warn('Dashboard:',e2);}
 
     // Siniestros
     const rowsSin = await fetchSheet(GS_FLOTA, 'Siniestros');
