@@ -601,16 +601,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por patente — acumulado</div><div class="cs">Ordenado de mayor a menor</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Dashboard — tipo y detalle</div></div>
-    <div style="display:flex;gap:6px;">
-      <button id="btn-tipo-cat" onclick="window.setTipoView('cat')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--ac);color:#fff;">Tipo</button>
-      <button id="btn-tipo-det" onclick="window.setTipoView('det')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">Detalle</button>
-    </div>
-  </div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
   </div>
   <div class="c2" style="margin-top:14px;">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por área</div></div></div><div class="cw"></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Distribución por tipo de arreglo</div></div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Desglose — Correctivos</div><div class="cs">Detalle de turnos correctivos</div></div></div><div class="cw"><canvas id="ch-taller-correctivo"></canvas></div></div>
   </div>
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div class="ct">Detalle por patente</div></div>
@@ -1645,36 +1640,24 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  const fr   = document.getElementById("f-cont-resp")?.value||"";
-  const femp = document.getElementById("f-cont-emp")?.value||"";
-  const fest = document.getElementById("f-cont-estado")?.value||"";
-  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const cont = document.getElementById("contratos-cont");
-  if(!cont) return;
-  const psub = document.getElementById("cont-psub");
-  if(psub && CONTRATOS_RT.length>0){
-    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
-    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
-    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
-    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
-  }
-  if(CONTRATOS_RT.length===0){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando contratos...</div>";return;}
+  const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"";
+  const fest=document.getElementById("f-cont-estado")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const cont=document.getElementById("contratos-cont");if(!cont)return;
+  const psub=document.getElementById("cont-psub");
+  if(psub&&CONTRATOS_RT.length>0){const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length,inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length,emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";}
+  if(!CONTRATOS_RT.length){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando...</div>";return;}
   const filtered=CONTRATOS_RT.filter(ct=>{
-    if(fr&&ct.jefe!==fr)return false;
-    if(femp&&ct.empresa!==femp)return false;
-    if(fest&&ct.estado!==fest)return false;
-    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
-    return true;
+    if(fr&&ct.jefe!==fr)return false;if(femp&&ct.empresa!==femp)return false;if(fest&&ct.estado!==fest)return false;
+    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}return true;
   });
-  const actF=filtered.filter(c=>c.estado==="Activo").length;
-  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
+  const actF=filtered.filter(c=>c.estado==="Activo").length,inactF=filtered.filter(c=>c.estado==="Inactivo").length;
   const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
-  const hoy2=new Date();
+  const hoy=new Date();
   function pF(s){try{const p=(s||"").split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
-  function dD(s){const d=pF(s);return d?Math.round((d-hoy2)/864e5):null;}
+  function dD(s){const d=pF(s);return d?Math.round((d-hoy)/864e5):null;}
   const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
-  const vence30 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
-  const vence90 =filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
+  const vence30=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
+  const vence90=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
   const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
   let html="<div class='kg' style='margin-bottom:14px;'>"
     +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
@@ -1687,27 +1670,20 @@ window.renderContratos=function(){
     +"</div>";
   Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
     const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
-    const aJ=cts.filter(c=>c.estado==="Activo").length;
-    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
-    html+="<div class='card' style='margin-bottom:10px;'>"
-      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
+    const aJ=cts.filter(c=>c.estado==="Activo").length,iJ=cts.filter(c=>c.estado==="Inactivo").length;
+    html+="<div class='card' style='margin-bottom:10px;'><div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
       +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
-      +"<div><div class='ct'>"+jefe+"</div>"
-      +"<div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div>"
-      +"</div></div></div><div style='display:grid;gap:4px;'>";
+      +"<div><div class='ct'>"+jefe+"</div><div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div></div></div></div>"
+      +"<div style='display:grid;gap:4px;'>";
     cts.forEach(function(ct){
-      const ecl=ct.estado==="Inactivo"?"p-err":"p-ok";
-      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
-      const dd=dD(ct.vence||"");
-      let vcl="p-mu",vl=ct.vence||"Sin fecha";
+      const ecl=ct.estado==="Inactivo"?"p-err":"p-ok",eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
+      const dd=dD(ct.vence||"");let vcl="p-mu",vl=ct.vence||"Sin fecha";
       if(dd!==null){if(dd<0){vcl="p-err";vl="Vencido "+Math.abs(dd)+"d";}else if(dd<=30){vcl="p-err";vl="Vence "+dd+"d";}else if(dd<=90){vcl="p-warn";vl="Vence "+dd+"d";}else{vcl="p-mu";vl=ct.vence;}}
-      else if(!ct.vence||ct.vence==="Sin información"||ct.vence==="Sin informacion"){vcl="p-mu";vl="Sin fecha";}
-      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
-        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
+      else if(!ct.vence||ct.vence==="Sin información"){vcl="p-mu";vl="Sin fecha";}
+      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span><span class='cn'>"+(ct.servicio||"—")+"</span>"
         +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
         +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
-        +"<span class='p "+vcl+"' style='font-size:10px;'>📅 "+vl+"</span>"
-        +"</div>";
+        +"<span class='p "+vcl+"' style='font-size:10px;'>📅 "+vl+"</span></div>";
     });
     html+="</div></div>";
   });
@@ -2074,127 +2050,6 @@ window.renderComplementariosPage = function(){
 };
 
 
-// ── Tipo/Detalle toggle for taller ──
-window._tipoView='cat';
-window.setTipoView=function(v){
-  window._tipoView=v;
-  window.renderTipoChart(null);
-};;
-window._tipoSelected = null; // currently drilled-in tipo
-
-window.renderTipoChart=function(drillTipo){
-  const COLORS = ["#4f8ef7","#22c55e","#f59e0b","#ef4444","#7c3aed","#14b8a6","#f97316","#06b6d4"];
-  dc("ch-taller-tipo");
-  const canvas = document.getElementById("ch-taller-tipo");
-  if(!canvas) return;
-
-  // Determine what to show
-  if(drillTipo){
-    // Drill-down: show detalles of selected tipo
-    window._tipoSelected = drillTipo;
-    const detalles = window.TURNOS_TIPO_DETALLE?.[drillTipo] || {};
-    const entries = Object.entries(detalles).sort((a,b)=>b[1]-a[1]);
-    const total = entries.reduce((s,[,v])=>s+v,0);
-
-    // Update buttons area to show back button
-    const btnArea = document.getElementById('btn-tipo-cat')?.parentElement;
-    if(btnArea){
-      btnArea.innerHTML = `<button onclick="window.renderTipoChart(null)" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">← Volver</button>
-        <span style="font-size:11px;color:var(--ac);font-weight:600;">${drillTipo}</span>`;
-    }
-
-    if(entries.length===0){
-      const ctx=canvas.getContext('2d');
-      if(ctx){ctx.clearRect(0,0,canvas.width,canvas.height);}
-      return;
-    }
-
-    charts["ch-taller-tipo"]=new Chart(canvas,{
-      type:"bar",
-      data:{
-        labels:entries.map(([k])=>k),
-        datasets:[{
-          label:"Turnos",
-          data:entries.map(([,v])=>v),
-          backgroundColor:COLORS.map(c=>c+'99'),
-          borderRadius:5
-        }]
-      },
-      options:{
-        responsive:true,maintainAspectRatio:false,indexAxis:"y",
-        plugins:{
-          legend:{display:false},
-          title:{display:true,text:drillTipo+' — desglose',color:'#8b8fa8',font:{size:12}},
-          tooltip:{callbacks:{label:c=>' '+c.raw+' turnos ('+Math.round(c.raw/total*100)+'%)'}}
-        },
-        scales:{
-          x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
-          y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}
-        }
-      }
-    });
-
-  } else {
-    // Top level: donut with all tipos — clickable
-    window._tipoSelected = null;
-
-    // Restore buttons
-    const btnArea = document.getElementById('btn-tipo-cat')?.parentElement;
-    if(btnArea){
-      btnArea.innerHTML = `<button id="btn-tipo-cat" onclick="window.setTipoView('cat')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--ac);color:#fff;">Tipo</button>
-        <button id="btn-tipo-det" onclick="window.setTipoView('det')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">Detalle global</button>`;
-    }
-
-    const isCat = window._tipoView !== 'det';
-    const src = isCat ? (window.TURNOS_TIPOS||{}) : (window.TURNOS_DETALLE_DASH||{});
-    const entries = Object.entries(src).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
-    const total = entries.reduce((s,[,v])=>s+v,0);
-
-    if(entries.length===0) return;
-
-    if(isCat){
-      // Donut — click to drill down
-      charts["ch-taller-tipo"]=new Chart(canvas,{
-        type:"doughnut",
-        data:{
-          labels:entries.map(([k,v])=>k+' ('+v+')'),
-          datasets:[{data:entries.map(([,v])=>v),backgroundColor:COLORS.slice(0,entries.length).map(c=>c+'cc'),borderWidth:2,borderColor:'#1a1d27'}]
-        },
-        options:{
-          responsive:true,maintainAspectRatio:false,cutout:'60%',
-          plugins:{
-            legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},
-            tooltip:{callbacks:{
-              label:c=>' '+c.raw+' turnos ('+Math.round(c.raw/total*100)+'%)',
-              afterLabel:()=>'← Click para ver detalle'
-            }}
-          },
-          onClick:(evt,els)=>{
-            if(els.length>0){
-              const tipo = entries[els[0].index][0];
-              if(window.TURNOS_TIPO_DETALLE?.[tipo]) window.renderTipoChart(tipo);
-            }
-          }
-        }
-      });
-    } else {
-      // Global detalle barras
-      charts["ch-taller-tipo"]=new Chart(canvas,{
-        type:"bar",
-        data:{
-          labels:entries.map(([k])=>k),
-          datasets:[{label:"Turnos",data:entries.map(([,v])=>v),backgroundColor:COLORS.map(c=>c+'99'),borderRadius:5}]
-        },
-        options:{
-          responsive:true,maintainAspectRatio:false,indexAxis:"y",
-          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' turnos ('+Math.round(c.raw/total*100)+'%)'}}},
-          scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}
-        }
-      });
-    }
-  }
-};;
-
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
 
@@ -2465,51 +2320,60 @@ function parseTurnos(rows){
 }
 
 // ── Parser: "Estadistica 3" ──
-// ── parseDashboard: hoja "Dashboard" FLOTA — solo mantenimiento ──
+// ── parseDashboard ──
 function parseDashboard(rows){
   if(!rows||rows.length<2) return;
   const M=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   function lbl(s){try{const p=String(s||'').trim().split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]).trim();return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}catch(e){return '';}}
   function isTotal(s){return /total|suma|prom/i.test(String(s||''));}
-  const nHM={},nTM={},nHP={},nE3=[],nTipos={},nDetalle={},nTipoDetalle={};let curTipo="";
+  const nHM={},nTM={},nHP={},nE3={},nTipos={},nDetalle={},nTipoDetalle={};let curTipo='';
   rows.slice(1).forEach(row=>{
-    const colB=String(row[1]||'').trim();
-    const colC=String(row[2]||'').trim();
-    const cant=parseFloat(row[3])||0;
-    // "Total Correctivo", "Total VTV" etc → tipo totals (strip "Total ")
-    if(colB.startsWith('Total ')&&!colC&&cant>0){
-      const tipoName=colB.replace(/^Total\s+/,'').trim();
-      nTipos[tipoName]=(nTipos[tipoName]||0)+cant;
-    }
-    // Track current tipo for sparse rows (col B empty after first detail row)
-    if(colB&&!colB.startsWith('Total ')&&!isTotal(colB)&&colB) curTipo=colB;
-    if(colB.startsWith('Total ')) curTipo='';
-    // Detail rows: col C has detail name — add to global detalle AND tipo→detalle map
-    const activeTipo = colB&&!colB.startsWith('Total ')&&!isTotal(colB) ? colB : curTipo;
+    const colB=String(row[1]||'').trim(),colC=String(row[2]||'').trim(),cant=parseFloat(row[3])||0;
+    // Tipo totals: "Total Correctivo" → Correctivo
+    if(colB.startsWith('Total ')&&!colC&&cant>0){nTipos[colB.slice(6).trim()]=(nTipos[colB.slice(6).trim()]||0)+cant;curTipo='';}
+    // Detail rows
+    const activeTipo=colB&&!colB.startsWith('Total ')&&!isTotal(colB)?colB:curTipo;
+    if(!colB.startsWith('Total ')&&!isTotal(colB)&&colB) curTipo=colB;
     if(colC&&!isTotal(colC)&&cant>0){
       nDetalle[colC]=(nDetalle[colC]||0)+cant;
-      if(activeTipo){
-        if(!nTipoDetalle[activeTipo]) nTipoDetalle[activeTipo]={};
-        nTipoDetalle[activeTipo][colC]=(nTipoDetalle[activeTipo][colC]||0)+cant;
-      }
+      if(activeTipo){if(!nTipoDetalle[activeTipo])nTipoDetalle[activeTipo]={};nTipoDetalle[activeTipo][colC]=(nTipoDetalle[activeTipo][colC]||0)+cant;}
     }
+    // F+G: hs mes
     const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
     if(pfg&&hsg>0&&!isTotal(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
+    // T+U: turnos mes
     const ptu=String(row[20]||'').trim(),tmu=parseFloat(row[21])||0;
     if(ptu&&tmu>0&&!isTotal(ptu)){const mk=lbl(ptu);if(mk)nTM[mk]=(nTM[mk]||0)+tmu;}
+    // R+S: horas patente
     const pat=String(row[17]||'').trim(),hsp=parseFloat(row[18])||0;
     if(pat&&hsp>0&&!isTotal(pat)&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER') nHP[pat]=(nHP[pat]||0)+hsp;
-    const pij=String(row[8]||'').trim(),hsPot=parseFloat(row[9])||0;
-    const imp=parseFloat(row[10])||0,cam=parseFloat(row[11])||0,pDisp=parseFloat(row[13])||0;
-    if(pij&&!isTotal(pij)&&cam>0&&hsPot>0){const mk=lbl(pij);if(mk){const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;nE3.push({mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0});}}
+    // I+J+K+L+N: impacto
+    const pij=String(row[8]||'').trim(),hsPot=parseFloat(row[9])||0,imp=parseFloat(row[10])||0,cam=parseFloat(row[11])||0,pDisp=parseFloat(row[13])||0;
+    if(pij&&!isTotal(pij)&&cam>0&&hsPot>0){const mk=lbl(pij);if(mk){const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;if(!nE3[mk])nE3[mk]={mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0};}}
   });
-  nE3.forEach(d=>{d.h=nHM[d.mes]||0;});
+  Object.entries(nE3).forEach(([mk,d])=>{d.h=nHM[mk]||0;});
   if(Object.keys(nHM).length>0){Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);Object.assign(HORAS_MES,nHM);}
   if(Object.keys(nTM).length>0){Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);Object.assign(TURNOS_MES,nTM);}
   if(Object.keys(nHP).length>0){Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);Object.assign(HORAS_PAT,nHP);}
-  if(nE3.length>0){EST3.length=0;nE3.forEach(d=>EST3.push(d));}
+  const e3arr=Object.values(nE3);if(e3arr.length>0){EST3.length=0;e3arr.forEach(d=>EST3.push(d));}
   window.TURNOS_TIPOS=nTipos;window.TURNOS_DETALLE_DASH=nDetalle;window.TURNOS_TIPO_DETALLE=nTipoDetalle;
 }
+
+// ── renderTipoChart: 2 fixed charts ──
+window.renderTipoChart=function(){
+  const COLORS=["#4f8ef7cc","#22c55ecc","#f59e0bcc","#ef4444cc","#7c3aedcc","#14b8a6cc","#f97316cc","#06b6d4cc"];
+  // Chart 1: donut tipos
+  const tipos=Object.entries(window.TURNOS_TIPOS||{}).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
+  const totalT=tipos.reduce((s,[,v])=>s+v,0);
+  dc("ch-taller-tipo");const c1=document.getElementById("ch-taller-tipo");
+  if(c1&&tipos.length>0)charts["ch-taller-tipo"]=new Chart(c1,{type:"doughnut",data:{labels:tipos.map(([k,v])=>k+' ('+v+')'),datasets:[{data:tipos.map(([,v])=>v),backgroundColor:COLORS.slice(0,tipos.length),borderWidth:2,borderColor:'#1a1d27'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalT*100)+'%)'}}}}});
+  // Chart 2: desglose correctivos
+  const corrDet=Object.entries((window.TURNOS_TIPO_DETALLE||{})["Correctivo"]||{}).sort((a,b)=>b[1]-a[1]);
+  const totalC=corrDet.reduce((s,[,v])=>s+v,0);
+  dc("ch-taller-correctivo");const c2=document.getElementById("ch-taller-correctivo");
+  if(c2&&corrDet.length>0)charts["ch-taller-correctivo"]=new Chart(c2,{type:"bar",data:{labels:corrDet.map(([k])=>k),datasets:[{label:"Turnos",data:corrDet.map(([,v])=>v),backgroundColor:COLORS.slice(0,corrDet.length),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalC*100)+'%)'}}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+};
+
 
 function parseEst3(rows){
   // MAPEO VERIFICADO ESTADISTICA 3 (con datos reales):
@@ -2681,7 +2545,6 @@ async function actualizarFlota(){
       nuevoEst3.forEach(d => EST3.push(d));
     }
 
-    // Dashboard (solo mantenimiento) — override EST3/HORAS after Est3
     try{const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard');parseDashboard(rowsDash);}catch(e2){console.warn('Dashboard:',e2);}
 
     // Siniestros
@@ -2771,9 +2634,7 @@ async function actualizarComplementarios(){
         COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
       });
 
-    // detallePorJefe already built from Resumen comercial col F→G→H above
-    // "Complementarios y presupuestos" col AD has individual work values, not totals
-    // so we do NOT override detallePorJefe from that sheet
+    // detallePorJefe already set from Resumen comercial col F→G→H above (authoritative source)
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
@@ -2790,25 +2651,21 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=VENCE
     const result = [];
     rows.slice(1).forEach(row=>{
-      const empresa  = String(row[0]||'').trim();
-      const jefe     = String(row[1]||'').trim();
-      const servicio = String(row[2]||'').trim();
-      const ceco     = String(row[3]||'').trim();
-      const estado   = String(row[4]||'').trim();
-      const vence    = String(row[5]||'').trim()||'Sin información';
-      if(!jefe && !servicio) return;
-      result.push({empresa, jefe, servicio, ceco, estado, vence});
+      const empresa=String(row[0]||'').trim(),jefe=String(row[1]||'').trim();
+      const servicio=String(row[2]||'').trim(),ceco=String(row[3]||'').trim();
+      const estado=String(row[4]||'').trim(),vence=String(row[5]||'').trim()||'Sin información';
+      if(!jefe&&!servicio) return;
+      result.push({empresa,jefe,servicio,ceco,estado,vence});
     });
     if(result.length > 0){
       CONTRATOS_RT = result;
       // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
       const emps=[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
-      const selR=document.getElementById("f-cont-resp");if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
-      const selE=document.getElementById("f-cont-emp");if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
+      const selR=document.getElementById('f-cont-resp');if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
+      const selE=document.getElementById('f-cont-emp');if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
     }
     setGsStatus('cont','ok');
     renderContratos();
