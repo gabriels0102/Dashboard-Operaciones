@@ -2078,24 +2078,122 @@ window.renderComplementariosPage = function(){
 window._tipoView='cat';
 window.setTipoView=function(v){
   window._tipoView=v;
-  const bc=document.getElementById('btn-tipo-cat'),bd=document.getElementById('btn-tipo-det');
-  if(bc){bc.style.background=v==='cat'?'var(--ac)':'var(--s2)';bc.style.color=v==='cat'?'#fff':'var(--mu)';}
-  if(bd){bd.style.background=v==='det'?'var(--ac)':'var(--s2)';bd.style.color=v==='det'?'#fff':'var(--mu)';}
-  window.renderTipoChart();
-};
-window.renderTipoChart=function(){
-  const src=window._tipoView==='cat'?(window.TURNOS_TIPOS||{}):(window.TURNOS_DETALLE_DASH||{});
-  const entries=Object.entries(src).sort((a,b)=>b[1]-a[1]);
-  const COLORS=["#4f8ef799","#22c55e99","#f59e0b99","#ef444499","#7c3aed99","#14b8a699","#f9731699","#06b6d499"];
+  window.renderTipoChart(null);
+};;
+window._tipoSelected = null; // currently drilled-in tipo
+
+window.renderTipoChart=function(drillTipo){
+  const COLORS = ["#4f8ef7","#22c55e","#f59e0b","#ef4444","#7c3aed","#14b8a6","#f97316","#06b6d4"];
   dc("ch-taller-tipo");
-  const canvas=document.getElementById("ch-taller-tipo");
-  if(!canvas||entries.length===0) return;
-  if(window._tipoView==='cat'){
-    charts["ch-taller-tipo"]=new Chart(canvas,{type:"doughnut",data:{labels:entries.map(d=>d[0]),datasets:[{data:entries.map(d=>d[1]),backgroundColor:COLORS.slice(0,entries.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:10},position:"right"},tooltip:{callbacks:{label:c=>`${c.raw} turnos`}}}}});
+  const canvas = document.getElementById("ch-taller-tipo");
+  if(!canvas) return;
+
+  // Determine what to show
+  if(drillTipo){
+    // Drill-down: show detalles of selected tipo
+    window._tipoSelected = drillTipo;
+    const detalles = window.TURNOS_TIPO_DETALLE?.[drillTipo] || {};
+    const entries = Object.entries(detalles).sort((a,b)=>b[1]-a[1]);
+    const total = entries.reduce((s,[,v])=>s+v,0);
+
+    // Update buttons area to show back button
+    const btnArea = document.getElementById('btn-tipo-cat')?.parentElement;
+    if(btnArea){
+      btnArea.innerHTML = `<button onclick="window.renderTipoChart(null)" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">← Volver</button>
+        <span style="font-size:11px;color:var(--ac);font-weight:600;">${drillTipo}</span>`;
+    }
+
+    if(entries.length===0){
+      const ctx=canvas.getContext('2d');
+      if(ctx){ctx.clearRect(0,0,canvas.width,canvas.height);}
+      return;
+    }
+
+    charts["ch-taller-tipo"]=new Chart(canvas,{
+      type:"bar",
+      data:{
+        labels:entries.map(([k])=>k),
+        datasets:[{
+          label:"Turnos",
+          data:entries.map(([,v])=>v),
+          backgroundColor:COLORS.map(c=>c+'99'),
+          borderRadius:5
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,indexAxis:"y",
+        plugins:{
+          legend:{display:false},
+          title:{display:true,text:drillTipo+' — desglose',color:'#8b8fa8',font:{size:12}},
+          tooltip:{callbacks:{label:c=>' '+c.raw+' turnos ('+Math.round(c.raw/total*100)+'%)'}}
+        },
+        scales:{
+          x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},
+          y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}
+        }
+      }
+    });
+
   } else {
-    charts["ch-taller-tipo"]=new Chart(canvas,{type:"bar",data:{labels:entries.map(d=>d[0]),datasets:[{label:"Turnos",data:entries.map(d=>d[1]),backgroundColor:entries.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:9}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+    // Top level: donut with all tipos — clickable
+    window._tipoSelected = null;
+
+    // Restore buttons
+    const btnArea = document.getElementById('btn-tipo-cat')?.parentElement;
+    if(btnArea){
+      btnArea.innerHTML = `<button id="btn-tipo-cat" onclick="window.setTipoView('cat')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--ac);color:#fff;">Tipo</button>
+        <button id="btn-tipo-det" onclick="window.setTipoView('det')" style="padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:var(--s2);color:var(--mu);">Detalle global</button>`;
+    }
+
+    const isCat = window._tipoView !== 'det';
+    const src = isCat ? (window.TURNOS_TIPOS||{}) : (window.TURNOS_DETALLE_DASH||{});
+    const entries = Object.entries(src).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
+    const total = entries.reduce((s,[,v])=>s+v,0);
+
+    if(entries.length===0) return;
+
+    if(isCat){
+      // Donut — click to drill down
+      charts["ch-taller-tipo"]=new Chart(canvas,{
+        type:"doughnut",
+        data:{
+          labels:entries.map(([k,v])=>k+' ('+v+')'),
+          datasets:[{data:entries.map(([,v])=>v),backgroundColor:COLORS.slice(0,entries.length).map(c=>c+'cc'),borderWidth:2,borderColor:'#1a1d27'}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,cutout:'60%',
+          plugins:{
+            legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},
+            tooltip:{callbacks:{
+              label:c=>' '+c.raw+' turnos ('+Math.round(c.raw/total*100)+'%)',
+              afterLabel:()=>'← Click para ver detalle'
+            }}
+          },
+          onClick:(evt,els)=>{
+            if(els.length>0){
+              const tipo = entries[els[0].index][0];
+              if(window.TURNOS_TIPO_DETALLE?.[tipo]) window.renderTipoChart(tipo);
+            }
+          }
+        }
+      });
+    } else {
+      // Global detalle barras
+      charts["ch-taller-tipo"]=new Chart(canvas,{
+        type:"bar",
+        data:{
+          labels:entries.map(([k])=>k),
+          datasets:[{label:"Turnos",data:entries.map(([,v])=>v),backgroundColor:COLORS.map(c=>c+'99'),borderRadius:5}]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,indexAxis:"y",
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' turnos ('+Math.round(c.raw/total*100)+'%)'}}},
+          scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}
+        }
+      });
+    }
   }
-};
+};;
 
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
@@ -2373,11 +2471,28 @@ function parseDashboard(rows){
   const M=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
   function lbl(s){try{const p=String(s||'').trim().split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]).trim();return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}catch(e){return '';}}
   function isTotal(s){return /total|suma|prom/i.test(String(s||''));}
-  const nHM={},nTM={},nHP={},nE3=[],nTipos={},nDetalle={};
+  const nHM={},nTM={},nHP={},nE3=[],nTipos={},nDetalle={},nTipoDetalle={};let curTipo="";
   rows.slice(1).forEach(row=>{
-    const tipo=String(row[1]||'').trim(),det=String(row[2]||'').trim(),cant=parseFloat(row[3])||0;
-    if(tipo&&!isTotal(tipo)&&cant>0) nTipos[tipo]=(nTipos[tipo]||0)+cant;
-    if(det&&!isTotal(det)&&cant>0) nDetalle[det]=(nDetalle[det]||0)+cant;
+    const colB=String(row[1]||'').trim();
+    const colC=String(row[2]||'').trim();
+    const cant=parseFloat(row[3])||0;
+    // "Total Correctivo", "Total VTV" etc → tipo totals (strip "Total ")
+    if(colB.startsWith('Total ')&&!colC&&cant>0){
+      const tipoName=colB.replace(/^Total\s+/,'').trim();
+      nTipos[tipoName]=(nTipos[tipoName]||0)+cant;
+    }
+    // Track current tipo for sparse rows (col B empty after first detail row)
+    if(colB&&!colB.startsWith('Total ')&&!isTotal(colB)&&colB) curTipo=colB;
+    if(colB.startsWith('Total ')) curTipo='';
+    // Detail rows: col C has detail name — add to global detalle AND tipo→detalle map
+    const activeTipo = colB&&!colB.startsWith('Total ')&&!isTotal(colB) ? colB : curTipo;
+    if(colC&&!isTotal(colC)&&cant>0){
+      nDetalle[colC]=(nDetalle[colC]||0)+cant;
+      if(activeTipo){
+        if(!nTipoDetalle[activeTipo]) nTipoDetalle[activeTipo]={};
+        nTipoDetalle[activeTipo][colC]=(nTipoDetalle[activeTipo][colC]||0)+cant;
+      }
+    }
     const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
     if(pfg&&hsg>0&&!isTotal(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
     const ptu=String(row[20]||'').trim(),tmu=parseFloat(row[21])||0;
@@ -2393,7 +2508,7 @@ function parseDashboard(rows){
   if(Object.keys(nTM).length>0){Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);Object.assign(TURNOS_MES,nTM);}
   if(Object.keys(nHP).length>0){Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);Object.assign(HORAS_PAT,nHP);}
   if(nE3.length>0){EST3.length=0;nE3.forEach(d=>EST3.push(d));}
-  window.TURNOS_TIPOS=nTipos;window.TURNOS_DETALLE_DASH=nDetalle;
+  window.TURNOS_TIPOS=nTipos;window.TURNOS_DETALLE_DASH=nDetalle;window.TURNOS_TIPO_DETALLE=nTipoDetalle;
 }
 
 function parseEst3(rows){
