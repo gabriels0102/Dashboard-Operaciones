@@ -187,7 +187,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
+.alertas-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -247,7 +247,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
-    <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios</span></button>
+    <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
+    <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -321,7 +322,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
-      <div class="kpi-arc-title">% COBERTURA DE<br>ACTIVOS CRÍTICOS</div>
+      <div class="kpi-arc-title">% COBERTURA DE<br>ABONOS DE LEY</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-4"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
       </div>
@@ -605,7 +606,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2" style="margin-top:14px;">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Distribución por tipo de arreglo</div></div></div><div class="cw" id="wrap-taller-tipo"><canvas id="ch-taller-tipo"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Desglose — Correctivos</div><div class="cs">Detalle de turnos correctivos</div></div></div><div class="cw" id="wrap-taller-correctivo"><canvas id="ch-taller-correctivo"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Detalle — Correctivos</div><div class="cs">Detalle de turnos correctivos</div></div></div><div class="cw" id="wrap-taller-correctivo"><canvas id="ch-taller-correctivo"></canvas></div></div>
   </div>
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div class="ct">Detalle por patente</div></div>
@@ -718,7 +719,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- COMPLEMENTARIOS -->
 <section class="page" id="page-complementarios">
   <div class="topbar">
-    <div><div class="ptitle">Complementarios — Seguimiento Comercial</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
+    <div><div class="ptitle">Complementarios — OCA</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-compl-jefe" onchange="window.renderComplementariosPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
     </div>
@@ -750,6 +751,40 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <th style="border-left:1px solid var(--b);padding-left:16px;">Servicio</th><th>Venta</th><th>%</th>
       </tr></thead>
       <tbody id="tb-compl"></tbody>
+    </table></div>
+  </div>
+</section>
+<!-- NO OCA -->
+<section class="page" id="page-no-oca">
+  <div class="topbar">
+    <div><div class="ptitle">Adicionales — No OCA</div><div class="psub">Venta por jefe zonal y servicio · Tiempo real</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-nooca-jefe" onchange="window.renderNoOcaPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
+    </div>
+  </div>
+  <div class="kg" id="k-nooca-page"></div>
+  <div class="c2">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Venta total por jefe zonal</div><div class="cs">Suma de valor venta por responsable</div></div></div>
+      <div class="cwtall"><canvas id="ch-nooca-jefe"></canvas></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Distribución porcentual</div><div class="cs">Participación de cada jefe en la venta total</div></div></div>
+      <div class="cwtall"><canvas id="ch-nooca-pie"></canvas></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Top servicios por valor de venta</div><div class="cs">Todos los servicios ordenados de mayor a menor</div></div></div>
+    <div class="cwtall"><canvas id="ch-nooca-svc"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div class="ct">Detalle por jefe zonal y servicio</div></div>
+    <div class="tw"><table>
+      <thead><tr>
+        <th>Jefe Zonal</th><th>Venta</th><th>%</th>
+        <th style="border-left:1px solid var(--b);padding-left:16px;">Servicio</th><th>Venta</th><th>%</th>
+      </tr></thead>
+      <tbody id="tb-nooca"></tbody>
     </table></div>
   </div>
 </section>
@@ -1014,18 +1049,33 @@ function renderDashboard(){
   // Alertas
   const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
+  // Col 1: Correctivos backlog
+  alertas.push(e.act>200
+    ? {icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'}
+    : {icon:'✅',txt:'Correctivos bajo control',sub:`${e.act} activos · ${e.pct_c}% cerrados`,cls:'al-ok'});
+  // Col 2: Flota en taller
+  alertas.push(enTaller.length>0
+    ? {icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'}
+    : {icon:'✅',txt:'Flota sin unidades en taller',sub:'Toda la flota operativa',cls:'al-ok'});
+  // Col 3: Dotación
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
+  alertas.push(defDot>0
+    ? {icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'}
+    : {icon:'✅',txt:'Dotación completa',sub:'Sin déficit de personal',cls:'al-ok'});
+  // Col 4: Preventivos
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
-  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
+  alertas.push(noComp>0
+    ? {icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'}
+    : {icon:'✅',txt:'Preventivos al día',sub:'Sin pendientes',cls:'al-ok'});
+  // Col 5: Abonos
   let abonosVenc=0;
   if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
-  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
+  // Col 5: Abonos (always push)
+  alertas.push(abonosVenc>0
+    ? {icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'}
+    : {icon:'✅',txt:'Abonos de ley al día',sub:'Sin vencimientos',cls:'al-ok'});
   const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  if(strip) strip.innerHTML=alertas.slice(0,5).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -2023,6 +2073,119 @@ window.renderComplementariosPage = function(){
 };
 
 
+
+// ── Actualizar No OCA ──
+async function actualizarNoOca(){
+  try {
+    const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
+    if(rows.length < 2) return false;
+    const porJefe=[], porServicio=[], detallePorJefeMap={};
+    let ventaTotal=0;
+    rows.slice(1).forEach(row=>{
+      // Col J(9)=jefe, K(10)=valor_jefe
+      const jefe = String(row[9]||'').trim();
+      const valorJefe = parseFloat(String(row[10]||'').replace(/[^0-9.-]/g,''))||0;
+      if(jefe && jefe!=='Suma total' && jefe!=='JEFE ZONAL' && valorJefe>0){
+        porJefe.push({jefe, valor:valorJefe});
+        ventaTotal += valorJefe;
+      }
+      // Col M(12)=jefe_svc, N(13)=servicio, O(14)=valor_svc
+      const jefeSvc  = String(row[12]||'').trim();
+      const servicio = String(row[13]||'').trim();
+      const valorSvc = parseFloat(String(row[14]||'').replace(/[^0-9.-]/g,''))||0;
+      if(servicio && servicio!=='Suma total' && servicio!=='Servicio' && valorSvc>0){
+        porServicio.push({servicio, valor:valorSvc});
+        if(jefeSvc && jefeSvc!=='Suma total'){
+          if(!detallePorJefeMap[jefeSvc]) detallePorJefeMap[jefeSvc]=[];
+          detallePorJefeMap[jefeSvc].push({servicio, valor:valorSvc});
+        }
+      }
+    });
+    // Deduplicate jefes (table may have repeated rows)
+    const jefeMap={};
+    porJefe.forEach(j=>{ jefeMap[j.jefe]=(jefeMap[j.jefe]||0)+j.valor; });
+    NO_OCA_DATA.porJefe = Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
+    NO_OCA_DATA.venta_total = Object.values(jefeMap).reduce((s,v)=>s+v, 0);
+    NO_OCA_DATA.porServicio = porServicio.sort((a,b)=>b.valor-a.valor);
+    NO_OCA_DATA.detallePorJefe = {};
+    Object.entries(detallePorJefeMap).forEach(([j,svcs])=>{
+      NO_OCA_DATA.detallePorJefe[j]=[...svcs].sort((a,b)=>b.valor-a.valor);
+    });
+    renderNoOcaPage();
+    return true;
+  } catch(err) {
+    console.warn('Error No OCA:', err);
+    return false;
+  }
+}
+
+window.renderNoOcaPage = function(){
+  const fj = document.getElementById('f-nooca-jefe')?.value||'';
+  const ventaTotal = NO_OCA_DATA.venta_total || 0;
+  const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
+
+  const sel = document.getElementById('f-nooca-jefe');
+  if(sel && sel.options.length <= 1){
+    NO_OCA_DATA.porJefe.forEach(j=>{ sel.innerHTML+=`<option value="${j.jefe}">${j.jefe}</option>`; });
+  }
+
+  const jefes = fj ? NO_OCA_DATA.porJefe.filter(j=>j.jefe===fj) : NO_OCA_DATA.porJefe;
+  const ventaFiltrada = fj ? jefes.reduce((s,j)=>s+j.valor,0) : ventaTotal;
+  const svcsData = fj ? (NO_OCA_DATA.detallePorJefe[fj]||[]) : NO_OCA_DATA.porServicio;
+
+  const topJefe = [...NO_OCA_DATA.porJefe].sort((a,b)=>b.valor-a.valor)[0];
+  const topSvc  = [...svcsData].sort((a,b)=>b.valor-a.valor)[0];
+  const kp = document.getElementById('k-nooca-page');
+  if(kp) kp.innerHTML=`
+    <div class="kc gr"><span class="ki">💰</span><div class="kl">${fj?'Venta — '+fj.split(' ')[0]:'Venta total No OCA'}</div><div class="kv" style="font-size:18px;">${fmtARS(ventaFiltrada)}</div><div class="ks">${fj?Math.round(ventaFiltrada/ventaTotal*100)+'% del total':'Acumulado'}</div></div>
+    <div class="kc pu"><span class="ki">👤</span><div class="kl">Jefes con adicionales</div><div class="kv">${NO_OCA_DATA.porJefe.length}</div><div class="ks">${topJefe?'Top: '+topJefe.jefe.split(' ')[0]:''}</div></div>
+    <div class="kc or"><span class="ki">🏢</span><div class="kl">Servicios${fj?' ('+fj.split(' ')[0]+')':''}</div><div class="kv">${svcsData.length}</div><div class="ks">${topSvc?'Top: '+topSvc.servicio:'—'}</div></div>
+    <div class="kc te"><span class="ki">🏆</span><div class="kl">Mayor venta</div><div class="kv" style="font-size:13px;">${topSvc?topSvc.servicio:'—'}</div><div class="ks">${topSvc?fmtARS(topSvc.valor):''}</div></div>`;
+
+  const jefesSort=[...jefes].sort((a,b)=>b.valor-a.valor);
+  dc('ch-nooca-jefe');
+  if(jefesSort.length>0){
+    charts['ch-nooca-jefe']=new Chart(document.getElementById('ch-nooca-jefe'),{type:'bar',
+      data:{labels:jefesSort.map(j=>j.jefe.split(' ').slice(0,2).join(' ')),datasets:[{label:'Venta',data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/(ventaTotal||1)*100)+'%)'}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  }
+  dc('ch-nooca-pie');
+  if(jefesSort.length>0){
+    charts['ch-nooca-pie']=new Chart(document.getElementById('ch-nooca-pie'),{type:'doughnut',
+      data:{labels:jefesSort.map(j=>j.jefe.split(' ')[0]),datasets:[{data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:10},position:'right'},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' · '+Math.round(c.raw/(ventaTotal||1)*100)+'%'}}}}});
+  }
+  const svcsSort=[...svcsData].sort((a,b)=>b.valor-a.valor);
+  dc('ch-nooca-svc');
+  if(svcsSort.length>0){
+    charts['ch-nooca-svc']=new Chart(document.getElementById('ch-nooca-svc'),{type:'bar',
+      data:{labels:svcsSort.map(d=>d.servicio),datasets:[{label:'Venta',data:svcsSort.map(d=>d.valor),backgroundColor:svcsSort.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:5}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/(ventaFiltrada||ventaTotal||1)*100)+'%)'}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  }
+  const tbody=document.getElementById('tb-nooca');
+  if(tbody){
+    const maxRows=Math.max(jefesSort.length,svcsSort.length);
+    const ventaRef=ventaFiltrada||ventaTotal||1;
+    let rows='';
+    for(let i=0;i<maxRows;i++){
+      const j=jefesSort[i],s=svcsSort[i];
+      const pctJ=j?Math.round(j.valor/ventaTotal*100):0;
+      const pctS=s?Math.round(s.valor/ventaRef*100):0;
+      rows+=`<tr>
+        <td style="font-weight:600;">${j?j.jefe:'—'}</td>
+        <td style="font-family:'JetBrains Mono';color:var(--ok);">${j?fmtARS(j.valor):'—'}</td>
+        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctJ*2)}%;background:var(--ok);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctJ}%</span></div></td>
+        <td style="border-left:1px solid var(--b);padding-left:16px;color:var(--ac);">${s?s.servicio:'—'}</td>
+        <td style="font-family:'JetBrains Mono';color:var(--ac);">${s?fmtARS(s.valor):'—'}</td>
+        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctS*2)}%;background:var(--ac);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctS}%</span></div></td>
+      </tr>`;
+    }
+    tbody.innerHTML=rows;
+  }
+};
+
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
 
@@ -2669,10 +2832,11 @@ async function actualizarContratos(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
-    actualizarComplementarios(), actualizarContratos()
+    actualizarComplementarios(), actualizarContratos(),
+    actualizarNoOca()
   ]);
   renderAll();
   if(showToast){
@@ -2742,6 +2906,7 @@ let DOTACION_DATA = [];
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}};
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
+let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 
 // ── Parser Dotación ──
 function parseDotacion(rows){
