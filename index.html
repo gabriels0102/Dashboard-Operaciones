@@ -389,7 +389,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div><div class="ptitle">Correctivos OCA — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
@@ -2079,38 +2079,46 @@ async function actualizarNoOca(){
   try {
     const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
     if(rows.length < 2) return false;
-    const porJefe=[], porServicio=[], detallePorJefeMap={};
-    let ventaTotal=0;
-    rows.slice(1).forEach(row=>{
-      // Col J(9)=jefe, K(10)=valor_jefe
-      const jefe = String(row[9]||'').trim();
-      const valorJefe = parseFloat(String(row[10]||'').replace(/[^0-9.-]/g,''))||0;
-      if(jefe && jefe!=='Suma total' && jefe!=='JEFE ZONAL' && valorJefe>0){
-        porJefe.push({jefe, valor:valorJefe});
-        ventaTotal += valorJefe;
+    const pn = v => { const n=parseFloat(v); return isNaN(n)?0:n; };
+
+    const jefeMap    = {};
+    const svcList    = [];
+    const jefeSvcMap = {};
+    let ventaTotal   = 0;
+
+    rows.slice(1).forEach(row => {
+      // Col J(9)=jefe NO OCA, K(10)=valor
+      const jefeJ = String(row[9]||'').trim();
+      const valK  = pn(row[10]);
+      if(jefeJ === 'Suma total' && valK > 0){
+        ventaTotal = valK;
+      } else if(jefeJ && jefeJ !== 'Suma total' && jefeJ !== 'JEFE ZONAL' && valK > 0){
+        if(!jefeMap[jefeJ]) jefeMap[jefeJ] = valK;
       }
+
       // Col M(12)=jefe_svc, N(13)=servicio, O(14)=valor_svc
-      const jefeSvc  = String(row[12]||'').trim();
-      const servicio = String(row[13]||'').trim();
-      const valorSvc = parseFloat(String(row[14]||'').replace(/[^0-9.-]/g,''))||0;
-      if(servicio && servicio!=='Suma total' && servicio!=='Servicio' && valorSvc>0){
-        porServicio.push({servicio, valor:valorSvc});
-        if(jefeSvc && jefeSvc!=='Suma total'){
-          if(!detallePorJefeMap[jefeSvc]) detallePorJefeMap[jefeSvc]=[];
-          detallePorJefeMap[jefeSvc].push({servicio, valor:valorSvc});
+      const jefeM = String(row[12]||'').trim();
+      const svc   = String(row[13]||'').trim();
+      const valO  = pn(row[14]);
+      if(svc && svc !== 'Suma total' && svc !== 'Servicio' && valO > 0){
+        svcList.push({servicio:svc, valor:valO, jefe:jefeM});
+        if(jefeM && jefeM !== 'Suma total' && jefeM !== 'JEFE ZONAL'){
+          if(!jefeSvcMap[jefeM]) jefeSvcMap[jefeM] = [];
+          jefeSvcMap[jefeM].push({servicio:svc, valor:valO});
         }
       }
     });
-    // Deduplicate jefes (table may have repeated rows)
-    const jefeMap={};
-    porJefe.forEach(j=>{ jefeMap[j.jefe]=(jefeMap[j.jefe]||0)+j.valor; });
-    NO_OCA_DATA.porJefe = Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
-    NO_OCA_DATA.venta_total = Object.values(jefeMap).reduce((s,v)=>s+v, 0);
-    NO_OCA_DATA.porServicio = porServicio.sort((a,b)=>b.valor-a.valor);
+
+    if(!ventaTotal) ventaTotal = Object.values(jefeMap).reduce((s,v)=>s+v,0);
+
+    NO_OCA_DATA.venta_total    = ventaTotal;
+    NO_OCA_DATA.porJefe        = Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
+    NO_OCA_DATA.porServicio    = [...svcList].sort((a,b)=>b.valor-a.valor);
     NO_OCA_DATA.detallePorJefe = {};
-    Object.entries(detallePorJefeMap).forEach(([j,svcs])=>{
-      NO_OCA_DATA.detallePorJefe[j]=[...svcs].sort((a,b)=>b.valor-a.valor);
+    Object.entries(jefeSvcMap).forEach(([j,svcs])=>{
+      NO_OCA_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
     });
+
     renderNoOcaPage();
     return true;
   } catch(err) {
@@ -2712,59 +2720,53 @@ async function actualizarComplementarios(){
   setGsStatus('compl','loading');
   try {
     const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
-    if(rows.length >= 2){
-      // Row index 1: col A(0)=adicionales count, col B(1)=venta total global
-      const vals = rows[1];
-      COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
-      // Col B total from planilla — use the Suma total row in col E for accuracy
-      // Find "Suma total" row in col D to get exact total from col E
-      let ventaTotal = 0;
-      const jefeMap = {};       // jefe → total (deduplicated from col D/E)
-      const svcMap  = {};       // servicio → total (from col G/H)
-      const jefeSvcMap = {};    // jefe → [{servicio, valor}] from col F/G/H
+    if(rows.length < 2){ setGsStatus('compl','error'); return false; }
 
-      rows.slice(1).forEach(row => {
-        // Col D(3)=jefe, E(4)=valor_jefe — build jefe totals (deduplicated)
-        const jefeD = String(row[3]||'').trim();
-        const valE  = parseFloat(String(row[4]||'').replace(/[$,.]/g,'').replace(',','.'))||0;
-        if(jefeD && jefeD !== 'Suma total' && jefeD !== 'JEFE ZONAL' && valE > 0){
-          // Each jefe appears once in the table — just assign (don't accumulate)
-          if(!jefeMap[jefeD]) jefeMap[jefeD] = valE;
+    // Values come as raw JS numbers — use parseFloat directly (no string cleanup needed)
+    const pn = v => { const n=parseFloat(v); return isNaN(n)?0:n; };
+
+    // row[0]=adicionales, row[1]=venta_total_global (first data row)
+    COMPL_DATA.adicionales = parseInt(rows[1][0]) || 0;
+
+    const jefeMap    = {};  // jefe → valor (col D/E, one entry per jefe)
+    const svcList    = [];  // [{servicio, valor, jefe}] from col F/G/H
+    const jefeSvcMap = {};  // jefe → [{servicio,valor}]
+    let ventaTotal   = 0;
+
+    rows.slice(1).forEach(row => {
+      // Col D(3)=jefe OCA, E(4)=valor — only assign once per jefe
+      const jefeD = String(row[3]||'').trim();
+      const valE  = pn(row[4]);
+      if(jefeD === 'Suma total' && valE > 0){
+        ventaTotal = valE; // exact total from planilla
+      } else if(jefeD && jefeD !== 'Suma total' && jefeD !== 'JEFE ZONAL' && valE > 0){
+        if(!jefeMap[jefeD]) jefeMap[jefeD] = valE; // first occurrence only
+      }
+
+      // Col F(5)=jefe_svc, G(6)=servicio, H(7)=valor_svc
+      const jefeF = String(row[5]||'').trim();
+      const svc   = String(row[6]||'').trim();
+      const valH  = pn(row[7]);
+      if(svc && svc !== 'Suma total' && svc !== 'Servicio (OCA' && valH > 0){
+        svcList.push({servicio:svc, valor:valH, jefe:jefeF});
+        if(jefeF && jefeF !== 'Suma total' && jefeF !== 'JEFE ZONAL'){
+          if(!jefeSvcMap[jefeF]) jefeSvcMap[jefeF] = [];
+          jefeSvcMap[jefeF].push({servicio:svc, valor:valH});
         }
-        if(jefeD === 'Suma total' && valE > 0) ventaTotal = valE;
+      }
+    });
 
-        // Col F(5)=jefe_svc, G(6)=servicio, H(7)=valor_svc
-        const jefeF = String(row[5]||'').trim();
-        const svc   = String(row[6]||'').trim();
-        const valH  = parseFloat(String(row[7]||'').replace(/[$,.]/g,'').replace(',','.'))||0;
-        if(svc && svc !== 'Suma total' && svc !== 'Servicio (OCA' && valH > 0){
-          // Each service appears once — assign directly
-          if(!svcMap[svc]) svcMap[svc] = {servicio:svc, valor:valH};
-          if(jefeF && jefeF !== 'Suma total' && jefeF !== 'JEFE ZONAL'){
-            if(!jefeSvcMap[jefeF]) jefeSvcMap[jefeF] = [];
-            // Only add if not already present (pivot may repeat)
-            if(!jefeSvcMap[jefeF].find(x=>x.servicio===svc)){
-              jefeSvcMap[jefeF].push({servicio:svc, valor:valH});
-            }
-          }
-        }
-      });
+    if(!ventaTotal) ventaTotal = Object.values(jefeMap).reduce((s,v)=>s+v, 0);
 
-      // If no "Suma total" row found, sum from jefeMap
-      if(!ventaTotal) ventaTotal = Object.values(jefeMap).reduce((s,v)=>s+v, 0);
-      COMPL_DATA.venta_total = ventaTotal;
-      COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
-      COMPL_DATA.porJefe = Object.entries(jefeMap)
-        .map(([jefe,valor])=>({jefe,valor}))
-        .sort((a,b)=>b.valor-a.valor);
-      COMPL_DATA.porServicio = Object.values(svcMap)
-        .sort((a,b)=>b.valor-a.valor);
-      COMPL_DATA.detalle = COMPL_DATA.porJefe;
-      COMPL_DATA.detallePorJefe = {};
-      Object.entries(jefeSvcMap).forEach(([j,svcs])=>{
-        COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
-      });
-    }
+    COMPL_DATA.venta_total   = ventaTotal;
+    COMPL_DATA.porJefe       = Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
+    COMPL_DATA.porServicio   = [...svcList].sort((a,b)=>b.valor-a.valor);
+    COMPL_DATA.detalle       = COMPL_DATA.porJefe;
+    COMPL_DATA.detallePorJefe = {};
+    Object.entries(jefeSvcMap).forEach(([j,svcs])=>{
+      COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
+    });
+
     setGsStatus('compl','ok');
     renderComplementariosPage();
     return true;
