@@ -2711,80 +2711,59 @@ async function actualizarFlota(){
 async function actualizarComplementarios(){
   setGsStatus('compl','loading');
   try {
-    // Fetch Resumen comercial (required) + Complementarios y presupuestos (optional)
     const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
-    let rowsDetalle = [];
-    try {
-      rowsDetalle = await fetchSheet(GS_COMPL, 'Complementarios y presupuestos');
-    } catch(e2) {
-      console.warn('Complementarios y presupuestos no disponible:', e2);
-    }
     if(rows.length >= 2){
-      // Row 1 (index 1): col A = adicionales, col B = venta total
+      // Row index 1: col A(0)=adicionales count, col B(1)=venta total global
       const vals = rows[1];
       COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
-      COMPL_DATA.venta_total = parseFloat(vals[1]) || 0;
-
-        // Resumen comercial estructura:
-      // D(3)=jefe zonal (tabla jefes), E(4)=venta total jefe
-      // F(5)=jefe zonal del servicio, G(6)=servicio, H(7)=valor servicio
-      // Suma total rows are skipped
-      const porJefe = [];
-      const porServicio = [];
-      const detallePorJefeMap = {}; // jefe → [{servicio, valor}]
+      // Col B total from planilla — use the Suma total row in col E for accuracy
+      // Find "Suma total" row in col D to get exact total from col E
+      let ventaTotal = 0;
+      const jefeMap = {};       // jefe → total (deduplicated from col D/E)
+      const svcMap  = {};       // servicio → total (from col G/H)
+      const jefeSvcMap = {};    // jefe → [{servicio, valor}] from col F/G/H
 
       rows.slice(1).forEach(row => {
-        // Tabla jefes: col D(3) = jefe, col E(4) = venta total
-        const jefe = String(row[3]||'').trim();
-        const valorJefe = parseFloat(row[4])||0;
-        if(jefe && jefe !== 'Suma total' && valorJefe > 0){
-          porJefe.push({jefe, valor: valorJefe});
+        // Col D(3)=jefe, E(4)=valor_jefe — build jefe totals (deduplicated)
+        const jefeD = String(row[3]||'').trim();
+        const valE  = parseFloat(String(row[4]||'').replace(/[$,.]/g,'').replace(',','.'))||0;
+        if(jefeD && jefeD !== 'Suma total' && jefeD !== 'JEFE ZONAL' && valE > 0){
+          // Each jefe appears once in the table — just assign (don't accumulate)
+          if(!jefeMap[jefeD]) jefeMap[jefeD] = valE;
         }
+        if(jefeD === 'Suma total' && valE > 0) ventaTotal = valE;
 
-        // Tabla servicios: col F(5) = jefe del servicio, col G(6) = servicio, col H(7) = valor
-        const jefesSvc = String(row[5]||'').trim(); // F = jefe asociado al servicio
-        const svc      = String(row[6]||'').trim(); // G = nombre servicio
-        const valorSvc = parseFloat(row[7])||0;     // H = valor venta
-
-        if(svc && svc !== 'Suma total' && valorSvc > 0){
-          porServicio.push({servicio: svc, valor: valorSvc});
-          // Col F = jefe del servicio — link service to jefe
-          const jefeKey = (jefesSvc && jefesSvc !== 'Suma total' && jefesSvc !== 'JEFE ZONAL') ? jefesSvc : null;
-          if(jefeKey){
-            if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
-            detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
+        // Col F(5)=jefe_svc, G(6)=servicio, H(7)=valor_svc
+        const jefeF = String(row[5]||'').trim();
+        const svc   = String(row[6]||'').trim();
+        const valH  = parseFloat(String(row[7]||'').replace(/[$,.]/g,'').replace(',','.'))||0;
+        if(svc && svc !== 'Suma total' && svc !== 'Servicio (OCA' && valH > 0){
+          // Each service appears once — assign directly
+          if(!svcMap[svc]) svcMap[svc] = {servicio:svc, valor:valH};
+          if(jefeF && jefeF !== 'Suma total' && jefeF !== 'JEFE ZONAL'){
+            if(!jefeSvcMap[jefeF]) jefeSvcMap[jefeF] = [];
+            // Only add if not already present (pivot may repeat)
+            if(!jefeSvcMap[jefeF].find(x=>x.servicio===svc)){
+              jefeSvcMap[jefeF].push({servicio:svc, valor:valH});
+            }
           }
         }
       });
 
-      COMPL_DATA.porJefe = porJefe;
-      COMPL_DATA.porServicio = porServicio;
-      COMPL_DATA.detalle = porJefe;
-      COMPL_DATA.rawRows = rows.slice(1);
-      // Build detallePorJefe from Resumen comercial col F(jefe)→G(servicio)→H(valor)
-      // This is the authoritative source — always overwrite
+      // If no "Suma total" row found, sum from jefeMap
+      if(!ventaTotal) ventaTotal = Object.values(jefeMap).reduce((s,v)=>s+v, 0);
+      COMPL_DATA.venta_total = ventaTotal;
+      COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
+      COMPL_DATA.porJefe = Object.entries(jefeMap)
+        .map(([jefe,valor])=>({jefe,valor}))
+        .sort((a,b)=>b.valor-a.valor);
+      COMPL_DATA.porServicio = Object.values(svcMap)
+        .sort((a,b)=>b.valor-a.valor);
+      COMPL_DATA.detalle = COMPL_DATA.porJefe;
       COMPL_DATA.detallePorJefe = {};
-      Object.entries(detallePorJefeMap).forEach(([j,svcs])=>{
+      Object.entries(jefeSvcMap).forEach(([j,svcs])=>{
         COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
       });
-
-    // Parse "Complementarios y presupuestos": A(0)=jefe, C(2)=servicio, AD(29)=valor
-    const detallePorJefe = {};
-    rowsDetalle.slice(1).forEach(row=>{
-      const jefe    = String(row[0]||'').trim();
-      const servicio= String(row[2]||'').trim();
-      const valor   = parseFloat(row[29])||0;
-      if(!jefe || !servicio || valor<=0) return;
-      if(!detallePorJefe[jefe]) detallePorJefe[jefe]={};
-      detallePorJefe[jefe][servicio]=(detallePorJefe[jefe][servicio]||0)+valor;
-    });
-    // Convert to sorted arrays per jefe
-    COMPL_DATA.detallePorJefe = {};
-    Object.entries(detallePorJefe).forEach(([j,svcs])=>{
-      COMPL_DATA.detallePorJefe[j] = Object.entries(svcs)
-        .map(([servicio,valor])=>({servicio,valor}))
-        .sort((a,b)=>b.valor-a.valor);
-    });
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
