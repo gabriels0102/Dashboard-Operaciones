@@ -1688,20 +1688,76 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  // Use real-time data if available, fallback to static
-  const useRT = CONTRATOS_RT.length > 0;
-
-  const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const c=document.getElementById("contratos-cont");if(!c)return;
-  c.innerHTML=RESP.map(r=>{
-    if(fr&&r!==fr)return "";
-    let cs=CONTR[r]||[];
-    if(femp)cs=cs.filter(c2=>c2.e===femp);
-    if(busq)cs=cs.filter(c2=>c2.n.toLowerCase().includes(busq)||c2.c.toLowerCase().includes(busq));
-    if(!cs.length)return `<div class="card" style="margin-bottom:8px;opacity:.35;"><div style="font-size:13px;font-weight:600;">${r}</div><div style="font-size:12px;color:var(--mu);">${(CONTR[r]||[]).length===0?"Sin contratos.":"Sin contratos para los filtros."}</div></div>`;
-    const init=ini(r);const emp2={};cs.forEach(c2=>{emp2[c2.e]=(emp2[c2.e]||0)+1;});
-    return `<div class="card" style="margin-bottom:10px;"><div class="ch"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${init}</div><div><div class="ct">${r}</div><div class="cs">${cs.length} contratos · ${Object.entries(emp2).map(([e,n])=>n+" "+e).join(" · ")}</div></div></div></div><div style="display:grid;gap:4px;">${cs.map(c2=>`<div class="ci"><span class="cb">${c2.c}</span><span class="cn">${c2.n}</span>${empBadge(c2.e)}</div>`).join("")}</div></div>`;
-  }).join("");
+  const fr=document.getElementById("f-cont-resp")?.value||"";
+  const femp=document.getElementById("f-cont-emp")?.value||"";
+  const fest=document.getElementById("f-cont-estado")?.value||"";
+  const busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const cont=document.getElementById("contratos-cont");
+  if(!cont) return;
+  const psub=document.getElementById("cont-psub");
+  if(psub&&CONTRATOS_RT.length>0){
+    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
+    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
+    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
+    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
+  }
+  if(!CONTRATOS_RT.length){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando...</div>";return;}
+  const filtered=CONTRATOS_RT.filter(ct=>{
+    if(fr&&ct.jefe!==fr)return false;
+    if(femp&&ct.empresa!==femp)return false;
+    if(fest&&ct.estado!==fest)return false;
+    if(busq){
+      const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();
+      if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;
+    }
+    return true;
+  });
+  const actF=filtered.filter(c=>c.estado==="Activo").length;
+  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
+  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
+  const hoy=new Date();
+  function pF(s){try{const p=(s||"").split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
+  function dD(s){const d=pF(s);return d?Math.round((d-hoy)/864e5):null;}
+  const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
+  const vence30=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
+  const vence90=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
+  const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
+  let html="<div class='kg' style='margin-bottom:14px;'>"
+    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
+    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
+    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
+    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
+    +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
+    +(vence30>0?"<div class='kc am'><span class='ki'>⚠️</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+vence30+"</div></div>":"")
+    +(vence90>0?"<div class='kc or'><span class='ki'>📅</span><div class='kl'>Vence ≤90d</div><div class='kv'>"+vence90+"</div></div>":"")
+    +"</div>";
+  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
+    const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
+    const aJ=cts.filter(c=>c.estado==="Activo").length,iJ=cts.filter(c=>c.estado==="Inactivo").length;
+    html+="<div class='card' style='margin-bottom:10px;'><div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
+      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
+      +"<div><div class='ct'>"+jefe+"</div><div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div></div></div></div>"
+      +"<div style='display:grid;gap:4px;'>";
+    cts.forEach(function(ct){
+      const ecl=ct.estado==="Inactivo"?"p-err":"p-ok";
+      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
+      const dd=dD(ct.vence||"");
+      let vcl="p-mu",vl=ct.vence||"Sin fecha";
+      if(dd!==null){
+        if(dd<0){vcl="p-err";vl="Vencido "+Math.abs(dd)+"d";}
+        else if(dd<=30){vcl="p-err";vl="Vence "+dd+"d";}
+        else if(dd<=90){vcl="p-warn";vl="Vence "+dd+"d";}
+        else{vcl="p-mu";vl=ct.vence;}
+      } else if(!ct.vence||ct.vence==="Sin información"){vcl="p-mu";vl="Sin fecha";}
+      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
+        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
+        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
+        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
+        +"<span class='p "+vcl+"' style='font-size:10px;'>📅 "+vl+"</span></div>";
+    });
+    html+="</div></div>";
+  });
+  cont.innerHTML=html;
 };
 
 // ══ FLOTA ══
@@ -2721,45 +2777,52 @@ async function actualizarComplementarios(){
   try {
     const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
     if(rows.length < 2){ setGsStatus('compl','error'); return false; }
-
-    // Values come as raw JS numbers — use parseFloat directly (no string cleanup needed)
     const pn = v => { const n=parseFloat(v); return isNaN(n)?0:n; };
 
-    // row[0]=adicionales, row[1]=venta_total_global (first data row)
+    // Adicionales: row[1][0], venta global from col D "Suma total"
     COMPL_DATA.adicionales = parseInt(rows[1][0]) || 0;
 
-    const jefeMap    = {};  // jefe → valor (col D/E, one entry per jefe)
-    const svcList    = [];  // [{servicio, valor, jefe}] from col F/G/H
-    const jefeSvcMap = {};  // jefe → [{servicio,valor}]
-    let ventaTotal   = 0;
-
+    // Col D(3)/E(4): jefe totals (for filter list) — skip "Suma total"
+    const jefeMapDE = {};
+    let ventaTotal = 0;
     rows.slice(1).forEach(row => {
-      // Col D(3)=jefe OCA, E(4)=valor — only assign once per jefe
-      const jefeD = String(row[3]||'').trim();
-      const valE  = pn(row[4]);
-      if(jefeD === 'Suma total' && valE > 0){
-        ventaTotal = valE; // exact total from planilla
-      } else if(jefeD && jefeD !== 'Suma total' && jefeD !== 'JEFE ZONAL' && valE > 0){
-        if(!jefeMap[jefeD]) jefeMap[jefeD] = valE; // first occurrence only
-      }
+      const d = String(row[3]||'').trim();
+      const e = pn(row[4]);
+      if(d === 'Suma total' && e > 0) ventaTotal = e;
+      else if(d && d !== 'Suma total' && e > 0 && !jefeMapDE[d]) jefeMapDE[d] = e;
+    });
+    if(!ventaTotal) ventaTotal = Object.values(jefeMapDE).reduce((s,v)=>s+v,0);
 
-      // Col F(5)=jefe_svc, G(6)=servicio, H(7)=valor_svc
-      const jefeF = String(row[5]||'').trim();
-      const svc   = String(row[6]||'').trim();
-      const valH  = pn(row[7]);
-      if(svc && svc !== 'Suma total' && svc !== 'Servicio (OCA' && valH > 0){
-        svcList.push({servicio:svc, valor:valH, jefe:jefeF});
-        if(jefeF && jefeF !== 'Suma total' && jefeF !== 'JEFE ZONAL'){
-          if(!jefeSvcMap[jefeF]) jefeSvcMap[jefeF] = [];
-          jefeSvcMap[jefeF].push({servicio:svc, valor:valH});
-        }
+    // Col G(6)=jefe, H(7)=servicio, I(8)=valor — detail source
+    // Skip rows where G starts with "Total" or is "Suma total" or H is empty
+    const jefeSvcMap = {};  // jefe → [{servicio,valor}]
+    const svcList    = [];  // global service list
+    let curJefe = '';
+    rows.slice(1).forEach(row => {
+      const g = String(row[6]||'').trim();
+      const h = String(row[7]||'').trim();
+      const i8 = pn(row[8]);
+
+      // Update current jefe when col G has a real jefe name
+      if(g && !g.startsWith('Total ') && g !== 'Suma total' && h !== '') curJefe = g;
+      else if(g && !g.startsWith('Total ') && g !== 'Suma total' && h === '') curJefe = g;
+
+      // Skip total rows and empty service rows
+      if(g.startsWith('Total ') || g === 'Suma total' || !h || i8 <= 0) return;
+
+      const jefe = g || curJefe;
+      svcList.push({servicio:h, valor:i8, jefe});
+      if(jefe){
+        if(!jefeSvcMap[jefe]) jefeSvcMap[jefe] = [];
+        jefeSvcMap[jefe].push({servicio:h, valor:i8});
       }
     });
 
-    if(!ventaTotal) ventaTotal = Object.values(jefeMap).reduce((s,v)=>s+v, 0);
-
+    // Build porJefe from D/E (authoritative totals) sorted by value
+    COMPL_DATA.porJefe = Object.entries(jefeMapDE)
+      .map(([jefe,valor])=>({jefe,valor}))
+      .sort((a,b)=>b.valor-a.valor);
     COMPL_DATA.venta_total   = ventaTotal;
-    COMPL_DATA.porJefe       = Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
     COMPL_DATA.porServicio   = [...svcList].sort((a,b)=>b.valor-a.valor);
     COMPL_DATA.detalle       = COMPL_DATA.porJefe;
     COMPL_DATA.detallePorJefe = {};
