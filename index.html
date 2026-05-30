@@ -1688,72 +1688,94 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  const fr=document.getElementById("f-cont-resp")?.value||"";
-  const femp=document.getElementById("f-cont-emp")?.value||"";
-  const fest=document.getElementById("f-cont-estado")?.value||"";
-  const busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const cont=document.getElementById("contratos-cont");
+  const fr   = document.getElementById("f-cont-resp")?.value||"";
+  const femp = document.getElementById("f-cont-emp")?.value||"";
+  const fest = document.getElementById("f-cont-estado")?.value||"";
+  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const cont = document.getElementById("contratos-cont");
   if(!cont) return;
-  const psub=document.getElementById("cont-psub");
-  if(psub&&CONTRATOS_RT.length>0){
+
+  const psub = document.getElementById("cont-psub");
+  if(psub && CONTRATOS_RT.length>0){
     const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
     const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
     const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
     psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
   }
   if(!CONTRATOS_RT.length){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando...</div>";return;}
+
   const filtered=CONTRATOS_RT.filter(ct=>{
-    if(fr&&ct.jefe!==fr)return false;
-    if(femp&&ct.empresa!==femp)return false;
-    if(fest&&ct.estado!==fest)return false;
+    if(fr   && ct.jefe!==fr)   return false;
+    if(femp && ct.empresa!==femp) return false;
+    if(fest && ct.estado!==fest)  return false;
     if(busq){
       const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();
-      if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;
+      if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq)) return false;
     }
     return true;
   });
-  const actF=filtered.filter(c=>c.estado==="Activo").length;
-  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
-  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
-  const hoy=new Date();
-  function pF(s){try{const p=(s||"").split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
-  function dD(s){const d=pF(s);return d?Math.round((d-hoy)/864e5):null;}
-  const vencidos=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d<0;}).length;
-  const vence30=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>=0&&d<=30;}).length;
-  const vence90=filtered.filter(c=>{const d=dD(c.vence);return d!==null&&d>30&&d<=90;}).length;
-  const byJefe={};filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
+
+  // KPIs — all reactive to current filters
+  const totF   = filtered.length;
+  const actF   = filtered.filter(c=>c.estado==="Activo").length;
+  const inactF = filtered.filter(c=>c.estado==="Inactivo").length;
+  const jefesF = new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
+
+  const hoy = new Date();
+  function parseFecha(s){
+    try{const p=(s||"").trim().split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}
+    catch(e){return null;}
+  }
+  function diasRestantes(s){const d=parseFecha(s);return d?Math.round((d-hoy)/864e5):null;}
+
+  // Count vencimientos from filtered set
+  const venc15  = filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d>=0&&d<=15;}).length;
+  const venc30  = filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d>15&&d<=30;}).length;
+  const vencidos= filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d<0;}).length;
+
   let html="<div class='kg' style='margin-bottom:14px;'>"
-    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+(actF+inactF)+"</div></div>"
+    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+totF+"</div><div class='ks'>Contratos filtrados</div></div>"
     +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
     +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
     +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
     +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
-    +(vence30>0?"<div class='kc am'><span class='ki'>⚠️</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+vence30+"</div></div>":"")
-    +(vence90>0?"<div class='kc or'><span class='ki'>📅</span><div class='kl'>Vence ≤90d</div><div class='kv'>"+vence90+"</div></div>":"")
+    +(venc15>0?"<div class='kc re'><span class='ki'>🔴</span><div class='kl'>Vence ≤15d</div><div class='kv'>"+venc15+"</div></div>":"")
+    +(venc30>0?"<div class='kc am'><span class='ki'>🟡</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+venc30+"</div></div>":"")
     +"</div>";
+
+  const byJefe={};
+  filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
+
   Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
-    const i2=ini(jefe),ec={};cts.forEach(ct=>{ec[ct.empresa]=(ec[ct.empresa]||0)+1;});
-    const aJ=cts.filter(c=>c.estado==="Activo").length,iJ=cts.filter(c=>c.estado==="Inactivo").length;
-    html+="<div class='card' style='margin-bottom:10px;'><div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
+    const i2=ini(jefe);
+    const ec2={};cts.forEach(ct=>{ec2[ct.empresa]=(ec2[ct.empresa]||0)+1;});
+    const aJ=cts.filter(c=>c.estado==="Activo").length;
+    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
+    html+="<div class='card' style='margin-bottom:10px;'>"
+      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
       +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
-      +"<div><div class='ct'>"+jefe+"</div><div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec).map(([e,n])=>n+" "+e).join(" · ")+"</div></div></div></div>"
+      +"<div><div class='ct'>"+jefe+"</div><div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec2).map(([e,n])=>n+" "+e).join(" · ")+"</div></div>"
+      +"</div></div>"
       +"<div style='display:grid;gap:4px;'>";
+
     cts.forEach(function(ct){
-      const ecl=ct.estado==="Inactivo"?"p-err":"p-ok";
-      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
-      const dd=dD(ct.vence||"");
-      let vcl="p-mu",vl=ct.vence||"Sin fecha";
-      if(dd!==null){
-        if(dd<0){vcl="p-err";vl="Vencido "+Math.abs(dd)+"d";}
-        else if(dd<=30){vcl="p-err";vl="Vence "+dd+"d";}
-        else if(dd<=90){vcl="p-warn";vl="Vence "+dd+"d";}
-        else{vcl="p-mu";vl=ct.vence;}
-      } else if(!ct.vence||ct.vence==="Sin información"){vcl="p-mu";vl="Sin fecha";}
-      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
+      const ecl = ct.estado==="Inactivo"?"p-err":"p-ok";
+      const eml = ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
+      const dias = diasRestantes(ct.vence||"");
+      let fechaColor="var(--mu)", fechaTxt=ct.vence||"Sin fecha";
+      if(dias!==null){
+        if(dias<0){fechaColor="var(--err)";fechaTxt="Vencido "+Math.abs(dias)+"d";}
+        else if(dias<=15){fechaColor="var(--err)";fechaTxt=ct.vence+" ("+dias+"d)";}
+        else if(dias<=30){fechaColor="var(--warn)";fechaTxt=ct.vence+" ("+dias+"d)";}
+        else{fechaColor="var(--mu)";fechaTxt=ct.vence;}
+      }
+      html+="<div class='ci'>"
+        +"<span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
         +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
         +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
         +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
-        +"<span class='p "+vcl+"' style='font-size:10px;'>📅 "+vl+"</span></div>";
+        +"<span style='font-size:11px;color:"+fechaColor+";'>📅 "+fechaTxt+"</span>"
+        +"</div>";
     });
     html+="</div></div>";
   });
@@ -2845,25 +2867,26 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO/CECO, D(3)=ESTADO
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=FECHA VENCIMIENTO
     const result = [];
     rows.slice(1).forEach(row=>{
       const empresa  = String(row[0]||'').trim();
       const jefe     = String(row[1]||'').trim();
       const servicio = String(row[2]||'').trim();
-      const estado   = String(row[3]||'').trim();
+      const ceco     = String(row[3]||'').trim();
+      const estado   = String(row[4]||'').trim();
+      const vence    = String(row[5]||'').trim();
       if(!jefe && !servicio) return;
-      result.push({empresa, jefe, servicio, estado});
+      result.push({empresa, jefe, servicio, ceco, estado, vence});
     });
     if(result.length > 0){
       CONTRATOS_RT = result;
-      // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
-      const sel=document.getElementById("f-cont-resp");
-      if(sel){
-        sel.innerHTML='<option value="">Todos</option>';
-        jefes.forEach(j=>{ sel.innerHTML+=`<option value="${j}">${j}</option>`; });
-      }
+      const emps =[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
+      const selR=document.getElementById("f-cont-resp");
+      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
+      const selE=document.getElementById("f-cont-emp");
+      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
     }
     setGsStatus('cont','ok');
     renderContratos();
