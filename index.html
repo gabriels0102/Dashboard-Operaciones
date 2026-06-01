@@ -165,6 +165,12 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .kpi-arc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;}
 .kpi-arc-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default;}
 .kpi-arc-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25);}
+.kpi-wc-badges{display:flex;gap:7px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+.kpi-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--b2);color:var(--txt);background:var(--s2);}
+.kpi-badge.wc{background:rgba(79,142,247,.15);border-color:var(--ac);color:var(--ac);}
+.kpi-brecha{font-size:11px;font-weight:600;margin-top:5px;text-align:center;}
+.kpi-brecha.neg{color:var(--err);}
+.kpi-brecha.pos{color:var(--ok);}
 .kpi-arc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 16px 16px;}
 .kpi-arc-card.kac-blue::after{background:linear-gradient(90deg,#4f8ef7,#60a5fa);}
 .kpi-arc-card.kac-green::after{background:linear-gradient(90deg,#22c55e,#4ade80);}
@@ -240,8 +246,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
     <div class="nav-section">Correctivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
-    <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos — OCA</span></button>
     <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
     <div class="nav-section">Contratos y Sitios</div>
@@ -295,6 +300,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-0" style="color:#4f8ef7;">—%</div><div class="kpi-arc-icon">🔧</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-0">—</div><div class="kpi-arc-val-l">Cerrados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-0">—</div><div class="kpi-arc-val-l">Generados</div></div></div>
+      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-0">Actual: —%</span><span class="kpi-badge wc">WC: 95%</span></div>
+      <div class="kpi-brecha" id="arc-brecha-0">—</div>
     </div>
     <div class="kpi-arc-card kac-green" id="arc-card-1">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-1">—</span>
@@ -303,6 +310,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-1" style="color:#22c55e;">—%</div><div class="kpi-arc-icon">🚐</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-1">—</div><div class="kpi-arc-val-l">Operativas</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-1">—</div><div class="kpi-arc-val-l">Total flota</div></div></div>
+      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-1">Actual: —%</span><span class="kpi-badge wc">WC: 96%</span></div>
+      <div class="kpi-brecha" id="arc-brecha-1">—</div>
     </div>
     <div class="kpi-arc-card kac-orange" id="arc-card-2">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-2">—</span>
@@ -311,6 +320,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-2" style="color:#f97316;">—%</div><div class="kpi-arc-icon">👥</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-2">—</div><div class="kpi-arc-val-l">Cumplida</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-2">—</div><div class="kpi-arc-val-l">Aprobada</div></div></div>
+      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-2">Actual: —%</span><span class="kpi-badge wc">WC: 98%</span></div>
+      <div class="kpi-brecha" id="arc-brecha-2">—</div>
     </div>
     <div class="kpi-arc-card kac-purple" id="arc-card-3">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-3">—</span>
@@ -319,6 +330,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-3" style="color:#7c3aed;">—%</div><div class="kpi-arc-icon">🛡️</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-3">—</div><div class="kpi-arc-val-l">Completados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-3">—</div><div class="kpi-arc-val-l">Programados</div></div></div>
+      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-3">Actual: —%</span><span class="kpi-badge wc">WC: 90%</span></div>
+      <div class="kpi-brecha" id="arc-brecha-3">—</div>
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
@@ -327,6 +340,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-4">—</div><div class="kpi-arc-val-l">Vigentes</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-4">—</div><div class="kpi-arc-val-l">Total</div></div></div>
+      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-4">Actual: —%</span><span class="kpi-badge wc">WC: 85%</span></div>
+      <div class="kpi-brecha" id="arc-brecha-4">—</div>
     </div>
   </div>
 
@@ -389,7 +404,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Correctivos OCA — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div><div class="ptitle">Análisis de Correctivos — OCA</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
@@ -1011,17 +1026,24 @@ function renderDashboard(){
   // Arc 0 — % cerrados from Col T (last value in SERIE.T)
   const pctCorr = (SERIE.T&&SERIE.T.length>0) ? SERIE.T[SERIE.T.length-1] : e.pct_c;
 
-  // Draw arc donut
-  function drawArc(id, pct, color){
+  // Draw arc donut with WC marker
+  function drawArc(id, pct, color, wc){
     const el = document.getElementById(id);
     if(!el) return;
     const ex = Chart.getChart(el);
     if(ex) ex.destroy();
-    new Chart(el,{type:'doughnut',data:{datasets:[{
-      data:[Math.max(0,Math.min(100,pct)),Math.max(0,100-pct)],
-      backgroundColor:[color,'rgba(255,255,255,0.05)'],borderWidth:0,
-      circumference:270,rotation:225
-    }]},options:{responsive:true,maintainAspectRatio:false,cutout:'78%',
+    // Main arc + WC marker arc
+    const wcAngle = 270 * (Math.min(100,wc||0)/100); // degrees for WC position
+    new Chart(el,{type:'doughnut',data:{datasets:[
+      // Main value arc
+      {data:[Math.max(0,Math.min(100,pct)),Math.max(0,100-pct)],
+        backgroundColor:[color,'rgba(255,255,255,0.04)'],
+        borderWidth:0,circumference:270,rotation:225,cutout:'78%'},
+      // WC reference arc (thin grey line up to WC point)
+      {data:[Math.max(0,Math.min(100,wc||0)),Math.max(0,100-(wc||0))],
+        backgroundColor:['rgba(255,255,255,0.0)','rgba(255,255,255,0.0)'],
+        borderWidth:0,circumference:270,rotation:225,cutout:'86%'}
+    ]},options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{enabled:false}},
       animation:{duration:900,easing:'easeInOutQuart'}}});
   }
@@ -1034,6 +1056,7 @@ function renderDashboard(){
     {id:4,pct:pctAbonos||0,color:'#14b8a6',v1:abonosVig||'—',l1:'Vigentes',v2:abonosTot||'—',l2:'Total',trend:pctAbonos>=75?'→ En control':'▼ Vencimientos',trendCls:pctAbonos>=75?'trend-nt':'trend-dn'},
   ];
 
+  const WC=[95,96,98,90,85];
   arcs.forEach(a=>{
     const pe=document.getElementById(`arc-pct-${a.id}`);
     const te=document.getElementById(`arc-trend-${a.id}`);
@@ -1043,7 +1066,18 @@ function renderDashboard(){
     if(te){te.textContent=a.trend;te.className='kpi-arc-trend '+a.trendCls;}
     if(v1e) v1e.textContent=a.v1;
     if(v2e) v2e.textContent=a.v2;
-    setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color),60*a.id);
+    // WC badges
+    const actEl=document.getElementById(`arc-act-${a.id}`);
+    const brechaEl=document.getElementById(`arc-brecha-${a.id}`);
+    const wc=WC[a.id];
+    const pctR=Math.round(a.pct);
+    const brecha=pctR-wc;
+    if(actEl) actEl.textContent='Actual: '+pctR+'%';
+    if(brechaEl){
+      brechaEl.textContent='Brecha: '+(brecha>=0?'+':'')+brecha+'% vs world class';
+      brechaEl.className='kpi-brecha '+(brecha>=0?'pos':'neg');
+    }
+    setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color,wc),60*a.id);
   });
 
   // Alertas
