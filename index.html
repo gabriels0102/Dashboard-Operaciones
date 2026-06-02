@@ -165,12 +165,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .kpi-arc-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px;}
 .kpi-arc-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:18px 14px 14px;display:flex;flex-direction:column;align-items:center;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s;cursor:default;}
 .kpi-arc-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.25);}
-.kpi-wc-badges{display:flex;gap:7px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
-.kpi-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--b2);color:var(--txt);background:var(--s2);}
-.kpi-badge.wc{background:rgba(79,142,247,.15);border-color:var(--ac);color:var(--ac);}
-.kpi-brecha{font-size:11px;font-weight:600;margin-top:5px;text-align:center;}
-.kpi-brecha.neg{color:var(--err);}
-.kpi-brecha.pos{color:var(--ok);}
 .kpi-arc-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 16px 16px;}
 .kpi-arc-card.kac-blue::after{background:linear-gradient(90deg,#4f8ef7,#60a5fa);}
 .kpi-arc-card.kac-green::after{background:linear-gradient(90deg,#22c55e,#4ade80);}
@@ -193,7 +187,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -246,15 +240,14 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
     <div class="nav-section">Correctivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos — OCA</span></button>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
+    <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
     <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
-    <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
-    <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
-    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
+    <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -265,6 +258,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
+    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
 
     <div class="nav-section">Exportar</div>
     <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">Exportar JSON</span></button>
@@ -330,7 +324,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="kpi-brecha" id="arc-brecha-3">—</div>
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
-      <div class="kpi-arc-title">% COBERTURA DE<br>ABONOS DE LEY</div>
+      <div class="kpi-arc-title">% COBERTURA DE<br>ACTIVOS CRÍTICOS</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-4"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
       </div>
@@ -399,7 +393,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Análisis de Correctivos — OCA</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
@@ -612,11 +606,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por patente — acumulado</div><div class="cs">Ordenado de mayor a menor</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipo de arreglo</div><div class="cs">Col I — distribución por tipo de trabajo</div></div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
   </div>
   <div class="c2" style="margin-top:14px;">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipos de turno</div><div class="cs">Distribución por tipo de arreglo</div></div></div><div class="cw" id="wrap-taller-tipo"><canvas id="ch-taller-tipo"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Detalle — Correctivos</div><div class="cs">Detalle de turnos correctivos</div></div></div><div class="cw" id="wrap-taller-correctivo"><canvas id="ch-taller-correctivo"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por área</div></div></div><div class="cw"></div></div>
   </div>
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div class="ct">Detalle por patente</div></div>
@@ -729,7 +723,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- COMPLEMENTARIOS -->
 <section class="page" id="page-complementarios">
   <div class="topbar">
-    <div><div class="ptitle">Complementarios — OCA</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
+    <div><div class="ptitle">Complementarios — Seguimiento Comercial</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-compl-jefe" onchange="window.renderComplementariosPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
     </div>
@@ -761,40 +755,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <th style="border-left:1px solid var(--b);padding-left:16px;">Servicio</th><th>Venta</th><th>%</th>
       </tr></thead>
       <tbody id="tb-compl"></tbody>
-    </table></div>
-  </div>
-</section>
-<!-- NO OCA -->
-<section class="page" id="page-no-oca">
-  <div class="topbar">
-    <div><div class="ptitle">Adicionales — No OCA</div><div class="psub">Venta por jefe zonal y servicio · Tiempo real</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <select id="f-nooca-jefe" onchange="window.renderNoOcaPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
-    </div>
-  </div>
-  <div class="kg" id="k-nooca-page"></div>
-  <div class="c2">
-    <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div><div class="ct">Venta total por jefe zonal</div><div class="cs">Suma de valor venta por responsable</div></div></div>
-      <div class="cwtall"><canvas id="ch-nooca-jefe"></canvas></div>
-    </div>
-    <div class="card" style="margin-bottom:0;">
-      <div class="ch"><div><div class="ct">Distribución porcentual</div><div class="cs">Participación de cada jefe en la venta total</div></div></div>
-      <div class="cwtall"><canvas id="ch-nooca-pie"></canvas></div>
-    </div>
-  </div>
-  <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Top servicios por valor de venta</div><div class="cs">Todos los servicios ordenados de mayor a menor</div></div></div>
-    <div class="cwtall"><canvas id="ch-nooca-svc"></canvas></div>
-  </div>
-  <div class="card" style="margin-top:14px;">
-    <div class="ch"><div class="ct">Detalle por jefe zonal y servicio</div></div>
-    <div class="tw"><table>
-      <thead><tr>
-        <th>Jefe Zonal</th><th>Venta</th><th>%</th>
-        <th style="border-left:1px solid var(--b);padding-left:16px;">Servicio</th><th>Venta</th><th>%</th>
-      </tr></thead>
-      <tbody id="tb-nooca"></tbody>
     </table></div>
   </div>
 </section>
@@ -1027,24 +987,20 @@ function renderDashboard(){
     if(!el) return;
     const ex = Chart.getChart(el);
     if(ex) ex.destroy();
-    const wcClamped = Math.min(100, wc||0);
-    const pctClamped = Math.max(0, Math.min(100, pct));
-    new Chart(el,{
-      type:'doughnut',
-      data:{datasets:[
-        // Layer 1 (outermost): WC reference — grey arc up to WC, then transparent
-        {data:[wcClamped, 100-wcClamped],
-          backgroundColor:['rgba(180,180,180,0.35)','rgba(255,255,255,0.04)'],
-          borderWidth:0, circumference:270, rotation:225, cutout:'82%'},
-        // Layer 2: actual value arc (thicker, inner)
-        {data:[pctClamped, 100-pctClamped],
-          backgroundColor:[color,'rgba(255,255,255,0.04)'],
-          borderWidth:0, circumference:270, rotation:225, cutout:'72%'},
-      ]},
-      options:{responsive:true, maintainAspectRatio:false,
-        plugins:{legend:{display:false}, tooltip:{enabled:false}},
-        animation:{duration:900, easing:'easeInOutQuart'}}
-    });
+    const wcC = Math.min(100, wc||0);
+    const pctC = Math.max(0, Math.min(100, pct));
+    new Chart(el,{type:'doughnut',data:{datasets:[
+      // Layer 1 (outermost): WC reference arc — grey up to WC point
+      {data:[wcC, 100-wcC],
+        backgroundColor:['rgba(180,180,180,0.35)','rgba(255,255,255,0.04)'],
+        borderWidth:0, circumference:270, rotation:225, cutout:'82%'},
+      // Layer 2: actual value arc (inner, thicker)
+      {data:[pctC, 100-pctC],
+        backgroundColor:[color,'rgba(255,255,255,0.04)'],
+        borderWidth:0, circumference:270, rotation:225, cutout:'72%'},
+    ]},options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      animation:{duration:900,easing:'easeInOutQuart'}}});
   }
 
   const arcs=[
@@ -1058,19 +1014,14 @@ function renderDashboard(){
   const WC=[95,96,98,90,85];
   arcs.forEach(a=>{
     const pe=document.getElementById(`arc-pct-${a.id}`);
-    const te=document.getElementById(`arc-trend-${a.id}`);
     const v1e=document.getElementById(`arc-v1-${a.id}`);
     const v2e=document.getElementById(`arc-v2-${a.id}`);
     if(pe) pe.textContent=Math.round(a.pct)+'%';
-    // trend badge hidden
     if(v1e) v1e.textContent=a.v1;
     if(v2e) v2e.textContent=a.v2;
-    // WC badges
     const actEl=document.getElementById(`arc-act-${a.id}`);
     const brechaEl=document.getElementById(`arc-brecha-${a.id}`);
-    const wc=WC[a.id];
-    const pctR=Math.round(a.pct);
-    const brecha=pctR-wc;
+    const wc=WC[a.id], pctR=Math.round(a.pct), brecha=pctR-wc;
     if(actEl) actEl.textContent='Actual: '+pctR+'%';
     if(brechaEl){
       brechaEl.textContent='Brecha: '+(brecha>=0?'+':'')+brecha+'% vs world class';
@@ -1082,33 +1033,18 @@ function renderDashboard(){
   // Alertas
   const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  // Col 1: Correctivos backlog
-  alertas.push(e.act>200
-    ? {icon:'⚠️',txt:`${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'}
-    : {icon:'✅',txt:'Correctivos bajo control',sub:`${e.act} activos · ${e.pct_c}% cerrados`,cls:'al-ok'});
-  // Col 2: Flota en taller
-  alertas.push(enTaller.length>0
-    ? {icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'}
-    : {icon:'✅',txt:'Flota sin unidades en taller',sub:'Toda la flota operativa',cls:'al-ok'});
-  // Col 3: Dotación
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-  alertas.push(defDot>0
-    ? {icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'}
-    : {icon:'✅',txt:'Dotación completa',sub:'Sin déficit de personal',cls:'al-ok'});
-  // Col 4: Preventivos
+  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
-  alertas.push(noComp>0
-    ? {icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'}
-    : {icon:'✅',txt:'Preventivos al día',sub:'Sin pendientes',cls:'al-ok'});
-  // Col 5: Abonos
+  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
   let abonosVenc=0;
   if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  // Col 5: Abonos (always push)
-  alertas.push(abonosVenc>0
-    ? {icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'}
-    : {icon:'✅',txt:'Abonos de ley al día',sub:'Sin vencimientos',cls:'al-ok'});
+  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
+  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
   const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,5).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1205,7 +1141,8 @@ window.renderCorr=function(){
     <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div></div>
     <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div></div>
-    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>`;
+    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>
+    `;
 
   const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
 
@@ -1720,98 +1657,20 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  const fr   = document.getElementById("f-cont-resp")?.value||"";
-  const femp = document.getElementById("f-cont-emp")?.value||"";
-  const fest = document.getElementById("f-cont-estado")?.value||"";
-  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const cont = document.getElementById("contratos-cont");
-  if(!cont) return;
+  // Use real-time data if available, fallback to static
+  const useRT = CONTRATOS_RT.length > 0;
 
-  const psub = document.getElementById("cont-psub");
-  if(psub && CONTRATOS_RT.length>0){
-    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
-    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
-    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
-    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
-  }
-  if(!CONTRATOS_RT.length){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando...</div>";return;}
-
-  const filtered=CONTRATOS_RT.filter(ct=>{
-    if(fr   && ct.jefe!==fr)   return false;
-    if(femp && ct.empresa!==femp) return false;
-    if(fest && ct.estado!==fest)  return false;
-    if(busq){
-      const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();
-      if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq)) return false;
-    }
-    return true;
-  });
-
-  // KPIs — all reactive to current filters
-  const totF   = filtered.length;
-  const actF   = filtered.filter(c=>c.estado==="Activo").length;
-  const inactF = filtered.filter(c=>c.estado==="Inactivo").length;
-  const jefesF = new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
-
-  const hoy = new Date();
-  function parseFecha(s){
-    try{const p=(s||"").trim().split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}
-    catch(e){return null;}
-  }
-  function diasRestantes(s){const d=parseFecha(s);return d?Math.round((d-hoy)/864e5):null;}
-
-  // Count vencimientos from filtered set
-  const venc15  = filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d>=0&&d<=15;}).length;
-  const venc30  = filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d>15&&d<=30;}).length;
-  const vencidos= filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d<0;}).length;
-
-  let html="<div class='kg' style='margin-bottom:14px;'>"
-    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+totF+"</div><div class='ks'>Contratos filtrados</div></div>"
-    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
-    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
-    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
-    +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
-    +(venc15>0?"<div class='kc re'><span class='ki'>🔴</span><div class='kl'>Vence ≤15d</div><div class='kv'>"+venc15+"</div></div>":"")
-    +(venc30>0?"<div class='kc am'><span class='ki'>🟡</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+venc30+"</div></div>":"")
-    +"</div>";
-
-  const byJefe={};
-  filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
-
-  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
-    const i2=ini(jefe);
-    const ec2={};cts.forEach(ct=>{ec2[ct.empresa]=(ec2[ct.empresa]||0)+1;});
-    const aJ=cts.filter(c=>c.estado==="Activo").length;
-    const iJ=cts.filter(c=>c.estado==="Inactivo").length;
-    html+="<div class='card' style='margin-bottom:10px;'>"
-      +"<div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
-      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
-      +"<div><div class='ct'>"+jefe+"</div><div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec2).map(([e,n])=>n+" "+e).join(" · ")+"</div></div>"
-      +"</div></div>"
-      +"<div style='display:grid;gap:4px;'>";
-
-    cts.forEach(function(ct){
-      const ecl = ct.estado==="Inactivo"?"p-err":"p-ok";
-      const eml = ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
-      const dias = diasRestantes(ct.vence||"");
-      let fechaColor="var(--mu)", fechaTxt=ct.vence||"Sin fecha";
-      if(dias!==null){
-        if(dias<0){fechaColor="var(--err)";fechaTxt="Vencido "+Math.abs(dias)+"d";}
-        else if(dias<=15){fechaColor="var(--err)";fechaTxt=ct.vence+" ("+dias+"d)";}
-        else if(dias<=30){fechaColor="var(--warn)";fechaTxt=ct.vence+" ("+dias+"d)";}
-        else{fechaColor="var(--mu)";fechaTxt=ct.vence;}
-      }
-      html+="<div class='ci'>"
-        +"<span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
-        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
-        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
-        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
-        +"<span style='font-size:11px;color:"+fechaColor+";'>📅 "+fechaTxt+"</span>"
-        +"</div>";
-    });
-    html+="</div></div>";
-  });
-  cont.innerHTML=html;
+  const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const c=document.getElementById("contratos-cont");if(!c)return;
+  c.innerHTML=RESP.map(r=>{
+    if(fr&&r!==fr)return "";
+    let cs=CONTR[r]||[];
+    if(femp)cs=cs.filter(c2=>c2.e===femp);
+    if(busq)cs=cs.filter(c2=>c2.n.toLowerCase().includes(busq)||c2.c.toLowerCase().includes(busq));
+    if(!cs.length)return `<div class="card" style="margin-bottom:8px;opacity:.35;"><div style="font-size:13px;font-weight:600;">${r}</div><div style="font-size:12px;color:var(--mu);">${(CONTR[r]||[]).length===0?"Sin contratos.":"Sin contratos para los filtros."}</div></div>`;
+    const init=ini(r);const emp2={};cs.forEach(c2=>{emp2[c2.e]=(emp2[c2.e]||0)+1;});
+    return `<div class="card" style="margin-bottom:10px;"><div class="ch"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${init}</div><div><div class="ct">${r}</div><div class="cs">${cs.length} contratos · ${Object.entries(emp2).map(([e,n])=>n+" "+e).join(" · ")}</div></div></div></div><div style="display:grid;gap:4px;">${cs.map(c2=>`<div class="ci"><span class="cb">${c2.c}</span><span class="cn">${c2.n}</span>${empBadge(c2.e)}</div>`).join("")}</div></div>`;
+  }).join("");
 };
 
 // ══ FLOTA ══
@@ -1825,7 +1684,7 @@ function renderFlotaResumen(){
   const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   const totalFlota = flotaActiva.length;
   const psubFlota = document.getElementById("flota-res-psub");
-  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades  · ${op} operativas · ${tal} en taller`;
+  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades () · ${op} operativas · ${tal} en taller`;
   const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
     <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks"></div></div>
@@ -1900,19 +1759,10 @@ window.renderFlotaTaller = function renderFlotaTaller(){
   const allP=Object.entries(useHP).sort((a,b)=>b[1]-a[1]);
   dc("ch-taller-all");charts["ch-taller-all"]=new Chart(document.getElementById("ch-taller-all"),{type:"bar",data:{labels:allP.map(p=>p[0]),datasets:[{label:"Horas",data:allP.map(p=>p[1]),backgroundColor:allP.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9},maxRotation:70},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   dc("ch-turnos-mes");charts["ch-turnos-mes"]=new Chart(document.getElementById("ch-turnos-mes"),{type:"bar",data:{labels:Object.keys(useTM),datasets:[{label:"Turnos",data:Object.values(useTM),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  const allPFiltered=allP.filter(([p])=>{
-    const v=FLOTA.find(x=>x.p===p);
-    if(!v) return false;
-    if((v.est||'').toLowerCase().includes('fuera')) return false;
-    if((v.tipo||'').toLowerCase()!=='mantenimiento') return false;
-    return true;
-  });
-  document.getElementById("tb-taller").innerHTML=allPFiltered.map(([p,hs])=>{
+  document.getElementById("tb-taller").innerHTML=allP.map(([p,hs])=>{
     const v=FLOTA.find(x=>x.p===p)||{};const pct=Math.round(hs/totalH*100*10)/10;const bc=hs>400?"var(--err)":hs>200?"var(--warn)":"var(--ac)";const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":v.est?"p-err":"p-mu";
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${p}</td><td style="font-size:11px;">${v.j||"—"}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${v.est?pill(v.est,ec):"—"}</td><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,hs/691*100)}%;background:${bc};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;">${hs.toFixed(1)}h</span></div></td><td style="color:var(--mu);font-size:11px;">${pct}%</td></tr>`;
   }).join("");
-
-  if(window.renderTipoChart) window.renderTipoChart();
 }
 
 function renderFlotaImpacto(){
@@ -2183,127 +2033,6 @@ window.renderComplementariosPage = function(){
 };
 
 
-
-// ── Actualizar No OCA ──
-async function actualizarNoOca(){
-  try {
-    const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
-    if(rows.length < 2) return false;
-    const pn = v => { const n=parseFloat(v); return isNaN(n)?0:n; };
-
-    const jefeMap    = {};
-    const svcList    = [];
-    const jefeSvcMap = {};
-    let ventaTotal   = 0;
-
-    rows.slice(1).forEach(row => {
-      // Col J(9)=jefe NO OCA, K(10)=valor
-      const jefeJ = String(row[9]||'').trim();
-      const valK  = pn(row[10]);
-      if(jefeJ === 'Suma total' && valK > 0){
-        ventaTotal = valK;
-      } else if(jefeJ && jefeJ !== 'Suma total' && jefeJ !== 'JEFE ZONAL' && valK > 0){
-        if(!jefeMap[jefeJ]) jefeMap[jefeJ] = valK;
-      }
-
-      // Col M(12)=jefe_svc, N(13)=servicio, O(14)=valor_svc
-      const jefeM = String(row[12]||'').trim();
-      const svc   = String(row[13]||'').trim();
-      const valO  = pn(row[14]);
-      if(svc && svc !== 'Suma total' && svc !== 'Servicio' && valO > 0){
-        svcList.push({servicio:svc, valor:valO, jefe:jefeM});
-        if(jefeM && jefeM !== 'Suma total' && jefeM !== 'JEFE ZONAL'){
-          if(!jefeSvcMap[jefeM]) jefeSvcMap[jefeM] = [];
-          jefeSvcMap[jefeM].push({servicio:svc, valor:valO});
-        }
-      }
-    });
-
-    if(!ventaTotal) ventaTotal = Object.values(jefeMap).reduce((s,v)=>s+v,0);
-
-    NO_OCA_DATA.venta_total    = ventaTotal;
-    NO_OCA_DATA.porJefe        = Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
-    NO_OCA_DATA.porServicio    = [...svcList].sort((a,b)=>b.valor-a.valor);
-    NO_OCA_DATA.detallePorJefe = {};
-    Object.entries(jefeSvcMap).forEach(([j,svcs])=>{
-      NO_OCA_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
-    });
-
-    renderNoOcaPage();
-    return true;
-  } catch(err) {
-    console.warn('Error No OCA:', err);
-    return false;
-  }
-}
-
-window.renderNoOcaPage = function(){
-  const fj = document.getElementById('f-nooca-jefe')?.value||'';
-  const ventaTotal = NO_OCA_DATA.venta_total || 0;
-  const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
-
-  const sel = document.getElementById('f-nooca-jefe');
-  if(sel && sel.options.length <= 1){
-    NO_OCA_DATA.porJefe.forEach(j=>{ sel.innerHTML+=`<option value="${j.jefe}">${j.jefe}</option>`; });
-  }
-
-  const jefes = fj ? NO_OCA_DATA.porJefe.filter(j=>j.jefe===fj) : NO_OCA_DATA.porJefe;
-  const ventaFiltrada = fj ? jefes.reduce((s,j)=>s+j.valor,0) : ventaTotal;
-  const svcsData = fj ? (NO_OCA_DATA.detallePorJefe[fj]||[]) : NO_OCA_DATA.porServicio;
-
-  const topJefe = [...NO_OCA_DATA.porJefe].sort((a,b)=>b.valor-a.valor)[0];
-  const topSvc  = [...svcsData].sort((a,b)=>b.valor-a.valor)[0];
-  const kp = document.getElementById('k-nooca-page');
-  if(kp) kp.innerHTML=`
-    <div class="kc gr"><span class="ki">💰</span><div class="kl">${fj?'Venta — '+fj.split(' ')[0]:'Venta total No OCA'}</div><div class="kv" style="font-size:18px;">${fmtARS(ventaFiltrada)}</div><div class="ks">${fj?Math.round(ventaFiltrada/ventaTotal*100)+'% del total':'Acumulado'}</div></div>
-    <div class="kc pu"><span class="ki">👤</span><div class="kl">Jefes con adicionales</div><div class="kv">${NO_OCA_DATA.porJefe.length}</div><div class="ks">${topJefe?'Top: '+topJefe.jefe.split(' ')[0]:''}</div></div>
-    <div class="kc or"><span class="ki">🏢</span><div class="kl">Servicios${fj?' ('+fj.split(' ')[0]+')':''}</div><div class="kv">${svcsData.length}</div><div class="ks">${topSvc?'Top: '+topSvc.servicio:'—'}</div></div>
-    <div class="kc te"><span class="ki">🏆</span><div class="kl">Mayor venta</div><div class="kv" style="font-size:13px;">${topSvc?topSvc.servicio:'—'}</div><div class="ks">${topSvc?fmtARS(topSvc.valor):''}</div></div>`;
-
-  const jefesSort=[...jefes].sort((a,b)=>b.valor-a.valor);
-  dc('ch-nooca-jefe');
-  if(jefesSort.length>0){
-    charts['ch-nooca-jefe']=new Chart(document.getElementById('ch-nooca-jefe'),{type:'bar',
-      data:{labels:jefesSort.map(j=>j.jefe.split(' ').slice(0,2).join(' ')),datasets:[{label:'Venta',data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderRadius:6}]},
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/(ventaTotal||1)*100)+'%)'}}},
-        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-  }
-  dc('ch-nooca-pie');
-  if(jefesSort.length>0){
-    charts['ch-nooca-pie']=new Chart(document.getElementById('ch-nooca-pie'),{type:'doughnut',
-      data:{labels:jefesSort.map(j=>j.jefe.split(' ')[0]),datasets:[{data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderWidth:0}]},
-      options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:10},position:'right'},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' · '+Math.round(c.raw/(ventaTotal||1)*100)+'%'}}}}});
-  }
-  const svcsSort=[...svcsData].sort((a,b)=>b.valor-a.valor);
-  dc('ch-nooca-svc');
-  if(svcsSort.length>0){
-    charts['ch-nooca-svc']=new Chart(document.getElementById('ch-nooca-svc'),{type:'bar',
-      data:{labels:svcsSort.map(d=>d.servicio),datasets:[{label:'Venta',data:svcsSort.map(d=>d.valor),backgroundColor:svcsSort.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:5}]},
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/(ventaFiltrada||ventaTotal||1)*100)+'%)'}}},
-        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-  }
-  const tbody=document.getElementById('tb-nooca');
-  if(tbody){
-    const maxRows=Math.max(jefesSort.length,svcsSort.length);
-    const ventaRef=ventaFiltrada||ventaTotal||1;
-    let rows='';
-    for(let i=0;i<maxRows;i++){
-      const j=jefesSort[i],s=svcsSort[i];
-      const pctJ=j?Math.round(j.valor/ventaTotal*100):0;
-      const pctS=s?Math.round(s.valor/ventaRef*100):0;
-      rows+=`<tr>
-        <td style="font-weight:600;">${j?j.jefe:'—'}</td>
-        <td style="font-family:'JetBrains Mono';color:var(--ok);">${j?fmtARS(j.valor):'—'}</td>
-        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctJ*2)}%;background:var(--ok);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctJ}%</span></div></td>
-        <td style="border-left:1px solid var(--b);padding-left:16px;color:var(--ac);">${s?s.servicio:'—'}</td>
-        <td style="font-family:'JetBrains Mono';color:var(--ac);">${s?fmtARS(s.valor):'—'}</td>
-        <td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctS*2)}%;background:var(--ac);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctS}%</span></div></td>
-      </tr>`;
-    }
-    tbody.innerHTML=rows;
-  }
-};
-
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
 
@@ -2536,7 +2265,6 @@ function parseTurnos(rows){
   // col 0=periodo, 1=patente, 2=area, 13=horas_habiles
   const horasPat={}, horasMes={}, turnosMes={}, horasArea={};
 
-  window.TURNOS_DETALLE = [];
   rows.slice(1).forEach(row=>{
     const pat = String(row[1]||'').trim();
     const area = String(row[2]||'Sin área').trim();
@@ -2556,6 +2284,7 @@ function parseTurnos(rows){
       }
     }catch(e){}
     const asistioVal = String(row[15]||'').trim().toUpperCase();
+    window.TURNOS_DETALLE = []; // Reset on each parse
     window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,horas,asistio:asistioVal,empresa,mesKey,anio,periodo});
     if(horas>0){
       horasPat[pat]=(horasPat[pat]||0)+horas;
@@ -2574,59 +2303,6 @@ function parseTurnos(rows){
 }
 
 // ── Parser: "Estadistica 3" ──
-// ── parseDashboard ──
-function parseDashboard(rows){
-  if(!rows||rows.length<2) return;
-  const M=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  function lbl(s){try{const p=String(s||'').trim().split('/');if(p.length===3){const mo=parseInt(p[1]),yr=String(p[2]).trim();return M[mo]+"'"+(yr.length===4?yr.slice(-2):yr);}return '';}catch(e){return '';}}
-  function isTotal(s){return /total|suma|prom/i.test(String(s||''));}
-  const nHM={},nTM={},nHP={},nE3={},nTipos={},nDetalle={},nTipoDetalle={};let curTipo='';
-  rows.slice(1).forEach(row=>{
-    const colB=String(row[1]||'').trim(),colC=String(row[2]||'').trim(),cant=parseFloat(row[3])||0;
-    if(colB.startsWith('Total ')&&!colC&&cant>0){nTipos[colB.slice(6).trim()]=(nTipos[colB.slice(6).trim()]||0)+cant;curTipo='';}
-    if(colB&&!colB.startsWith('Total ')&&!isTotal(colB)&&colB) curTipo=colB;
-    const activeTipo=colB&&!colB.startsWith('Total ')&&!isTotal(colB)?colB:curTipo;
-    if(colC&&!isTotal(colC)&&cant>0){nDetalle[colC]=(nDetalle[colC]||0)+cant;if(activeTipo){if(!nTipoDetalle[activeTipo])nTipoDetalle[activeTipo]={};nTipoDetalle[activeTipo][colC]=(nTipoDetalle[activeTipo][colC]||0)+cant;}}
-    const pfg=String(row[5]||'').trim(),hsg=parseFloat(row[6])||0;
-    if(pfg&&hsg>0&&!isTotal(pfg)){const mk=lbl(pfg);if(mk)nHM[mk]=(nHM[mk]||0)+hsg;}
-    const ptu=String(row[20]||'').trim(),tmu=parseFloat(row[21])||0;
-    if(ptu&&tmu>0&&!isTotal(ptu)){const mk=lbl(ptu);if(mk)nTM[mk]=(nTM[mk]||0)+tmu;}
-    const pat=String(row[17]||'').trim(),hsp=parseFloat(row[18])||0;
-    if(pat&&hsp>0&&!isTotal(pat)&&pat!=='PATENTE'&&pat!=='SUM de HORAS HABILES EN TALLER') nHP[pat]=(nHP[pat]||0)+hsp;
-    const pij=String(row[8]||'').trim(),hsPot=parseFloat(row[9])||0,imp=parseFloat(row[10])||0,cam=parseFloat(row[11])||0,pDisp=parseFloat(row[13])||0;
-    if(pij&&!isTotal(pij)&&cam>0&&hsPot>0){const mk=lbl(pij);if(mk){const dv=pDisp>1?Math.round(pDisp*10)/10:Math.round(pDisp*10000)/100;if(!nE3[mk])nE3[mk]={mes:mk,cam,hPot:hsPot,h:0,imp:Math.round(imp*100)/100,disp:dv,corr:0};}}
-  });
-  Object.entries(nE3).forEach(([mk,d])=>{d.h=nHM[mk]||0;});
-  if(Object.keys(nHM).length>0){Object.keys(HORAS_MES).forEach(k=>delete HORAS_MES[k]);Object.assign(HORAS_MES,nHM);}
-  if(Object.keys(nTM).length>0){Object.keys(TURNOS_MES).forEach(k=>delete TURNOS_MES[k]);Object.assign(TURNOS_MES,nTM);}
-  if(Object.keys(nHP).length>0){Object.keys(HORAS_PAT).forEach(k=>delete HORAS_PAT[k]);Object.assign(HORAS_PAT,nHP);}
-  const e3arr=Object.values(nE3);if(e3arr.length>0){EST3.length=0;e3arr.forEach(d=>EST3.push(d));}
-  window.TURNOS_TIPOS=nTipos;window.TURNOS_DETALLE_DASH=nDetalle;window.TURNOS_TIPO_DETALLE=nTipoDetalle;
-}
-
-// ── renderTipoChart: 2 fixed charts ──
-window.renderTipoChart=function(){
-  const COLORS=["#4f8ef7cc","#22c55ecc","#f59e0bcc","#ef4444cc","#7c3aedcc","#14b8a6cc","#f97316cc","#06b6d4cc"];
-  const tipos=Object.entries(window.TURNOS_TIPOS||{}).filter(([k])=>k).sort((a,b)=>b[1]-a[1]);
-  const corrDet=Object.entries((window.TURNOS_TIPO_DETALLE||{})["Correctivo"]||{}).sort((a,b)=>b[1]-a[1]);
-  if(!tipos.length&&!corrDet.length) return;
-  const w1=document.getElementById("wrap-taller-tipo");
-  const w2=document.getElementById("wrap-taller-correctivo");
-  if(w1) w1.innerHTML='<canvas id="ch-taller-tipo"></canvas>';
-  if(w2) w2.innerHTML='<canvas id="ch-taller-correctivo"></canvas>';
-  const c1=document.getElementById("ch-taller-tipo");
-  const c2=document.getElementById("ch-taller-correctivo");
-  const totalT=tipos.reduce((s,[,v])=>s+v,0);
-  const totalC=corrDet.reduce((s,[,v])=>s+v,0);
-  if(c1&&tipos.length>0){
-    new Chart(c1,{type:"doughnut",data:{labels:tipos.map(([k,v])=>k+' ('+v+')'),datasets:[{data:tipos.map(([,v])=>v),backgroundColor:COLORS.slice(0,tipos.length),borderWidth:2,borderColor:'#1a1d27'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:12},position:"right"},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalT*100)+'%)'}}}}});
-  }
-  if(c2&&corrDet.length>0){
-    new Chart(c2,{type:"bar",data:{labels:corrDet.map(([k])=>k),datasets:[{label:"Turnos",data:corrDet.map(([,v])=>v),backgroundColor:COLORS.slice(0,corrDet.length),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.raw+' ('+Math.round(c.raw/totalC*100)+'%)'}}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10}},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
-  }
-};
-
-
 function parseEst3(rows){
   // MAPEO VERIFICADO ESTADISTICA 3 (con datos reales):
   // A(0)=PERIODO (dd/mm/yyyy), B(1)=CANTIDAD CAMIONETAS
@@ -2797,8 +2473,6 @@ async function actualizarFlota(){
       nuevoEst3.forEach(d => EST3.push(d));
     }
 
-    try{const rowsDash=await fetchSheet(GS_FLOTA,'Dashboard');parseDashboard(rowsDash);if(window.renderTipoChart)window.renderTipoChart();}catch(e2){console.warn('Dashboard:',e2);}
-
     // Siniestros
     const rowsSin = await fetchSheet(GS_FLOTA, 'Siniestros');
     const {tipo, sem, topPat, area} = parseSiniestros(rowsSin);
@@ -2829,61 +2503,81 @@ async function actualizarFlota(){
 async function actualizarComplementarios(){
   setGsStatus('compl','loading');
   try {
+    // Fetch Resumen comercial (required) + Complementarios y presupuestos (optional)
     const rows = await fetchSheet(GS_COMPL, 'Resumen comercial');
-    if(rows.length < 2){ setGsStatus('compl','error'); return false; }
-    const pn = v => { const n=parseFloat(v); return isNaN(n)?0:n; };
+    let rowsDetalle = [];
+    try {
+      rowsDetalle = await fetchSheet(GS_COMPL, 'Complementarios y presupuestos');
+    } catch(e2) {
+      console.warn('Complementarios y presupuestos no disponible:', e2);
+    }
+    if(rows.length >= 2){
+      // Row 1 (index 1): col A = adicionales, col B = venta total
+      const vals = rows[1];
+      COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
+      COMPL_DATA.venta_total = parseFloat(vals[1]) || 0;
 
-    // Adicionales: row[1][0], venta global from col D "Suma total"
-    COMPL_DATA.adicionales = parseInt(rows[1][0]) || 0;
+        // Resumen comercial estructura:
+      // D(3)=jefe zonal (tabla jefes), E(4)=venta total jefe
+      // F(5)=jefe zonal del servicio, G(6)=servicio, H(7)=valor servicio
+      // Suma total rows are skipped
+      const porJefe = [];
+      const porServicio = [];
+      const detallePorJefeMap = {}; // jefe → [{servicio, valor}]
 
-    // Col D(3)/E(4): jefe totals (for filter list) — skip "Suma total"
-    const jefeMapDE = {};
-    let ventaTotal = 0;
-    rows.slice(1).forEach(row => {
-      const d = String(row[3]||'').trim();
-      const e = pn(row[4]);
-      if(d === 'Suma total' && e > 0) ventaTotal = e;
-      else if(d && d !== 'Suma total' && e > 0 && !jefeMapDE[d]) jefeMapDE[d] = e;
+      rows.slice(1).forEach(row => {
+        // Tabla jefes: col D(3) = jefe, col E(4) = venta total
+        const jefe = String(row[3]||'').trim();
+        const valorJefe = parseFloat(row[4])||0;
+        if(jefe && jefe !== 'Suma total' && valorJefe > 0){
+          porJefe.push({jefe, valor: valorJefe});
+        }
+
+        // Tabla servicios: col F(5) = jefe del servicio, col G(6) = servicio, col H(7) = valor
+        const jefesSvc = String(row[5]||'').trim(); // F = jefe asociado al servicio
+        const svc      = String(row[6]||'').trim(); // G = nombre servicio
+        const valorSvc = parseFloat(row[7])||0;     // H = valor venta
+
+        if(svc && svc !== 'Suma total' && valorSvc > 0){
+          porServicio.push({servicio: svc, valor: valorSvc});
+          // Col F = jefe del servicio — link service to jefe
+          const jefeKey = (jefesSvc && jefesSvc !== 'Suma total' && jefesSvc !== 'JEFE ZONAL') ? jefesSvc : null;
+          if(jefeKey){
+            if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
+            detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
+          }
+        }
+      });
+
+      COMPL_DATA.porJefe = porJefe;
+      COMPL_DATA.porServicio = porServicio;
+      COMPL_DATA.detalle = porJefe;
+      COMPL_DATA.rawRows = rows.slice(1);
+      // Build detallePorJefe from Resumen comercial col F(jefe)→G(servicio)→H(valor)
+      // This is the authoritative source — always overwrite
+      COMPL_DATA.detallePorJefe = {};
+      Object.entries(detallePorJefeMap).forEach(([j,svcs])=>{
+        COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
+      });
+
+    // Parse "Complementarios y presupuestos": A(0)=jefe, C(2)=servicio, AD(29)=valor
+    const detallePorJefe = {};
+    rowsDetalle.slice(1).forEach(row=>{
+      const jefe    = String(row[0]||'').trim();
+      const servicio= String(row[2]||'').trim();
+      const valor   = parseFloat(row[29])||0;
+      if(!jefe || !servicio || valor<=0) return;
+      if(!detallePorJefe[jefe]) detallePorJefe[jefe]={};
+      detallePorJefe[jefe][servicio]=(detallePorJefe[jefe][servicio]||0)+valor;
     });
-    if(!ventaTotal) ventaTotal = Object.values(jefeMapDE).reduce((s,v)=>s+v,0);
-
-    // Col G(6)=jefe, H(7)=servicio, I(8)=valor — detail source
-    // Skip rows where G starts with "Total" or is "Suma total" or H is empty
-    const jefeSvcMap = {};  // jefe → [{servicio,valor}]
-    const svcList    = [];  // global service list
-    let curJefe = '';
-    rows.slice(1).forEach(row => {
-      const g = String(row[6]||'').trim();
-      const h = String(row[7]||'').trim();
-      const i8 = pn(row[8]);
-
-      // Update current jefe when col G has a real jefe name
-      if(g && !g.startsWith('Total ') && g !== 'Suma total' && h !== '') curJefe = g;
-      else if(g && !g.startsWith('Total ') && g !== 'Suma total' && h === '') curJefe = g;
-
-      // Skip total rows and empty service rows
-      if(g.startsWith('Total ') || g === 'Suma total' || !h || i8 <= 0) return;
-
-      const jefe = g || curJefe;
-      svcList.push({servicio:h, valor:i8, jefe});
-      if(jefe){
-        if(!jefeSvcMap[jefe]) jefeSvcMap[jefe] = [];
-        jefeSvcMap[jefe].push({servicio:h, valor:i8});
-      }
-    });
-
-    // Build porJefe from D/E (authoritative totals) sorted by value
-    COMPL_DATA.porJefe = Object.entries(jefeMapDE)
-      .map(([jefe,valor])=>({jefe,valor}))
-      .sort((a,b)=>b.valor-a.valor);
-    COMPL_DATA.venta_total   = ventaTotal;
-    COMPL_DATA.porServicio   = [...svcList].sort((a,b)=>b.valor-a.valor);
-    COMPL_DATA.detalle       = COMPL_DATA.porJefe;
+    // Convert to sorted arrays per jefe
     COMPL_DATA.detallePorJefe = {};
-    Object.entries(jefeSvcMap).forEach(([j,svcs])=>{
-      COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
+    Object.entries(detallePorJefe).forEach(([j,svcs])=>{
+      COMPL_DATA.detallePorJefe[j] = Object.entries(svcs)
+        .map(([servicio,valor])=>({servicio,valor}))
+        .sort((a,b)=>b.valor-a.valor);
     });
-
+    }
     setGsStatus('compl','ok');
     renderComplementariosPage();
     return true;
@@ -2899,26 +2593,25 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=FECHA VENCIMIENTO
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO/CECO, D(3)=ESTADO
     const result = [];
     rows.slice(1).forEach(row=>{
       const empresa  = String(row[0]||'').trim();
       const jefe     = String(row[1]||'').trim();
       const servicio = String(row[2]||'').trim();
-      const ceco     = String(row[3]||'').trim();
-      const estado   = String(row[4]||'').trim();
-      const vence    = String(row[5]||'').trim();
+      const estado   = String(row[3]||'').trim();
       if(!jefe && !servicio) return;
-      result.push({empresa, jefe, servicio, ceco, estado, vence});
+      result.push({empresa, jefe, servicio, estado});
     });
     if(result.length > 0){
       CONTRATOS_RT = result;
+      // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
-      const emps =[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
-      const selR=document.getElementById("f-cont-resp");
-      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
-      const selE=document.getElementById("f-cont-emp");
-      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
+      const sel=document.getElementById("f-cont-resp");
+      if(sel){
+        sel.innerHTML='<option value="">Todos</option>';
+        jefes.forEach(j=>{ sel.innerHTML+=`<option value="${j}">${j}</option>`; });
+      }
     }
     setGsStatus('cont','ok');
     renderContratos();
@@ -2931,11 +2624,10 @@ async function actualizarContratos(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
-    actualizarComplementarios(), actualizarContratos(),
-    actualizarNoOca()
+    actualizarComplementarios(), actualizarContratos()
   ]);
   renderAll();
   if(showToast){
@@ -3005,7 +2697,6 @@ let DOTACION_DATA = [];
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}};
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
-let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 
 // ── Parser Dotación ──
 function parseDotacion(rows){
