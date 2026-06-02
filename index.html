@@ -185,6 +185,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-up{background:rgba(34,197,94,.15);color:var(--ok);}
 .trend-dn{background:rgba(239,68,68,.15);color:var(--err);}
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
+.kpi-wc-badges{display:flex;gap:7px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
+.kpi-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--b2);color:var(--txt);background:var(--s2);}
+.kpi-badge.wc{background:rgba(79,142,247,.15);border-color:var(--ac);color:var(--ac);}
+.kpi-brecha{font-size:11px;font-weight:600;margin-top:5px;text-align:center;}
+.kpi-brecha.neg{color:var(--err);} .kpi-brecha.pos{color:var(--ok);}
 
 /* Alertas strip */
 .alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
@@ -240,14 +245,14 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
     <div class="nav-section">Correctivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
-    <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos — OCA</span></button>
     <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios</span></button>
+    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -258,7 +263,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
-    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
 
     <div class="nav-section">Exportar</div>
     <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">Exportar JSON</span></button>
@@ -393,7 +397,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div><div class="ptitle">Análisis de Correctivos — OCA</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
@@ -983,24 +987,13 @@ function renderDashboard(){
 
   // Draw arc donut with WC reference line
   function drawArc(id, pct, color, wc){
-    const el = document.getElementById(id);
-    if(!el) return;
-    const ex = Chart.getChart(el);
-    if(ex) ex.destroy();
-    const wcC = Math.min(100, wc||0);
-    const pctC = Math.max(0, Math.min(100, pct));
+    const el=document.getElementById(id); if(!el) return;
+    const ex=Chart.getChart(el); if(ex) ex.destroy();
+    const wcC=Math.min(100,wc||0), pctC=Math.max(0,Math.min(100,pct));
     new Chart(el,{type:'doughnut',data:{datasets:[
-      // Layer 1 (outermost): WC reference arc — grey up to WC point
-      {data:[wcC, 100-wcC],
-        backgroundColor:['rgba(180,180,180,0.35)','rgba(255,255,255,0.04)'],
-        borderWidth:0, circumference:270, rotation:225, cutout:'82%'},
-      // Layer 2: actual value arc (inner, thicker)
-      {data:[pctC, 100-pctC],
-        backgroundColor:[color,'rgba(255,255,255,0.04)'],
-        borderWidth:0, circumference:270, rotation:225, cutout:'72%'},
-    ]},options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      animation:{duration:900,easing:'easeInOutQuart'}}});
+      {data:[wcC,100-wcC],backgroundColor:['rgba(180,180,180,0.35)','rgba(255,255,255,0.04)'],borderWidth:0,circumference:270,rotation:225,cutout:'82%'},
+      {data:[pctC,100-pctC],backgroundColor:[color,'rgba(255,255,255,0.04)'],borderWidth:0,circumference:270,rotation:225,cutout:'72%'}
+    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:900,easing:'easeInOutQuart'}}});
   }
 
   const arcs=[
@@ -1023,10 +1016,7 @@ function renderDashboard(){
     const brechaEl=document.getElementById(`arc-brecha-${a.id}`);
     const wc=WC[a.id], pctR=Math.round(a.pct), brecha=pctR-wc;
     if(actEl) actEl.textContent='Actual: '+pctR+'%';
-    if(brechaEl){
-      brechaEl.textContent='Brecha: '+(brecha>=0?'+':'')+brecha+'% vs world class';
-      brechaEl.className='kpi-brecha '+(brecha>=0?'pos':'neg');
-    }
+    if(brechaEl){brechaEl.textContent='Brecha: '+(brecha>=0?'+':'')+brecha+'% vs world class';brechaEl.className='kpi-brecha '+(brecha>=0?'pos':'neg');}
     setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color,wc),60*a.id);
   });
 
@@ -1142,7 +1132,7 @@ window.renderCorr=function(){
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div></div>
     <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div></div>
     <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>
-    `;
+    <div class="kc blue" style="--kc-color:var(--ac)"><span class="ki">⏱️</span><div class="kl">Lead time prom.</div><div class="kv">${leadProm>0?leadProm+"d":"—"}</div><div class="ks">Días desde emisión a cierre</div></div>`;
 
   const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
 
@@ -1684,7 +1674,7 @@ function renderFlotaResumen(){
   const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   const totalFlota = flotaActiva.length;
   const psubFlota = document.getElementById("flota-res-psub");
-  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades () · ${op} operativas · ${tal} en taller`;
+  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades  · ${op} operativas · ${tal} en taller`;
   const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
     <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks"></div></div>
