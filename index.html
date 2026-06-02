@@ -244,15 +244,16 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="nav-section">Panel</div>
     <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
-    <div class="nav-section">Correctivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
-    <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
+    <div class="nav-section">Correctivos y Preventivos</div>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos — OCA</span></button>
+    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
     <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
+    <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -263,8 +264,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
-    <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
-    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
+    
+    
 
     <div class="nav-section">Exportar</div>
     <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">Exportar JSON</span></button>
@@ -2659,10 +2660,10 @@ async function actualizarComplementarios(){
           porJefe.push({jefe, valor: valorJefe});
         }
 
-        // Tabla servicios: col F(5) = jefe del servicio, col G(6) = servicio, col H(7) = valor
-        const jefesSvc = String(row[5]||'').trim(); // F = jefe asociado al servicio
-        const svc      = String(row[6]||'').trim(); // G = nombre servicio
-        const valorSvc = parseFloat(row[7])||0;     // H = valor venta
+        // Tabla servicios: col G(6) = jefe del servicio, col H(7) = servicio, col I(8) = valor
+        const jefesSvc = String(row[6]||'').trim(); // G = jefe asociado al servicio
+        const svc      = String(row[7]||'').trim(); // H = nombre servicio
+        const valorSvc = parseFloat(row[8])||0;     // I = valor venta
 
         if(svc && svc !== 'Suma total' && valorSvc > 0){
           porServicio.push({servicio: svc, valor: valorSvc});
