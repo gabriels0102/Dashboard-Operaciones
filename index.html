@@ -254,6 +254,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
     <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
+    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -264,7 +265,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
-    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
 
     <div class="nav-section">Exportar</div>
     <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">Exportar JSON</span></button>
@@ -294,7 +294,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <!-- 5 KPI ARCOS -->
   <div class="kpi-arc-grid" id="kpi-arc-grid">
     <div class="kpi-arc-card kac-blue" id="arc-card-0">
-      <span class="kpi-arc-trend trend-nt" id="arc-trend-0">—</span>
       <div class="kpi-arc-title">% CORRECTIVOS CERRADOS<br>SOBRE GENERADOS</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-0"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-0" style="color:#4f8ef7;">—%</div><div class="kpi-arc-icon">🔧</div></div>
@@ -304,7 +303,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="kpi-brecha" id="arc-brecha-0">—</div>
     </div>
     <div class="kpi-arc-card kac-green" id="arc-card-1">
-      <span class="kpi-arc-trend trend-nt" id="arc-trend-1">—</span>
       <div class="kpi-arc-title">% DE FLOTA ACTIVA<br>(OPERATIVAS SOBRE TOTAL)</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-1"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-1" style="color:#22c55e;">—%</div><div class="kpi-arc-icon">🚐</div></div>
@@ -314,7 +312,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="kpi-brecha" id="arc-brecha-1">—</div>
     </div>
     <div class="kpi-arc-card kac-orange" id="arc-card-2">
-      <span class="kpi-arc-trend trend-nt" id="arc-trend-2">—</span>
       <div class="kpi-arc-title">% COBERTURA DE DOTACIÓN<br>(REAL SOBRE APROBADA)</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-2"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-2" style="color:#f97316;">—%</div><div class="kpi-arc-icon">👥</div></div>
@@ -324,7 +321,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="kpi-brecha" id="arc-brecha-2">—</div>
     </div>
     <div class="kpi-arc-card kac-purple" id="arc-card-3">
-      <span class="kpi-arc-trend trend-nt" id="arc-trend-3">—</span>
       <div class="kpi-arc-title">% CUMPLIMIENTO DE<br>PREVENTIVOS</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-3"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-3" style="color:#7c3aed;">—%</div><div class="kpi-arc-icon">🛡️</div></div>
@@ -334,7 +330,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div class="kpi-brecha" id="arc-brecha-3">—</div>
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
-      <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
       <div class="kpi-arc-title">% COBERTURA DE<br>ABONOS DE LEY</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-4"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
@@ -1026,26 +1021,30 @@ function renderDashboard(){
   // Arc 0 — % cerrados from Col T (last value in SERIE.T)
   const pctCorr = (SERIE.T&&SERIE.T.length>0) ? SERIE.T[SERIE.T.length-1] : e.pct_c;
 
-  // Draw arc donut with WC marker
+  // Draw arc donut with WC reference line
   function drawArc(id, pct, color, wc){
     const el = document.getElementById(id);
     if(!el) return;
     const ex = Chart.getChart(el);
     if(ex) ex.destroy();
-    // Main arc + WC marker arc
-    const wcAngle = 270 * (Math.min(100,wc||0)/100); // degrees for WC position
-    new Chart(el,{type:'doughnut',data:{datasets:[
-      // Main value arc
-      {data:[Math.max(0,Math.min(100,pct)),Math.max(0,100-pct)],
-        backgroundColor:[color,'rgba(255,255,255,0.04)'],
-        borderWidth:0,circumference:270,rotation:225,cutout:'78%'},
-      // WC reference arc (thin grey line up to WC point)
-      {data:[Math.max(0,Math.min(100,wc||0)),Math.max(0,100-(wc||0))],
-        backgroundColor:['rgba(255,255,255,0.0)','rgba(255,255,255,0.0)'],
-        borderWidth:0,circumference:270,rotation:225,cutout:'86%'}
-    ]},options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{enabled:false}},
-      animation:{duration:900,easing:'easeInOutQuart'}}});
+    const wcClamped = Math.min(100, wc||0);
+    const pctClamped = Math.max(0, Math.min(100, pct));
+    new Chart(el,{
+      type:'doughnut',
+      data:{datasets:[
+        // Layer 1 (outermost): WC reference — grey arc up to WC, then transparent
+        {data:[wcClamped, 100-wcClamped],
+          backgroundColor:['rgba(180,180,180,0.35)','rgba(255,255,255,0.04)'],
+          borderWidth:0, circumference:270, rotation:225, cutout:'82%'},
+        // Layer 2: actual value arc (thicker, inner)
+        {data:[pctClamped, 100-pctClamped],
+          backgroundColor:[color,'rgba(255,255,255,0.04)'],
+          borderWidth:0, circumference:270, rotation:225, cutout:'72%'},
+      ]},
+      options:{responsive:true, maintainAspectRatio:false,
+        plugins:{legend:{display:false}, tooltip:{enabled:false}},
+        animation:{duration:900, easing:'easeInOutQuart'}}
+    });
   }
 
   const arcs=[
@@ -1063,7 +1062,7 @@ function renderDashboard(){
     const v1e=document.getElementById(`arc-v1-${a.id}`);
     const v2e=document.getElementById(`arc-v2-${a.id}`);
     if(pe) pe.textContent=Math.round(a.pct)+'%';
-    if(te){te.textContent=a.trend;te.className='kpi-arc-trend '+a.trendCls;}
+    // trend badge hidden
     if(v1e) v1e.textContent=a.v1;
     if(v2e) v2e.textContent=a.v2;
     // WC badges
@@ -1085,7 +1084,7 @@ function renderDashboard(){
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
   // Col 1: Correctivos backlog
   alertas.push(e.act>200
-    ? {icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'}
+    ? {icon:'⚠️',txt:`${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'}
     : {icon:'✅',txt:'Correctivos bajo control',sub:`${e.act} activos · ${e.pct_c}% cerrados`,cls:'al-ok'});
   // Col 2: Flota en taller
   alertas.push(enTaller.length>0
@@ -1201,13 +1200,12 @@ window.renderCorr=function(){
   // ── KPIs ──
   document.getElementById("k-corr-det").innerHTML=`
     <div class="kc bl"><span class="ki">📂</span><div class="kl">Total correctivos</div><div class="kv">${tot.toLocaleString()}</div><div class="ks">Trabajos acumulados</div></div>
-    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div><div class="ks">Col B — estado Abierto</div></div>
-    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div><div class="ks">Col D — estado En curso</div></div>
-    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div><div class="ks">Ab + EC + Pend (col N)</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div><div class="ks">Col J — Finalizado</div></div>
-    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div><div class="ks">Col H — Cerrado compl.</div></div>
-    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>
-    <div class="kc blue" style="--kc-color:var(--ac)"><span class="ki">⏱️</span><div class="kl">Lead time prom.</div><div class="kv">${leadProm>0?leadProm+"d":"—"}</div><div class="ks">Días desde emisión a cierre</div></div>`;
+    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div></div>
+    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div></div>
+    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div></div>
+    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div></div>
+    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>`;
 
   const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
 
@@ -1827,14 +1825,14 @@ function renderFlotaResumen(){
   const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   const totalFlota = flotaActiva.length;
   const psubFlota = document.getElementById("flota-res-psub");
-  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Col W = Mantenimiento) · ${op} operativas · ${tal} en taller`;
+  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades  · ${op} operativas · ${tal} en taller`;
   const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
-    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks">Col W = Mantenimiento</div></div>
+    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks"></div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${pctOp}%</div></div>
     <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div><div class="ks">${totalFlota>0?Math.round(tal/totalFlota*100):0}%</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Col N acumulado</div></div>
-    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Col P = SI</div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks"></div></div>
+    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks"></div></div>`;
 
   dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{
     type:"doughnut",
@@ -1929,10 +1927,10 @@ function renderFlotaImpacto(){
   // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota)
   const totalHTurnos = Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   document.getElementById("k-impacto").innerHTML=`
-    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual (Est. 3)</div></div>
-    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — camionetas equiv./mes</div></div>
+    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks"></div></div>
+    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks"></div></div>
     <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.h)}h taller</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks">Col N — Turnos unidades</div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks"></div></div>`;
   const mes=EST3.map(d=>d.mes);
   dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{
     type:"bar",
