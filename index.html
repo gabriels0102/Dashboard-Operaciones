@@ -1030,29 +1030,28 @@ function renderDashboard(){
 
     const cx = size / 2;
     const cy = size / 2;
-    const R  = size / 2 - 8;    // arc center radius
-    const TW = 12;               // arc thickness
+    const R  = size / 2 - 9;   // center radius of the main arc
+    const TW = 11;              // thickness of the main arc
 
-    // 270° arc: starts at 135° (bottom-left), ends at 45° (bottom-right) going clockwise
-    // In canvas radians: 135° = 0.75π, sweep 270° = 1.5π
+    // 270° sweep: starts bottom-left (135°), ends bottom-right (405° = 45°)
     const startA     = 135 * Math.PI / 180;
     const totalSweep = 270 * Math.PI / 180;
-    const endA       = startA + totalSweep;
-    const pctA       = startA + (Math.max(0, Math.min(100, pct)) / 100) * totalSweep;
-    const wcA        = startA + (Math.max(0, Math.min(100, wc))  / 100) * totalSweep;
+    const endA = startA + totalSweep;
+    const pctA = startA + (Math.max(0, Math.min(100, pct)) / 100) * totalSweep;
+    const wcA  = startA + (Math.max(0, Math.min(100, wc))  / 100) * totalSweep;
 
     ctx.clearRect(0, 0, size, size);
 
     // ── 1. Dark circular background ──
     ctx.beginPath();
-    ctx.arc(cx, cy, R + TW / 2 + 2, 0, 2 * Math.PI);
-    ctx.fillStyle = 'rgba(15, 17, 23, 0.85)';
+    ctx.arc(cx, cy, R + TW / 2 + 3, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(15,17,23,0.88)';
     ctx.fill();
 
     // ── 2. Grey track — full 270° ──
     ctx.beginPath();
     ctx.arc(cx, cy, R, startA, endA, false);
-    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.09)';
     ctx.lineWidth   = TW;
     ctx.lineCap     = 'butt';
     ctx.stroke();
@@ -1067,25 +1066,35 @@ function renderDashboard(){
       ctx.stroke();
     }
 
-    // ── 4. WC tick mark — perpendicular dashed stroke at WC angle ──
-    // A short radial line crossing the arc at the WC position
-    const tickOuter = R + TW / 2 + 2;   // just outside the arc
-    const tickInner = R - TW / 2 - 2;   // just inside the arc
-    const cos = Math.cos(wcA);
-    const sin = Math.sin(wcA);
+    // ── 4. WC: dashed arc parallel to main arc, from start up to WC angle ──
+    // Runs just outside the main arc
+    const wcR = R + TW / 2 + 3;   // radius just outside the outer edge of the arc
+    const wcW = 2;
     ctx.beginPath();
-    ctx.moveTo(cx + tickInner * cos, cy + tickInner * sin);
-    ctx.lineTo(cx + tickOuter * cos, cy + tickOuter * sin);
+    ctx.arc(cx, cy, wcR, startA, wcA, false);
     ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth   = 2.5;
-    ctx.lineCap     = 'round';
-    ctx.setLineDash([2, 2]);
+    ctx.lineWidth   = wcW;
+    ctx.lineCap     = 'butt';
+    ctx.setLineDash([3, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // ── 5. WC dot at the tick ──
+    // ── 5. Tick mark at the WC endpoint — perpendicular to arc ──
+    const cosW = Math.cos(wcA);
+    const sinW = Math.sin(wcA);
+    const tickOuter = wcR + 3;
+    const tickInner = R - TW / 2 - 1;
     ctx.beginPath();
-    ctx.arc(cx + R * cos, cy + R * sin, 3, 0, 2 * Math.PI);
+    ctx.moveTo(cx + tickInner * cosW, cy + tickInner * sinW);
+    ctx.lineTo(cx + tickOuter * cosW, cy + tickOuter * sinW);
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth   = 2;
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+
+    // ── 6. Small golden dot at tick center ──
+    ctx.beginPath();
+    ctx.arc(cx + R * cosW, cy + R * sinW, 2.5, 0, 2 * Math.PI);
     ctx.fillStyle = '#FFD700';
     ctx.fill();
   }
