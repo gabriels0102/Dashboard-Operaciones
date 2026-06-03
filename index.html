@@ -2803,8 +2803,8 @@ async function actualizarComplementarios(){
     if(rows.length >= 2){
       // Row 1 (index 1): col A = adicionales, col B = venta total
       const vals = rows[1];
-      COMPL_DATA.adicionales = parseInt(vals[0]) || 0;
-      COMPL_DATA.venta_total = parseFloat(vals[1]) || 0;
+      COMPL_DATA.adicionales = typeof vals[0]==='number' ? vals[0] : parseInt(vals[0])||0;
+      COMPL_DATA.venta_total = typeof vals[1]==='number' ? vals[1] : parseFloat(vals[1])||0;
 
         // Resumen comercial estructura:
       // D(3)=jefe zonal (tabla jefes), E(4)=venta total jefe
@@ -2817,7 +2817,7 @@ async function actualizarComplementarios(){
       rows.slice(1).forEach(row => {
         // Tabla jefes: col D(3) = jefe, col E(4) = venta total del jefe
         const jefe = String(row[3]||'').trim();
-        const valorJefe = parseFloat(String(row[4]||'').replace(/\./g,'').replace(',','.'))||0;
+        const valorJefe = typeof row[4]==='number' ? row[4] : parseFloat(row[4])||0;
         if(jefe && jefe !== 'Suma total' && jefe !== 'JEFE ZONAL' && valorJefe > 0){
           if(!porJefe.find(j=>j.jefe===jefe)){
             porJefe.push({jefe, valor: valorJefe});
@@ -2827,13 +2827,17 @@ async function actualizarComplementarios(){
         // Tabla servicios: col G(6) = jefe zonal, col H(7) = nombre servicio, col I(8) = valor venta
         const jefeKey = String(row[6]||'').trim();
         const svc     = String(row[7]||'').trim();
-        const valorSvc = parseFloat(String(row[8]||'').replace(/\./g,'').replace(',','.'))||0;
+        const valorSvc = typeof row[8]==='number' ? row[8] : parseFloat(row[8])||0;
 
-        if(svc && svc !== 'Suma total' && svc !== 'SERVICIO' && valorSvc > 0 && jefeKey && jefeKey !== 'Suma total' && jefeKey !== 'JEFE ZONAL'){
-          // detallePorJefe: agregar servicio al jefe (una entrada por fila, sin deduplicar — cada fila es un servicio)
-          if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
-          detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
-          // porServicio global: acumular por servicio sumando todos los jefes
+        // Saltar filas de subtotales (jefeKey contiene "Total " o svc está vacío)
+        const esSubtotal = jefeKey.startsWith('Total ') || jefeKey === 'Suma total' || svc === '' || svc === 'Suma total';
+        if(!esSubtotal && svc && valorSvc > 0){
+          // detallePorJefe: una entrada por fila
+          if(jefeKey && jefeKey !== 'JEFE ZONAL'){
+            if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
+            detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
+          }
+          // porServicio global: acumular sumando todos los jefes
           const existing = porServicio.find(s=>s.servicio===svc);
           if(existing) existing.valor += valorSvc;
           else porServicio.push({servicio: svc, valor: valorSvc});
