@@ -919,18 +919,12 @@ const SITIOS_SEED=[
 // ══ STATE ══
 let sitios=[], charts={}, editSitioId=null, modalCb=null;
 
-onSnapshot(collection(db,"sitios"),snap=>{
-  if(snap.empty){seedSitios();}
-  else{sitios=snap.docs.map(d=>({fid:d.id,...d.data()}));}
-  document.getElementById("loading").style.display="none";
-  setSyncStatus("online");
-  try { renderAll(); } catch(e) { console.error('renderAll error (snapshot):', e); }
-});
+// Sitios se cargan EXCLUSIVAMENTE desde Google Sheets (GS_SITIOS)
+// Firebase ya no se usa para sitios — se eliminó el onSnapshot y seedSitios
+document.getElementById("loading").style.display="none";
+setSyncStatus("online");
+try { renderAll(); } catch(e) { console.error('renderAll error (initial):', e); }
 
-async function seedSitios(){
-  const b=writeBatch(db);SITIOS_SEED.forEach(s=>b.set(doc(collection(db,"sitios")),s));
-  await b.commit();toast("Sitios iniciales cargados ✓");
-}
 function setSyncStatus(s){document.getElementById("sdot").className="sync-dot "+(s==="online"?"online":"");document.getElementById("slabel").textContent=s==="online"?"En línea":"Sin conexión";}
 
 // ── NAV ──
@@ -1020,9 +1014,7 @@ function renderDashboard(){
   // Draw arc donut with WC reference line (yellow dashed with circle endpoint)
   function drawArc(id, pct, color, wc){
     const el=document.getElementById(id); if(!el) return;
-    // Destroy any existing Chart.js instance
     const ex=Chart.getChart(el); if(ex) ex.destroy();
-    // Use pure canvas drawing to match the reference image exactly
     const dpr = window.devicePixelRatio||1;
     const size = 100;
     el.width  = size * dpr;
@@ -1031,73 +1023,69 @@ function renderDashboard(){
     el.style.height = size + 'px';
     const ctx = el.getContext('2d');
     ctx.scale(dpr, dpr);
+
     const cx = size/2, cy = size/2;
-    const R = size/2 - 6;          // outer radius of the colored arc
-    const trackW = 10;             // arc stroke width
-    const wcR = R + 5;             // WC dashed ring sits outside the colored arc
-    // Angles: start at 225° (bottom-left), sweep 270° clockwise to bottom-right
-    const startA = 225 * Math.PI/180;
+    // Main arc (thick, colored) — outer radius
+    const R = size/2 - 8;
+    const trackW = 11;
+    // WC dashed line runs just inside the main arc
+    const wcR = R - trackW/2 - 1;
+    const wcW  = 2.5;
+
+    // Angles: 225° start, 270° sweep
+    const startA    = 225 * Math.PI/180;
     const totalSweep = 270 * Math.PI/180;
-    const pctA = startA + (Math.max(0,Math.min(100,pct))/100) * totalSweep;
-    const wcA  = startA + (Math.max(0,Math.min(100,wc ))/100) * totalSweep;
-    const endA = startA + totalSweep;
+    const endA  = startA + totalSweep;
+    const pctA  = startA + (Math.max(0,Math.min(100,pct))/100) * totalSweep;
+    const wcA   = startA + (Math.max(0,Math.min(100,wc ))/100) * totalSweep;
 
     ctx.clearRect(0,0,size,size);
 
-    // 1. Dark circular background fill
+    // 1. Grey track — full 270° background for the main arc
     ctx.beginPath();
-    ctx.arc(cx,cy,wcR+4,0,2*Math.PI);
-    ctx.fillStyle='rgba(0,0,0,0.45)';
-    ctx.fill();
-
-    // 2. WC dashed yellow full-arc track (background, full 270°)
-    ctx.beginPath();
-    ctx.arc(cx,cy,wcR,startA,endA,false);
-    ctx.strokeStyle='rgba(245,158,11,0.25)';
-    ctx.lineWidth=2;
-    ctx.setLineDash([4,3]);
-    ctx.lineCap='round';
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 3. WC dashed yellow arc up to WC value
-    ctx.beginPath();
-    ctx.arc(cx,cy,wcR,startA,wcA,false);
-    ctx.strokeStyle='#f59e0b';
-    ctx.lineWidth=2.5;
-    ctx.setLineDash([4,3]);
-    ctx.lineCap='round';
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 4. Colored arc track background (grey, full 270°)
-    ctx.beginPath();
-    ctx.arc(cx,cy,R,startA,endA,false);
-    ctx.strokeStyle='rgba(255,255,255,0.08)';
-    ctx.lineWidth=trackW;
-    ctx.lineCap='butt';
+    ctx.arc(cx, cy, R, startA, endA, false);
+    ctx.strokeStyle = 'rgba(180,180,180,0.35)';
+    ctx.lineWidth   = trackW;
+    ctx.lineCap     = 'round';
     ctx.stroke();
 
-    // 5. Colored arc — actual value
-    if(pct>0){
+    // 2. Colored arc — actual value (thick, on top of grey)
+    if(pct > 0){
       ctx.beginPath();
-      ctx.arc(cx,cy,R,startA,pctA,false);
-      ctx.strokeStyle=color;
-      ctx.lineWidth=trackW;
-      ctx.lineCap='round';
+      ctx.arc(cx, cy, R, startA, pctA, false);
+      ctx.strokeStyle = color;
+      ctx.lineWidth   = trackW;
+      ctx.lineCap     = 'round';
       ctx.stroke();
     }
 
-    // 6. Yellow filled circle at WC endpoint
+    // 3. WC dashed line — grey ghost track (full 270°, very faint)
+    ctx.beginPath();
+    ctx.arc(cx, cy, wcR, startA, endA, false);
+    ctx.strokeStyle = 'rgba(245,158,11,0.18)';
+    ctx.lineWidth   = wcW;
+    ctx.lineCap     = 'round';
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 4. WC dashed yellow line — up to WC value
+    ctx.beginPath();
+    ctx.arc(cx, cy, wcR, startA, wcA, false);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth   = wcW;
+    ctx.lineCap     = 'round';
+    ctx.setLineDash([3, 3]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 5. Yellow filled circle at WC endpoint
     const wcEx = cx + wcR * Math.cos(wcA);
     const wcEy = cy + wcR * Math.sin(wcA);
     ctx.beginPath();
-    ctx.arc(wcEx,wcEy,4,0,2*Math.PI);
-    ctx.fillStyle='#f59e0b';
+    ctx.arc(wcEx, wcEy, 3.5, 0, 2*Math.PI);
+    ctx.fillStyle = '#f59e0b';
     ctx.fill();
-    ctx.strokeStyle='rgba(0,0,0,0.5)';
-    ctx.lineWidth=1;
-    ctx.stroke();
   }
 
   const arcs=[
@@ -2852,99 +2840,99 @@ async function actualizarContratos(){
 // H(7)=puesta a tierra, I(8)=termografias, J(9)=iluminacion, K(10)=ruido,
 // L(11)=entrega EPP, M(12)=capacitaciones
 async function actualizarSitiosGS(){
+  // Fuente EXCLUSIVA: GS_SITIOS (Google Apps Script)
+  // Columnas: B(1)=Jefe Zonal, E(4)=Nombre sitio/servicio,
+  //           F(5)=Extintores, G(6)=Hidrantes, H(7)=Puesta a tierra,
+  //           I(8)=Termografías, J(9)=Iluminación, K(10)=Ruido,
+  //           L(11)=Entrega EPP, M(12)=Capacitaciones
+  const colMap = {
+    extintores:   5,
+    hidrantes:    6,
+    pat:          7,
+    termografia:  8,
+    iluminacion:  9,
+    ruido:        10,
+    epp:          11,
+    capacitaciones: 12,
+    autoproteccion: null
+  };
+
+  function normalizeEstado(val){
+    const v = String(val||'').trim().toLowerCase();
+    if(!v || v==='-' || v==='n/a') return 'N/A';
+    if(v==='vigente' || v==='ok' || v==='al día' || v==='al dia' || v==='activo' || v==='realizado') return 'vigente';
+    if(v.includes('vence pronto') || v.includes('próximo') || v.includes('proximo') || v.includes('por vencer') || v.includes('próxim')) return 'vence pronto';
+    if(v.includes('vencid') || v.includes('vencida') || v.includes('expirad') || v==='vencido') return 'vencido';
+    if(v.includes('no realiz') || v.includes('pendiente') || v.includes('sin realizar') || v.includes('no realizado')) return 'No realizado';
+    return val;
+  }
+
+  // Fetch directo al GAS sin parámetro de hoja — el script devuelve la primera hoja
   try {
-    // Try fetching directly (no sheet param) first, then fallback sheet names
+    const controller = new AbortController();
+    const timeout = setTimeout(()=>controller.abort(), 35000);
+    const res = await fetch(GS_SITIOS, {signal: controller.signal});
+    clearTimeout(timeout);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    const json = JSON.parse(text);
+
+    // Aceptar cualquier formato de respuesta
     let rows = [];
-    const sheetNames = ['', 'Sheet1', 'Hoja1', 'Abonos de Ley', 'Abonos', 'Sitios', 'Data', 'Registro'];
-    for(const sheetName of sheetNames){
-      try {
-        const url = sheetName
-          ? `${GS_SITIOS}?sheet=${encodeURIComponent(sheetName)}`
-          : GS_SITIOS;
-        const controller = new AbortController();
-        const timeout = setTimeout(()=>controller.abort(), 30000);
-        const res = await fetch(url, {signal: controller.signal});
-        clearTimeout(timeout);
-        if(!res.ok) continue;
-        const text = await res.text();
-        let json;
-        try { json = JSON.parse(text); } catch(e){ continue; }
-        // Handle multiple response formats
-        if(Array.isArray(json)) { rows = json; }
-        else if(json.rows && Array.isArray(json.rows)) { rows = json.rows; }
-        else if(json.data && Array.isArray(json.data)) { rows = json.data; }
-        else if(json.values && Array.isArray(json.values)) { rows = json.values; }
-        else if(json.error) { continue; }
-        else {
-          // Try to find any array property with data
-          const arrProp = Object.values(json).find(v=>Array.isArray(v)&&v.length>=2);
-          if(arrProp) rows = arrProp;
-        }
-        if(rows.length >= 2) break;
-        rows = [];
-      } catch(e2){ continue; }
-    }
-    if(rows.length < 2) return false;
-    // Parse rows into sitios format compatible with existing ABONOS structure
-    // ABONOS ids: extintores, hidrantes, pat, termografia, iluminacion, ruido, epp, capacitaciones
-    const colMap = {
-      extintores: 5,   // F
-      hidrantes:  6,   // G
-      pat:        7,   // H
-      termografia:8,   // I
-      iluminacion:9,   // J
-      ruido:      10,  // K
-      epp:        11,  // L
-      capacitaciones: 12, // M
-      autoproteccion: null // not in this sheet
-    };
-    // Normalize status values from sheet to internal format
-    function normalizeEstado(val){
-      const v = String(val||'').trim().toLowerCase();
-      if(v === 'vigente' || v === 'ok' || v === 'al día' || v === 'al dia') return 'vigente';
-      if(v.includes('vence pronto') || v.includes('próximo') || v.includes('proximo') || v.includes('por vencer')) return 'vence pronto';
-      if(v === 'vencido' || v === 'vencida' || v === 'expirado') return 'vencido';
-      if(v === 'no realizado' || v === 'no realizada' || v === 'pendiente' || v === 'sin realizar') return 'No realizado';
-      if(v === 'n/a' || v === '-' || v === '') return 'N/A';
-      // Try to detect by color-like keywords
-      if(v.includes('venc')) return 'vencido';
-      if(v.length === 0) return 'N/A';
-      return val; // keep original if not matched
+    if(Array.isArray(json))                              rows = json;
+    else if(Array.isArray(json.rows))                    rows = json.rows;
+    else if(Array.isArray(json.data))                    rows = json.data;
+    else if(Array.isArray(json.values))                  rows = json.values;
+    else {
+      const arr = Object.values(json).find(v=>Array.isArray(v)&&v.length>=1);
+      if(arr) rows = arr;
     }
 
+    if(rows.length < 1) return false;
+
     const nuevosSitios = [];
-    rows.slice(1).forEach((row, i) => {
-      const jefe    = String(row[1]||'').trim();
-      const nombre  = String(row[4]||'').trim();
+    rows.forEach((row, i) => {
+      // Saltar fila de encabezado si la primera celda parece encabezado
+      if(i===0){
+        const first = String(row[0]||'').toLowerCase();
+        if(first.includes('jefe')||first.includes('nombre')||first.includes('id')||first.includes('sitio')) return;
+      }
+      const jefe   = String(row[1]||'').trim();
+      const nombre = String(row[4]||'').trim();
       if(!nombre && !jefe) return;
       const servicios = {};
-      Object.entries(colMap).forEach(([id, colIdx]) => {
-        if(colIdx === null){ servicios[id] = 'N/A'; return; }
+      Object.entries(colMap).forEach(([id, colIdx])=>{
+        if(colIdx===null){ servicios[id]='N/A'; return; }
         servicios[id] = normalizeEstado(row[colIdx]);
       });
       nuevosSitios.push({
         id: 'GS-'+(i+1),
-        zona: '',
+        zona: String(row[2]||'').trim() || '',
         jefe,
-        domicilio: '',
+        domicilio: String(row[3]||'').trim() || '',
         nombre: nombre || '(sin nombre)',
         servicios,
         _fromGS: true
       });
     });
 
-    if(nuevosSitios.length > 0){
-      // Replace GS-sourced sitios but keep Firebase ones
-      const firebaseSitios = sitios.filter(s => !s._fromGS);
-      sitios.length = 0;
-      // Add firebase sitios + GS sitios
-      [...firebaseSitios, ...nuevosSitios].forEach(s => sitios.push(s));
-      renderSitios();
-      renderDashboard();
+    // Reemplazar todos los sitios con los de GS
+    sitios.length = 0;
+    nuevosSitios.forEach(s => sitios.push(s));
+
+    // Actualizar filtro de zonales en la página de sitios
+    const zonalesGS = [...new Set(nuevosSitios.map(s=>s.jefe).filter(Boolean))].sort();
+    const selSit = document.getElementById('f-sit-zonal');
+    if(selSit){
+      selSit.innerHTML = '<option value="">Todos</option>';
+      zonalesGS.forEach(z=>{ selSit.innerHTML+=`<option value="${z}">${z}</option>`; });
     }
+
+    renderSitios();
+    renderDashboard();
     return true;
-  } catch(err) {
-    console.warn('Error sitios GS:', err);
+  } catch(err){
+    console.warn('Error cargando Abonos de Ley desde GS:', err);
     return false;
   }
 }
