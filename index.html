@@ -1013,82 +1013,80 @@ function renderDashboard(){
 
   // Draw arc donut with WC reference line (yellow dashed with circle endpoint)
   function drawArc(id, pct, color, wc){
-    const el=document.getElementById(id); if(!el) return;
-    const ex=Chart.getChart(el); if(ex) ex.destroy();
-    const dpr = window.devicePixelRatio||1;
+    const el = document.getElementById(id);
+    if(!el) return;
+    const ex = Chart.getChart(el);
+    if(ex) ex.destroy();
+
+    const dpr  = window.devicePixelRatio || 1;
     const size = 100;
-    el.width  = size * dpr;
-    el.height = size * dpr;
+    el.width        = size * dpr;
+    el.height       = size * dpr;
     el.style.width  = size + 'px';
     el.style.height = size + 'px';
+
     const ctx = el.getContext('2d');
     ctx.scale(dpr, dpr);
 
-    const cx = size/2, cy = size/2;
+    const cx = size / 2;
+    const cy = size / 2;
+    const R  = size / 2 - 8;    // arc center radius
+    const TW = 12;               // arc thickness
 
-    // Main colored arc
-    const R      = size/2 - 9;   // center radius of the thick arc
-    const trackW = 10;            // thickness of the colored arc
-
-    // WC dashed line: runs along the inner edge of the colored arc, slightly inside
-    // inner edge of colored arc = R - trackW/2
-    // we place WC line 2px inside that inner edge
-    const wcR = R - trackW/2 - 2;
-    const wcW = 2;
-
-    // Angles: 225° start, 270° sweep (bottom-left → top → bottom-right)
-    const startA     = 225 * Math.PI / 180;
+    // 270° arc: starts at 135° (bottom-left), ends at 45° (bottom-right) going clockwise
+    // In canvas radians: 135° = 0.75π, sweep 270° = 1.5π
+    const startA     = 135 * Math.PI / 180;
     const totalSweep = 270 * Math.PI / 180;
-    const endA = startA + totalSweep;
-    const pctA = startA + (Math.max(0, Math.min(100, pct)) / 100) * totalSweep;
-    const wcA  = startA + (Math.max(0, Math.min(100, wc))  / 100) * totalSweep;
+    const endA       = startA + totalSweep;
+    const pctA       = startA + (Math.max(0, Math.min(100, pct)) / 100) * totalSweep;
+    const wcA        = startA + (Math.max(0, Math.min(100, wc))  / 100) * totalSweep;
 
     ctx.clearRect(0, 0, size, size);
 
-    // 1. Grey track background — full 270°
+    // ── 1. Dark circular background ──
+    ctx.beginPath();
+    ctx.arc(cx, cy, R + TW / 2 + 2, 0, 2 * Math.PI);
+    ctx.fillStyle = 'rgba(15, 17, 23, 0.85)';
+    ctx.fill();
+
+    // ── 2. Grey track — full 270° ──
     ctx.beginPath();
     ctx.arc(cx, cy, R, startA, endA, false);
-    ctx.strokeStyle = 'rgba(160,160,160,0.30)';
-    ctx.lineWidth   = trackW;
-    ctx.lineCap     = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth   = TW;
+    ctx.lineCap     = 'butt';
     ctx.stroke();
 
-    // 2. Colored arc — actual % value
+    // ── 3. Colored arc — actual value ──
     if(pct > 0){
       ctx.beginPath();
       ctx.arc(cx, cy, R, startA, pctA, false);
       ctx.strokeStyle = color;
-      ctx.lineWidth   = trackW;
+      ctx.lineWidth   = TW;
       ctx.lineCap     = 'round';
       ctx.stroke();
     }
 
-    // 3. WC ghost track — full 270°, very faint yellow
+    // ── 4. WC tick mark — perpendicular dashed stroke at WC angle ──
+    // A short radial line crossing the arc at the WC position
+    const tickOuter = R + TW / 2 + 2;   // just outside the arc
+    const tickInner = R - TW / 2 - 2;   // just inside the arc
+    const cos = Math.cos(wcA);
+    const sin = Math.sin(wcA);
     ctx.beginPath();
-    ctx.arc(cx, cy, wcR, startA, endA, false);
-    ctx.strokeStyle = 'rgba(245,158,11,0.15)';
-    ctx.lineWidth   = wcW;
-    ctx.lineCap     = 'butt';
-    ctx.setLineDash([3, 3]);
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // 4. WC dashed yellow line — up to WC value
-    ctx.beginPath();
-    ctx.arc(cx, cy, wcR, startA, wcA, false);
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth   = wcW;
+    ctx.moveTo(cx + tickInner * cos, cy + tickInner * sin);
+    ctx.lineTo(cx + tickOuter * cos, cy + tickOuter * sin);
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth   = 2.5;
     ctx.lineCap     = 'round';
-    ctx.setLineDash([3, 3]);
+    ctx.setLineDash([2, 2]);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 5. Yellow filled circle at WC endpoint
-    const wcEx = cx + wcR * Math.cos(wcA);
-    const wcEy = cy + wcR * Math.sin(wcA);
+    // ── 5. WC dot at the tick ──
     ctx.beginPath();
-    ctx.arc(wcEx, wcEy, 3, 0, 2 * Math.PI);
-    ctx.fillStyle = '#f59e0b';
+    ctx.arc(cx + R * cos, cy + R * sin, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = '#FFD700';
     ctx.fill();
   }
 
