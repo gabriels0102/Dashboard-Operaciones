@@ -192,7 +192,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .kpi-brecha.neg{color:var(--err);} .kpi-brecha.pos{color:var(--ok);}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
+.alertas-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -283,7 +283,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <!-- HEADER -->
   <div class="dash-header">
     <div class="dash-header-left">
-      <h1>Gestion Operativa</h1>
+      <h1>Panel de control de Operaciones</h1>
       <p>Indicadores clave de mantenimiento · <span id="dash-last-update">Cargando...</span></p>
     </div>
     <div class="dash-header-right">
@@ -1022,43 +1022,52 @@ function renderDashboard(){
     const el=document.getElementById(id); if(!el) return;
     const ex=Chart.getChart(el); if(ex) ex.destroy();
     const wcC=Math.min(100,wc||0), pctC=Math.max(0,Math.min(100,pct));
-    // Custom plugin to draw yellow dashed WC arc + circle at end
+    // Custom plugin: draw yellow dashed WC arc + filled circle at endpoint
+    // The doughnut outer dataset uses cutout 78% → ring occupies 78%→100% of radius
+    // WC line drawn at ~86% of total radius (midpoint of outer ring)
     const wcArcPlugin = {
       id: 'wcArc_'+id,
       afterDraw(chart) {
-        const {ctx, chartArea: {width, height, left, top}} = chart;
-        const cx = left + width/2, cy = top + height/2;
-        const r = Math.min(width,height)/2 * 0.89; // matches cutout 82% area outer
-        // Arc spans 270 degrees starting at 225 deg (bottom-left to bottom-right)
-        const startAngle = (225) * Math.PI/180;
-        const wcAngle = startAngle + (wcC/100) * (270 * Math.PI/180);
+        const {ctx, chartArea} = chart;
+        const cx = chartArea.left + chartArea.width/2;
+        const cy = chartArea.top + chartArea.height/2;
+        const outerR = Math.min(chartArea.width, chartArea.height) / 2;
+        // WC line sits on the outer ring (cutout 78%), at ~89% of outer radius
+        const r = outerR * 0.89;
+        const startAngle = 225 * Math.PI / 180;
+        const wcAngle = startAngle + (wcC / 100) * (270 * Math.PI / 180);
         ctx.save();
-        // Draw dashed arc for WC
         ctx.beginPath();
         ctx.arc(cx, cy, r, startAngle, wcAngle, false);
         ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([4, 3]);
-        ctx.lineDashOffset = 0;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 3]);
         ctx.stroke();
         ctx.setLineDash([]);
-        // Draw circle at end of WC arc
+        // Filled circle at endpoint
         const ex2 = cx + r * Math.cos(wcAngle);
         const ey2 = cy + r * Math.sin(wcAngle);
         ctx.beginPath();
-        ctx.arc(ex2, ey2, 4, 0, 2*Math.PI);
+        ctx.arc(ex2, ey2, 4.5, 0, 2 * Math.PI);
         ctx.fillStyle = '#f59e0b';
         ctx.fill();
-        ctx.strokeStyle = '#1a1d27';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 1;
         ctx.stroke();
         ctx.restore();
       }
     };
-    new Chart(el,{type:'doughnut',data:{datasets:[
-      {data:[wcC,100-wcC],backgroundColor:['rgba(0,0,0,0)','rgba(255,255,255,0.04)'],borderWidth:0,circumference:270,rotation:225,cutout:'82%'},
-      {data:[pctC,100-pctC],backgroundColor:[color,'rgba(255,255,255,0.04)'],borderWidth:0,circumference:270,rotation:225,cutout:'72%'}
-    ]},plugins:[wcArcPlugin],options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:900,easing:'easeInOutQuart'}}});
+    new Chart(el, {
+      type: 'doughnut',
+      data: { datasets: [
+        // Outer ring: grey track (background) for WC reference area
+        {data:[100,0], backgroundColor:['rgba(255,255,255,0.10)','rgba(0,0,0,0)'], borderWidth:0, circumference:270, rotation:225, cutout:'78%'},
+        // Inner ring: actual value
+        {data:[pctC,100-pctC], backgroundColor:[color,'rgba(255,255,255,0.06)'], borderWidth:0, circumference:270, rotation:225, cutout:'68%'}
+      ]},
+      plugins: [wcArcPlugin],
+      options: {responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{enabled:false}}, animation:{duration:900, easing:'easeInOutQuart'}}
+    });
   }
 
   const arcs=[
@@ -1085,21 +1094,35 @@ function renderDashboard(){
     setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color,wc),60*a.id);
   });
 
-  // Alertas
-  const alertas=[];
+  // Alertas — 5 slots, one per KPI card (order: correctivos, flota, dotacion, preventivos, abonos)
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
+  // Slot 0: Correctivos
+  const alerta0 = e.act>0
+    ? {icon:'⚠️', txt:`${e.act} correctivos abiertos`, cls:'al-err'}
+    : {icon:'✅', txt:'Sin backlog activo', cls:'al-ok'};
+  // Slot 1: Flota
+  const alerta1 = enTaller.length>0
+    ? {icon:'🔧', txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`, sub:enTaller.map(v=>v.p).join(', '), cls:'al-warn'}
+    : {icon:'✅', txt:'Toda la flota operativa', cls:'al-ok'};
+  // Slot 2: Dotación
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
+  const alerta2 = defDot>0
+    ? {icon:'👥', txt:`${defDot} servicios con déficit`, sub:'Real por debajo de lo aprobado', cls:'al-warn'}
+    : {icon:'✅', txt:'Dotación completa', cls:'al-ok'};
+  // Slot 3: Preventivos
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
-  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
+  const alerta3 = noComp>0
+    ? {icon:'📋', txt:`${noComp} preventivos no completados`, cls:'al-warn'}
+    : {icon:'✅', txt:'Preventivos al día', cls:'al-ok'};
+  // Slot 4: Abonos de ley
   let abonosVenc=0;
   if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
-  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
+  const alerta4 = abonosVenc>0
+    ? {icon:'📑', txt:`${abonosVenc} abonos vencidos`, sub:'Revisar sitios críticos', cls:'al-err'}
+    : {icon:'✅', txt:'Abonos al día', cls:'al-ok'};
+  const alertas5 = [alerta0, alerta1, alerta2, alerta3, alerta4];
   const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  if(strip) strip.innerHTML=alertas5.map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong>${a.sub?`<span>${a.sub}</span>`:''}</div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -2801,7 +2824,25 @@ async function actualizarContratos(){
 // L(11)=entrega EPP, M(12)=capacitaciones
 async function actualizarSitiosGS(){
   try {
-    const rows = await fetchSheet(GS_SITIOS, 'Sheet1');
+    // Try fetching directly (no sheet param) first, then fallback sheet names
+    let rows = [];
+    const sheetNames = ['', 'Sheet1', 'Hoja1', 'Abonos', 'Sitios', 'Data'];
+    for(const sheetName of sheetNames){
+      try {
+        const url = sheetName
+          ? `${GS_SITIOS}?sheet=${encodeURIComponent(sheetName)}`
+          : GS_SITIOS;
+        const controller = new AbortController();
+        const timeout = setTimeout(()=>controller.abort(), 30000);
+        const res = await fetch(url, {signal: controller.signal});
+        clearTimeout(timeout);
+        if(!res.ok) continue;
+        const json = await res.json();
+        if(json.error) continue;
+        rows = json.rows || [];
+        if(rows.length >= 2) break;
+      } catch(e2){ continue; }
+    }
     if(rows.length < 2) return false;
     // Parse rows into sitios format compatible with existing ABONOS structure
     // ABONOS ids: extintores, hidrantes, pat, termografia, iluminacion, ruido, epp, capacitaciones
