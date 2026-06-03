@@ -373,14 +373,14 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
         <!-- Overlay 1: línea vertical punteada amarilla — punto de inflexión 11/4/25 -->
         <div id="evo-infl" style="display:none;position:absolute;pointer-events:none;z-index:10;width:0;border-left:2px dashed #FFD700;">
-          <div id="evo-infl-lbl" style="position:absolute;top:8px;left:8px;background:rgba(255,215,0,0.15);border:1px solid #FFD700;border-radius:6px;padding:5px 9px;line-height:1.4;">
-            <div style="font-size:11px;font-weight:700;color:#FFD700;margin-bottom:2px;">Punto de inflexión</div>
-            <div style="font-size:10px;color:rgba(255,215,0,0.85);">Cerrados superan<br>a abiertos por 1ª vez</div>
+          <div id="evo-infl-lbl" style="position:absolute;top:8px;left:8px;background:rgba(255,215,0,0.15);border:1px solid #FFD700;border-radius:6px;padding:5px 9px;line-height:1.4;color:#FFD700;">
+            <div style="font-size:11px;font-weight:700;margin-bottom:2px;">Punto de inflexión</div>
+            <div style="font-size:10px;opacity:0.85;">Cerrados superan<br>a abiertos por 1ª vez</div>
           </div>
         </div>
 
         <!-- Overlay 2: zona de estabilidad — últimos 13 meses -->
-        <div id="evo-stab" style="display:none;position:absolute;pointer-events:none;z-index:9;background:rgba(76,175,80,0.10);border:1.5px solid rgba(76,175,80,0.55);border-radius:6px;">
+        <div id="evo-stab" style="display:none;position:absolute;pointer-events:none;z-index:9;background:rgba(76,175,80,0.08);border:1px dashed rgba(76,175,80,0.5);border-radius:6px;">
           <div style="position:absolute;top:8px;right:10px;text-align:right;line-height:1.4;">
             <div style="font-size:11px;font-weight:700;color:#4caf50;">Estabilidad sostenida</div>
             <div style="font-size:10px;color:rgba(76,175,80,0.85);">+13 meses consecutivos</div>
@@ -1209,13 +1209,7 @@ function renderDashboard(){
       // Verde — % Cerrados: línea sólida gruesa, fill con gradiente verde suave
       {label:'% Cerrados',data:SERIE.T,
         borderColor:'#22c55e',
-        backgroundColor:(ctx)=>{
-          const c=ctx.chart.ctx;
-          const g=c.createLinearGradient(0,0,0,240);
-          g.addColorStop(0,'rgba(76,175,80,0.06)');
-          g.addColorStop(1,'rgba(76,175,80,0.01)');
-          return g;
-        },
+        backgroundColor:'rgba(76,175,80,0.06)',
         tension:0.4,fill:true,pointRadius:0,borderWidth:3,
         borderDash:[],
         order:1},
