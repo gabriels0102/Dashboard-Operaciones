@@ -1025,31 +1025,35 @@ function renderDashboard(){
     ctx.scale(dpr, dpr);
 
     const cx = size/2, cy = size/2;
-    // Main arc (thick, colored) — outer radius
-    const R = size/2 - 8;
-    const trackW = 11;
-    // WC dashed line runs just inside the main arc
-    const wcR = R - trackW/2 - 1;
-    const wcW  = 2.5;
 
-    // Angles: 225° start, 270° sweep
-    const startA    = 225 * Math.PI/180;
-    const totalSweep = 270 * Math.PI/180;
-    const endA  = startA + totalSweep;
-    const pctA  = startA + (Math.max(0,Math.min(100,pct))/100) * totalSweep;
-    const wcA   = startA + (Math.max(0,Math.min(100,wc ))/100) * totalSweep;
+    // Main colored arc
+    const R      = size/2 - 9;   // center radius of the thick arc
+    const trackW = 10;            // thickness of the colored arc
 
-    ctx.clearRect(0,0,size,size);
+    // WC dashed line: runs along the inner edge of the colored arc, slightly inside
+    // inner edge of colored arc = R - trackW/2
+    // we place WC line 2px inside that inner edge
+    const wcR = R - trackW/2 - 2;
+    const wcW = 2;
 
-    // 1. Grey track — full 270° background for the main arc
+    // Angles: 225° start, 270° sweep (bottom-left → top → bottom-right)
+    const startA     = 225 * Math.PI / 180;
+    const totalSweep = 270 * Math.PI / 180;
+    const endA = startA + totalSweep;
+    const pctA = startA + (Math.max(0, Math.min(100, pct)) / 100) * totalSweep;
+    const wcA  = startA + (Math.max(0, Math.min(100, wc))  / 100) * totalSweep;
+
+    ctx.clearRect(0, 0, size, size);
+
+    // 1. Grey track background — full 270°
     ctx.beginPath();
     ctx.arc(cx, cy, R, startA, endA, false);
-    ctx.strokeStyle = 'rgba(180,180,180,0.35)';
+    ctx.strokeStyle = 'rgba(160,160,160,0.30)';
     ctx.lineWidth   = trackW;
     ctx.lineCap     = 'round';
     ctx.stroke();
 
-    // 2. Colored arc — actual value (thick, on top of grey)
+    // 2. Colored arc — actual % value
     if(pct > 0){
       ctx.beginPath();
       ctx.arc(cx, cy, R, startA, pctA, false);
@@ -1059,12 +1063,12 @@ function renderDashboard(){
       ctx.stroke();
     }
 
-    // 3. WC dashed line — grey ghost track (full 270°, very faint)
+    // 3. WC ghost track — full 270°, very faint yellow
     ctx.beginPath();
     ctx.arc(cx, cy, wcR, startA, endA, false);
-    ctx.strokeStyle = 'rgba(245,158,11,0.18)';
+    ctx.strokeStyle = 'rgba(245,158,11,0.15)';
     ctx.lineWidth   = wcW;
-    ctx.lineCap     = 'round';
+    ctx.lineCap     = 'butt';
     ctx.setLineDash([3, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
@@ -1083,7 +1087,7 @@ function renderDashboard(){
     const wcEx = cx + wcR * Math.cos(wcA);
     const wcEy = cy + wcR * Math.sin(wcA);
     ctx.beginPath();
-    ctx.arc(wcEx, wcEy, 3.5, 0, 2*Math.PI);
+    ctx.arc(wcEx, wcEy, 3, 0, 2 * Math.PI);
     ctx.fillStyle = '#f59e0b';
     ctx.fill();
   }
@@ -2840,77 +2844,76 @@ async function actualizarContratos(){
 // H(7)=puesta a tierra, I(8)=termografias, J(9)=iluminacion, K(10)=ruido,
 // L(11)=entrega EPP, M(12)=capacitaciones
 async function actualizarSitiosGS(){
-  // Fuente EXCLUSIVA: GS_SITIOS (Google Apps Script)
-  // Columnas: B(1)=Jefe Zonal, E(4)=Nombre sitio/servicio,
-  //           F(5)=Extintores, G(6)=Hidrantes, H(7)=Puesta a tierra,
-  //           I(8)=Termografías, J(9)=Iluminación, K(10)=Ruido,
-  //           L(11)=Entrega EPP, M(12)=Capacitaciones
+  // JSON real confirmado:
+  // Fila 0: títulos de sección (se saltea)
+  // Fila 1: encabezados (se saltea)
+  // Fila 2+: datos
+  // A(0)=Zona, B(1)=Jefe Zonal, C(2)=ID Sitio, D(3)=Domicilio, E(4)=Nombre del sitio
+  // F(5)=Extintores, G(6)=Hidrantes, H(7)=Puesta a tierra, I(8)=Termografía
+  // J(9)=Iluminación, K(10)=Ruido, L(11)=Entrega de EPP, M(12)=Capacitaciones
+
   const colMap = {
-    extintores:   5,
-    hidrantes:    6,
-    pat:          7,
-    termografia:  8,
-    iluminacion:  9,
-    ruido:        10,
-    epp:          11,
-    capacitaciones: 12,
-    autoproteccion: null
+    extintores:      5,
+    hidrantes:       6,
+    pat:             7,
+    termografia:     8,
+    iluminacion:     9,
+    ruido:           10,
+    epp:             11,
+    capacitaciones:  12,
+    autoproteccion:  null
   };
 
   function normalizeEstado(val){
     const v = String(val||'').trim().toLowerCase();
     if(!v || v==='-' || v==='n/a') return 'N/A';
-    if(v==='vigente' || v==='ok' || v==='al día' || v==='al dia' || v==='activo' || v==='realizado') return 'vigente';
-    if(v.includes('vence pronto') || v.includes('próximo') || v.includes('proximo') || v.includes('por vencer') || v.includes('próxim')) return 'vence pronto';
-    if(v.includes('vencid') || v.includes('vencida') || v.includes('expirad') || v==='vencido') return 'vencido';
-    if(v.includes('no realiz') || v.includes('pendiente') || v.includes('sin realizar') || v.includes('no realizado')) return 'No realizado';
-    return val;
+    if(v==='vigente') return 'vigente';
+    if(v.includes('vence pronto') || v.includes('por vencer')) return 'vence pronto';
+    if(v.includes('vencido') || v.includes('vencida')) return 'vencido';
+    if(v.includes('no realizado') || v.includes('no realizada')) return 'No realizado';
+    return 'N/A';
   }
 
-  // Fetch directo al GAS sin parámetro de hoja — el script devuelve la primera hoja
   try {
     const controller = new AbortController();
     const timeout = setTimeout(()=>controller.abort(), 35000);
     const res = await fetch(GS_SITIOS + '?sheet=' + encodeURIComponent('Estado mantenimiento'), {signal: controller.signal});
     clearTimeout(timeout);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const text = await res.text();
-    const json = JSON.parse(text);
+    const json = await res.json();
 
-    // Aceptar cualquier formato de respuesta
-    let rows = [];
-    if(Array.isArray(json))                              rows = json;
-    else if(Array.isArray(json.rows))                    rows = json.rows;
-    else if(Array.isArray(json.data))                    rows = json.data;
-    else if(Array.isArray(json.values))                  rows = json.values;
-    else {
-      const arr = Object.values(json).find(v=>Array.isArray(v)&&v.length>=1);
-      if(arr) rows = arr;
-    }
+    // El script devuelve {rows: [...], total: N, timestamp: "..."}
+    const rows = json.rows || [];
+    if(rows.length < 3) return false; // menos de 2 filas de header + 1 dato
 
-    if(rows.length < 1) return false;
-
-    // La primera fila siempre es encabezado — se saltea con slice(1)
+    // Saltear las 2 primeras filas (sección + encabezados), datos desde fila 2
     const nuevosSitios = [];
-    rows.slice(1).forEach((row, i) => {
-      const jefe   = String(row[1]||'').trim();  // Col B
-      const nombre = String(row[4]||'').trim();  // Col E
+    rows.slice(2).forEach((row, i) => {
+      const zona    = String(row[0]||'').trim();
+      const jefe    = String(row[1]||'').trim();
+      const idSitio = String(row[2]||'').trim();
+      const domicilio = String(row[3]||'').trim();
+      const nombre  = String(row[4]||'').trim();
       if(!nombre && !jefe) return;
+
       const servicios = {};
-      Object.entries(colMap).forEach(([id, colIdx])=>{
-        if(colIdx===null){ servicios[id]='N/A'; return; }
+      Object.entries(colMap).forEach(([id, colIdx]) => {
+        if(colIdx === null){ servicios[id] = 'N/A'; return; }
         servicios[id] = normalizeEstado(row[colIdx]);
       });
+
       nuevosSitios.push({
-        id: 'GS-'+(i+1),
-        zona: String(row[2]||'').trim() || '',
+        id: idSitio || ('GS-'+(i+1)),
+        zona,
         jefe,
-        domicilio: String(row[3]||'').trim() || '',
+        domicilio,
         nombre: nombre || '(sin nombre)',
         servicios,
         _fromGS: true
       });
     });
+
+    if(nuevosSitios.length === 0) return false;
 
     // Reemplazar todos los sitios con los de GS
     sitios.length = 0;
