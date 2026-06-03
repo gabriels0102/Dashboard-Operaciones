@@ -1966,13 +1966,19 @@ window.renderFlotaTaller = function renderFlotaTaller(){
   dc("ch-taller-all");charts["ch-taller-all"]=new Chart(document.getElementById("ch-taller-all"),{type:"bar",data:{labels:allP.map(p=>p[0]),datasets:[{label:"Horas",data:allP.map(p=>p[1]),backgroundColor:allP.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9},maxRotation:70},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   dc("ch-turnos-mes");charts["ch-turnos-mes"]=new Chart(document.getElementById("ch-turnos-mes"),{type:"bar",data:{labels:Object.keys(useTM),datasets:[{label:"Turnos",data:Object.values(useTM),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
 
-  // Tipo de arreglo — doughnut (Col I de Turnos)
+  // Tipo de arreglo — doughnut: usa datos reales del Dashboard (col B/C) si están disponibles
   const tipoData = {};
-  (window.TURNOS_DETALLE||[]).filter(t=>{
-    if(femp && t.empresa!==femp) return false;
-    if(fanio && t.anio!==fanio) return false;
-    return true;
-  }).forEach(t=>{ if(t.tipoArr) tipoData[t.tipoArr]=(tipoData[t.tipoArr]||0)+1; });
+  if(window.DASHBOARD_TIPO_DATA && Object.keys(window.DASHBOARD_TIPO_DATA).length > 0){
+    // Fuente: hoja Dashboard — tabla limpia col B=tipo, C=cantidad
+    Object.assign(tipoData, window.DASHBOARD_TIPO_DATA);
+  } else {
+    // Fallback: TURNOS_DETALLE con filtros aplicados
+    (window.TURNOS_DETALLE||[]).filter(t=>{
+      if(femp && t.empresa!==femp) return false;
+      if(fanio && t.anio!==fanio) return false;
+      return true;
+    }).forEach(t=>{ if(t.tipoArr) tipoData[t.tipoArr]=(tipoData[t.tipoArr]||0)+1; });
+  }
   const tipoEntries = Object.entries(tipoData).sort((a,b)=>b[1]-a[1]);
   dc("ch-taller-tipo");
   if(tipoEntries.length>0){
@@ -2811,6 +2817,21 @@ async function actualizarFlota(){
           window.DASHBOARD_HS_TALLER = hsT;
           window.DASHBOARD_HS_DISP   = hsD;
         }
+      }
+
+      // Tipo de arreglo: segunda tabla limpia en la hoja Dashboard
+      // Col A(0)=Periodo, B(1)=Tipo, C(2)=Cantidad — filas sin "Total" y sin "Suma total"
+      const tipoAccum = {};
+      rowsDash.forEach(row => {
+        const tipo = String(row[1]||'').trim();
+        const cant = typeof row[2]==='number' ? row[2] : parseFloat(row[2])||0;
+        if(!tipo || tipo.startsWith('Total') || tipo==='Suma total' ||
+           tipo==='TIPO DE ARREGLO' || tipo==='PERIODO' || cant<=0) return;
+        // Solo filas de detalle (tipo limpio sin prefijo "Total ")
+        tipoAccum[tipo] = (tipoAccum[tipo]||0) + cant;
+      });
+      if(Object.keys(tipoAccum).length > 0){
+        window.DASHBOARD_TIPO_DATA = tipoAccum;
       }
     } catch(dashErr){ console.warn('Dashboard sheet no disponible:', dashErr); }
 
