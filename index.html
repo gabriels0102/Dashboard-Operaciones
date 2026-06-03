@@ -2815,26 +2815,28 @@ async function actualizarComplementarios(){
       const detallePorJefeMap = {}; // jefe → [{servicio, valor}]
 
       rows.slice(1).forEach(row => {
-        // Tabla jefes: col D(3) = jefe, col E(4) = venta total
+        // Tabla jefes: col D(3) = jefe, col E(4) = venta total del jefe
         const jefe = String(row[3]||'').trim();
-        const valorJefe = parseFloat(row[4])||0;
-        if(jefe && jefe !== 'Suma total' && valorJefe > 0){
-          porJefe.push({jefe, valor: valorJefe});
+        const valorJefe = parseFloat(String(row[4]||'').replace(/\./g,'').replace(',','.'))||0;
+        if(jefe && jefe !== 'Suma total' && jefe !== 'JEFE ZONAL' && valorJefe > 0){
+          if(!porJefe.find(j=>j.jefe===jefe)){
+            porJefe.push({jefe, valor: valorJefe});
+          }
         }
 
-        // Tabla servicios: col G(6) = jefe del servicio, col H(7) = servicio, col I(8) = valor
-        const jefesSvc = String(row[6]||'').trim(); // G = jefe asociado al servicio
-        const svc      = String(row[7]||'').trim(); // H = nombre servicio
-        const valorSvc = parseFloat(row[8])||0;     // I = valor venta
+        // Tabla servicios: col G(6) = jefe zonal, col H(7) = nombre servicio, col I(8) = valor venta
+        const jefeKey = String(row[6]||'').trim();
+        const svc     = String(row[7]||'').trim();
+        const valorSvc = parseFloat(String(row[8]||'').replace(/\./g,'').replace(',','.'))||0;
 
-        if(svc && svc !== 'Suma total' && valorSvc > 0){
-          porServicio.push({servicio: svc, valor: valorSvc});
-          // Col F = jefe del servicio — link service to jefe
-          const jefeKey = (jefesSvc && jefesSvc !== 'Suma total' && jefesSvc !== 'JEFE ZONAL') ? jefesSvc : null;
-          if(jefeKey){
-            if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
-            detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
-          }
+        if(svc && svc !== 'Suma total' && svc !== 'SERVICIO' && valorSvc > 0 && jefeKey && jefeKey !== 'Suma total' && jefeKey !== 'JEFE ZONAL'){
+          // detallePorJefe: agregar servicio al jefe (una entrada por fila, sin deduplicar — cada fila es un servicio)
+          if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
+          detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
+          // porServicio global: acumular por servicio sumando todos los jefes
+          const existing = porServicio.find(s=>s.servicio===svc);
+          if(existing) existing.valor += valorSvc;
+          else porServicio.push({servicio: svc, valor: valorSvc});
         }
       });
 
