@@ -185,19 +185,9 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .trend-up{background:rgba(34,197,94,.15);color:var(--ok);}
 .trend-dn{background:rgba(239,68,68,.15);color:var(--err);}
 .trend-nt{background:rgba(139,143,168,.12);color:var(--mu);}
-.kpi-wc-badges{display:flex;gap:7px;justify-content:center;margin-top:8px;flex-wrap:wrap;}
-.kpi-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--b2);color:var(--txt);background:var(--s2);}
-.kpi-badge.wc{background:rgba(79,142,247,.15);border-color:var(--ac);color:var(--ac);}
-.kpi-brecha{font-size:11px;font-weight:600;margin-top:5px;text-align:center;}
-.kpi-brecha.neg{color:var(--err);} .kpi-brecha.pos{color:var(--ok);}
-.arc-alert-slot{width:100%;margin-top:8px;}
-.arc-alert-slot .alerta-item{border-radius:8px;padding:8px 10px;}
-.arc-alert-slot .alerta-body strong{display:block;font-size:11px;font-weight:600;line-height:1.3;}
-.arc-alert-slot .alerta-body span{font-size:10px;color:var(--mu);}
-.arc-alert-slot .alerta-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
 
 /* Alertas strip */
-.alertas-strip{display:none;}
+.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -250,7 +240,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
     <div class="nav-section">Correctivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Correctivos - OCA</span></button>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos</span></button>
     <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
     <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
@@ -304,7 +294,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-0" style="color:#4f8ef7;">—%</div><div class="kpi-arc-icon">🔧</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-0">—</div><div class="kpi-arc-val-l">Cerrados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-0">—</div><div class="kpi-arc-val-l">Generados</div></div></div>
-      <div id="arc-alert-0" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-green" id="arc-card-1">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-1">—</span>
@@ -313,7 +302,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-1" style="color:#22c55e;">—%</div><div class="kpi-arc-icon">🚐</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-1">—</div><div class="kpi-arc-val-l">Operativas</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-1">—</div><div class="kpi-arc-val-l">Total flota</div></div></div>
-      <div id="arc-alert-1" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-orange" id="arc-card-2">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-2">—</span>
@@ -322,7 +310,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-2" style="color:#f97316;">—%</div><div class="kpi-arc-icon">👥</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-2">—</div><div class="kpi-arc-val-l">Cumplida</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-2">—</div><div class="kpi-arc-val-l">Aprobada</div></div></div>
-      <div id="arc-alert-2" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-purple" id="arc-card-3">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-3">—</span>
@@ -331,7 +318,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-3" style="color:#7c3aed;">—%</div><div class="kpi-arc-icon">🛡️</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-3">—</div><div class="kpi-arc-val-l">Completados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-3">—</div><div class="kpi-arc-val-l">Programados</div></div></div>
-      <div id="arc-alert-3" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
@@ -340,7 +326,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-4">—</div><div class="kpi-arc-val-l">Vigentes</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-4">—</div><div class="kpi-arc-val-l">Total</div></div></div>
-      <div id="arc-alert-4" class="arc-alert-slot"></div>
     </div>
   </div>
 
@@ -403,7 +388,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Correctivos - OCA</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
@@ -1026,24 +1011,21 @@ function renderDashboard(){
     setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color),60*a.id);
   });
 
-  // Alertas — 1 por KPI card, orden fijo
+  // Alertas
+  const alertas=[];
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
+  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
+  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
+  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
+  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
   let abonosVenc=0;
   if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  const alertas=[
-    e.act>0?{icon:'⚠️',txt:`${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'}:{icon:'✅',txt:'Sin correctivos activos',sub:'Todo cerrado',cls:'al-ok'},
-    enTaller.length>0?{icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'}:{icon:'✅',txt:'Flota sin unidades en taller',sub:'Toda la flota operativa',cls:'al-ok'},
-    defDot>0?{icon:'👥',txt:`${defDot} servicios con déficit`,sub:'Real por debajo de lo aprobado',cls:'al-warn'}:{icon:'✅',txt:'Dotación completa',sub:'Sin déficit',cls:'al-ok'},
-    noComp>0?{icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'}:{icon:'✅',txt:'Preventivos al día',sub:'Sin pendientes',cls:'al-ok'},
-    abonosVenc>0?{icon:'📑',txt:`${abonosVenc} abonos vencidos`,sub:'Revisar sitios críticos',cls:'al-err'}:{icon:'✅',txt:'Abonos de ley vigentes',sub:'Sin vencidos',cls:'al-ok'},
-  ];
-  // Render cada alerta dentro de su arc card correspondiente
-  alertas.forEach((a,i)=>{
-    const slot=document.getElementById(`arc-alert-${i}`);
-    if(slot) slot.innerHTML=`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`;
-  });
+  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
+  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
+  const strip=document.getElementById('alertas-strip');
+  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1135,11 +1117,11 @@ window.renderCorr=function(){
   // ── KPIs ──
   document.getElementById("k-corr-det").innerHTML=`
     <div class="kc bl"><span class="ki">📂</span><div class="kl">Total correctivos</div><div class="kv">${tot.toLocaleString()}</div><div class="ks">Trabajos acumulados</div></div>
-    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div></div>
-    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div></div>
-    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div></div>
-    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div></div>
+    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div><div class="ks">Col B — estado Abierto</div></div>
+    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div><div class="ks">Col D — estado En curso</div></div>
+    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div><div class="ks">Ab + EC + Pend (col N)</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div><div class="ks">Col J — Finalizado</div></div>
+    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div><div class="ks">Col H — Cerrado compl.</div></div>
     <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>
     <div class="kc blue" style="--kc-color:var(--ac)"><span class="ki">⏱️</span><div class="kl">Lead time prom.</div><div class="kv">${leadProm>0?leadProm+"d":"—"}</div><div class="ks">Días desde emisión a cierre</div></div>`;
 
@@ -1686,11 +1668,11 @@ function renderFlotaResumen(){
   if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Col W = Mantenimiento) · ${op} operativas · ${tal} en taller`;
   const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
-    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks"></div></div>
+    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks">Col W = Mantenimiento</div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${pctOp}%</div></div>
     <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div><div class="ks">${totalFlota>0?Math.round(tal/totalFlota*100):0}%</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks"></div></div>
-    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks"></div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Col N acumulado</div></div>
+    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Col P = SI</div></div>`;
 
   dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{
     type:"doughnut",
@@ -1776,10 +1758,10 @@ function renderFlotaImpacto(){
   // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota)
   const totalHTurnos = Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   document.getElementById("k-impacto").innerHTML=`
-    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks"></div></div>
-    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks"></div></div>
+    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual (Est. 3)</div></div>
+    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — camionetas equiv./mes</div></div>
     <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.h)}h taller</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks"></div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks">Col N — Turnos unidades</div></div>`;
   const mes=EST3.map(d=>d.mes);
   dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{
     type:"bar",
