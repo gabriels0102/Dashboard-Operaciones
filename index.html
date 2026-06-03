@@ -2871,7 +2871,7 @@ async function actualizarSitiosGS(){
   try {
     const controller = new AbortController();
     const timeout = setTimeout(()=>controller.abort(), 35000);
-    const res = await fetch(GS_SITIOS, {signal: controller.signal});
+    const res = await fetch(GS_SITIOS + '?sheet=' + encodeURIComponent('Estado mantenimiento'), {signal: controller.signal});
     clearTimeout(timeout);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const text = await res.text();
@@ -2890,15 +2890,11 @@ async function actualizarSitiosGS(){
 
     if(rows.length < 1) return false;
 
+    // La primera fila siempre es encabezado — se saltea con slice(1)
     const nuevosSitios = [];
-    rows.forEach((row, i) => {
-      // Saltar fila de encabezado si la primera celda parece encabezado
-      if(i===0){
-        const first = String(row[0]||'').toLowerCase();
-        if(first.includes('jefe')||first.includes('nombre')||first.includes('id')||first.includes('sitio')) return;
-      }
-      const jefe   = String(row[1]||'').trim();
-      const nombre = String(row[4]||'').trim();
+    rows.slice(1).forEach((row, i) => {
+      const jefe   = String(row[1]||'').trim();  // Col B
+      const nombre = String(row[4]||'').trim();  // Col E
       if(!nombre && !jefe) return;
       const servicios = {};
       Object.entries(colMap).forEach(([id, colIdx])=>{
