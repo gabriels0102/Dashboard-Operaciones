@@ -1005,6 +1005,12 @@ window.switchEvoTab = function(tab, btn){
   if(el) el.style.display='block';
   document.querySelectorAll('.evo-tab').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  // Overlays solo visibles en tab "% Correctivos"
+  const showOverlays = tab==='pct';
+  const inflEl=document.getElementById('evo-infl');
+  const stabEl=document.getElementById('evo-stab');
+  if(inflEl) inflEl.style.visibility = showOverlays ? 'visible' : 'hidden';
+  if(stabEl) stabEl.style.visibility = showOverlays ? 'visible' : 'hidden';
 };
 
 window.dashRefresh = function(){
@@ -1270,7 +1276,18 @@ function renderDashboard(){
       stabEl.style.display='block';
     }
   }
-  window.addEventListener('resize',()=>setTimeout(posEvoOverlays,150));
+  window.addEventListener('resize',()=>{
+    setTimeout(()=>{
+      posEvoOverlays();
+      // Mantener visibilidad según tab activo
+      const activeTab=document.querySelector('.evo-tab.active');
+      const isPct=activeTab&&activeTab.textContent.trim().startsWith('%');
+      const inflEl=document.getElementById('evo-infl');
+      const stabEl=document.getElementById('evo-stab');
+      if(inflEl) inflEl.style.visibility=isPct?'visible':'hidden';
+      if(stabEl) stabEl.style.visibility=isPct?'visible':'hidden';
+    },150);
+  });
 
   dc('ch-evo-np');
   charts['ch-evo-np']=new Chart(document.getElementById('ch-evo-np'),{type:'line',
