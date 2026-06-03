@@ -2814,6 +2814,7 @@ async function actualizarComplementarios(){
       const porServicio = [];
       const detallePorJefeMap = {}; // jefe → [{servicio, valor}]
 
+      let currentJefe = '';
       rows.slice(1).forEach(row => {
         // Tabla jefes: col D(3) = jefe, col E(4) = venta total del jefe
         const jefe = String(row[3]||'').trim();
@@ -2824,20 +2825,25 @@ async function actualizarComplementarios(){
           }
         }
 
-        // Tabla servicios: col G(6) = jefe zonal, col H(7) = nombre servicio, col I(8) = valor venta
-        const jefeKey = String(row[6]||'').trim();
-        const svc     = String(row[7]||'').trim();
+        // Tabla servicios: col G(6) puede estar vacía — el jefe solo aparece en la primera fila del grupo
+        const g   = String(row[6]||'').trim();
+        const svc = String(row[7]||'').trim();
         const valorSvc = typeof row[8]==='number' ? row[8] : parseFloat(row[8])||0;
 
-        // Saltar filas de subtotales (jefeKey contiene "Total " o svc está vacío)
-        const esSubtotal = jefeKey.startsWith('Total ') || jefeKey === 'Suma total' || svc === '' || svc === 'Suma total';
-        if(!esSubtotal && svc && valorSvc > 0){
-          // detallePorJefe: una entrada por fila
-          if(jefeKey && jefeKey !== 'JEFE ZONAL'){
-            if(!detallePorJefeMap[jefeKey]) detallePorJefeMap[jefeKey] = [];
-            detallePorJefeMap[jefeKey].push({servicio: svc, valor: valorSvc});
-          }
-          // porServicio global: acumular sumando todos los jefes
+        // Propagar jefe: si G tiene "Total..." o "Suma total" → fin de grupo
+        // Si G tiene un nombre nuevo → nuevo jefe activo
+        // Si G está vacío → seguir usando currentJefe
+        if(g.startsWith('Total ') || g === 'Suma total'){
+          currentJefe = '';
+        } else if(g !== '' && g !== 'Jefe zonal'){
+          currentJefe = g;
+        }
+
+        // Procesar servicio usando currentJefe propagado
+        if(svc && svc !== 'Suma total' && valorSvc > 0 && currentJefe){
+          if(!detallePorJefeMap[currentJefe]) detallePorJefeMap[currentJefe] = [];
+          detallePorJefeMap[currentJefe].push({servicio: svc, valor: valorSvc});
+          // porServicio global
           const existing = porServicio.find(s=>s.servicio===svc);
           if(existing) existing.valor += valorSvc;
           else porServicio.push({servicio: svc, valor: valorSvc});
