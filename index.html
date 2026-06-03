@@ -190,9 +190,14 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .kpi-badge.wc{background:rgba(79,142,247,.15);border-color:var(--ac);color:var(--ac);}
 .kpi-brecha{font-size:11px;font-weight:600;margin-top:5px;text-align:center;}
 .kpi-brecha.neg{color:var(--err);} .kpi-brecha.pos{color:var(--ok);}
+.arc-alert-slot{width:100%;margin-top:8px;}
+.arc-alert-slot .alerta-item{border-radius:8px;padding:8px 10px;}
+.arc-alert-slot .alerta-body strong{display:block;font-size:11px;font-weight:600;line-height:1.3;}
+.arc-alert-slot .alerta-body span{font-size:10px;color:var(--mu);}
+.arc-alert-slot .alerta-icon{font-size:14px;flex-shrink:0;margin-top:1px;}
 
 /* Alertas strip */
-.alertas-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:20px;}
+.alertas-strip{display:none;}
 .alerta-item{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--b);border-radius:10px;padding:10px 12px;position:relative;overflow:hidden;}
 .alerta-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
 .alerta-item.al-err::before{background:var(--err);}
@@ -244,16 +249,15 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="nav-section">Panel</div>
     <button class="ni active" data-page="dashboard"><span class="ni-icon">📊</span><span class="ni-label">Dashboard General</span></button>
 
-    <div class="nav-section">Correctivos y Preventivos</div>
-    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Análisis de Correctivos — OCA</span></button>
-    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
+    <div class="nav-section">Correctivos</div>
+    <button class="ni" data-page="correctivos"><span class="ni-icon">🔧</span><span class="ni-label">Correctivos - OCA</span></button>
+    <button class="ni" data-page="motivos"><span class="ni-icon">🔍</span><span class="ni-label">Motivos de No Cierre</span></button>
     <!-- Resumen por Jefe Zonal temporalmente deshabilitado -->
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Sitios y Abonos de Ley</span></button>
-    <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
-    <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
+    <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -264,8 +268,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
-    
-    
+    <button class="ni" data-page="preventivos"><span class="ni-icon">🛡️</span><span class="ni-label">Trabajos Preventivos</span></button>
 
     <div class="nav-section">Exportar</div>
     <button class="ni" onclick="exportJSON()"><span class="ni-icon">💾</span><span class="ni-label">Exportar JSON</span></button>
@@ -301,8 +304,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-0" style="color:#4f8ef7;">—%</div><div class="kpi-arc-icon">🔧</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-0">—</div><div class="kpi-arc-val-l">Cerrados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-0">—</div><div class="kpi-arc-val-l">Generados</div></div></div>
-      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-0">Actual: —%</span><span class="kpi-badge wc">WC: 95%</span></div>
-      <div class="kpi-brecha" id="arc-brecha-0">—</div>
+      <div id="arc-alert-0" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-green" id="arc-card-1">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-1">—</span>
@@ -311,8 +313,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-1" style="color:#22c55e;">—%</div><div class="kpi-arc-icon">🚐</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-1">—</div><div class="kpi-arc-val-l">Operativas</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-1">—</div><div class="kpi-arc-val-l">Total flota</div></div></div>
-      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-1">Actual: —%</span><span class="kpi-badge wc">WC: 96%</span></div>
-      <div class="kpi-brecha" id="arc-brecha-1">—</div>
+      <div id="arc-alert-1" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-orange" id="arc-card-2">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-2">—</span>
@@ -321,8 +322,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-2" style="color:#f97316;">—%</div><div class="kpi-arc-icon">👥</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-2">—</div><div class="kpi-arc-val-l">Cumplida</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-2">—</div><div class="kpi-arc-val-l">Aprobada</div></div></div>
-      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-2">Actual: —%</span><span class="kpi-badge wc">WC: 98%</span></div>
-      <div class="kpi-brecha" id="arc-brecha-2">—</div>
+      <div id="arc-alert-2" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-purple" id="arc-card-3">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-3">—</span>
@@ -331,8 +331,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-3" style="color:#7c3aed;">—%</div><div class="kpi-arc-icon">🛡️</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-3">—</div><div class="kpi-arc-val-l">Completados</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-3">—</div><div class="kpi-arc-val-l">Programados</div></div></div>
-      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-3">Actual: —%</span><span class="kpi-badge wc">WC: 90%</span></div>
-      <div class="kpi-brecha" id="arc-brecha-3">—</div>
+      <div id="arc-alert-3" class="arc-alert-slot"></div>
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
@@ -341,8 +340,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
       </div>
       <div class="kpi-arc-vals"><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v1-4">—</div><div class="kpi-arc-val-l">Vigentes</div></div><div class="kpi-arc-val"><div class="kpi-arc-val-n" id="arc-v2-4">—</div><div class="kpi-arc-val-l">Total</div></div></div>
-      <div class="kpi-wc-badges"><span class="kpi-badge" id="arc-act-4">Actual: —%</span><span class="kpi-badge wc">WC: 85%</span></div>
-      <div class="kpi-brecha" id="arc-brecha-4">—</div>
+      <div id="arc-alert-4" class="arc-alert-slot"></div>
     </div>
   </div>
 
@@ -405,7 +403,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- CORRECTIVOS -->
 <section class="page" id="page-correctivos">
   <div class="topbar">
-    <div><div class="ptitle">Correctivos — Análisis Histórico</div><div class="psub" id="corr-psub">Cargando...</div></div>
+    <div><div class="ptitle">Correctivos - OCA</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
@@ -735,7 +733,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- COMPLEMENTARIOS -->
 <section class="page" id="page-complementarios">
   <div class="topbar">
-    <div><div class="ptitle">Complementarios — OCA</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
+    <div><div class="ptitle">Complementarios — Seguimiento Comercial</div><div class="psub">Adicionales aprobados · Venta por jefe zonal y servicio · Tiempo real</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-compl-jefe" onchange="window.renderComplementariosPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select>
     </div>
@@ -768,22 +766,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       </tr></thead>
       <tbody id="tb-compl"></tbody>
     </table></div>
-  </div>
-</section>
-<!-- NO OCA -->
-<section class="page" id="page-no-oca">
-  <div class="topbar">
-    <div><div class="ptitle">Adicionales — No OCA</div><div class="psub">Venta por jefe zonal y servicio · Tiempo real</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;"><select id="f-nooca-jefe" onchange="window.renderNoOcaPage()" style="min-width:200px;"><option value="">Todos los jefes</option></select></div>
-  </div>
-  <div class="kg" id="k-nooca-page"></div>
-  <div class="c2">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Venta total por jefe zonal</div><div class="cs">Suma de valor venta por responsable</div></div></div><div class="cwtall"><canvas id="ch-nooca-jefe"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Distribución porcentual</div><div class="cs">Participación de cada jefe en la venta total</div></div></div><div class="cwtall"><canvas id="ch-nooca-pie"></canvas></div></div>
-  </div>
-  <div class="card" style="margin-top:14px;"><div class="ch"><div><div class="ct">Top servicios por valor de venta</div><div class="cs">Todos los servicios ordenados de mayor a menor</div></div></div><div class="cwtall"><canvas id="ch-nooca-svc"></canvas></div></div>
-  <div class="card" style="margin-top:14px;"><div class="ch"><div class="ct">Detalle por jefe zonal y servicio</div></div>
-    <div class="tw"><table><thead><tr><th>Jefe Zonal</th><th>Venta</th><th>%</th><th style="border-left:1px solid var(--b);padding-left:16px;">Servicio</th><th>Venta</th><th>%</th></tr></thead><tbody id="tb-nooca"></tbody></table></div>
   </div>
 </section>
 </main>
@@ -1009,15 +991,19 @@ function renderDashboard(){
   // Arc 0 — % cerrados from Col T (last value in SERIE.T)
   const pctCorr = (SERIE.T&&SERIE.T.length>0) ? SERIE.T[SERIE.T.length-1] : e.pct_c;
 
-  // Draw arc donut with WC reference line
-  function drawArc(id, pct, color, wc){
-    const el=document.getElementById(id); if(!el) return;
-    const ex=Chart.getChart(el); if(ex) ex.destroy();
-    const wcC=Math.min(100,wc||0), pctC=Math.max(0,Math.min(100,pct));
-    new Chart(el,{type:'doughnut',data:{datasets:[
-      {data:[wcC,100-wcC],backgroundColor:['rgba(180,180,180,0.35)','rgba(255,255,255,0.04)'],borderWidth:0,circumference:270,rotation:225,cutout:'82%'},
-      {data:[pctC,100-pctC],backgroundColor:[color,'rgba(255,255,255,0.04)'],borderWidth:0,circumference:270,rotation:225,cutout:'72%'}
-    ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:900,easing:'easeInOutQuart'}}});
+  // Draw arc donut
+  function drawArc(id, pct, color){
+    const el = document.getElementById(id);
+    if(!el) return;
+    const ex = Chart.getChart(el);
+    if(ex) ex.destroy();
+    new Chart(el,{type:'doughnut',data:{datasets:[{
+      data:[Math.max(0,Math.min(100,pct)),Math.max(0,100-pct)],
+      backgroundColor:[color,'rgba(255,255,255,0.05)'],borderWidth:0,
+      circumference:270,rotation:225
+    }]},options:{responsive:true,maintainAspectRatio:false,cutout:'78%',
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      animation:{duration:900,easing:'easeInOutQuart'}}});
   }
 
   const arcs=[
@@ -1028,37 +1014,36 @@ function renderDashboard(){
     {id:4,pct:pctAbonos||0,color:'#14b8a6',v1:abonosVig||'—',l1:'Vigentes',v2:abonosTot||'—',l2:'Total',trend:pctAbonos>=75?'→ En control':'▼ Vencimientos',trendCls:pctAbonos>=75?'trend-nt':'trend-dn'},
   ];
 
-  const WC=[95,96,98,90,85];
   arcs.forEach(a=>{
     const pe=document.getElementById(`arc-pct-${a.id}`);
+    const te=document.getElementById(`arc-trend-${a.id}`);
     const v1e=document.getElementById(`arc-v1-${a.id}`);
     const v2e=document.getElementById(`arc-v2-${a.id}`);
     if(pe) pe.textContent=Math.round(a.pct)+'%';
+    if(te){te.textContent=a.trend;te.className='kpi-arc-trend '+a.trendCls;}
     if(v1e) v1e.textContent=a.v1;
     if(v2e) v2e.textContent=a.v2;
-    const actEl=document.getElementById(`arc-act-${a.id}`);
-    const brechaEl=document.getElementById(`arc-brecha-${a.id}`);
-    const wc=WC[a.id], pctR=Math.round(a.pct), brecha=pctR-wc;
-    if(actEl) actEl.textContent='Actual: '+pctR+'%';
-    if(brechaEl){brechaEl.textContent='Brecha: '+(brecha>=0?'+':'')+brecha+'% vs world class';brechaEl.className='kpi-brecha '+(brecha>=0?'pos':'neg');}
-    setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color,wc),60*a.id);
+    setTimeout(()=>drawArc(`arc-canvas-${a.id}`,a.pct,a.color),60*a.id);
   });
 
-  // Alertas
-  const alertas=[];
+  // Alertas — 1 por KPI card, orden fijo
   const enTaller=FLOTA.filter(v=>v.est==="En taller");
-  if(enTaller.length>0) alertas.push({icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'});
-  if(e.act>200) alertas.push({icon:'⚠️',txt:`Backlog elevado: ${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'});
   const defDot=DOTACION_DATA.filter(d=>d.real<d.aprobada).length;
-  if(defDot>0) alertas.push({icon:'👥',txt:`${defDot} servicios con déficit de dotación`,sub:'Real por debajo de lo aprobado',cls:'al-warn'});
   const noComp=PREV_DATA.filter(d=>d.estado==='No completada').length;
-  if(noComp>0) alertas.push({icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'});
   let abonosVenc=0;
   if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
-  if(abonosVenc>0) alertas.push({icon:'📑',txt:`${abonosVenc} abonos de ley vencidos`,sub:'Revisar sitios críticos',cls:'al-err'});
-  if(alertas.length===0) alertas.push({icon:'✅',txt:'Todos los indicadores operativos',sub:'Sin alertas activas',cls:'al-ok'});
-  const strip=document.getElementById('alertas-strip');
-  if(strip) strip.innerHTML=alertas.slice(0,4).map(a=>`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`).join('');
+  const alertas=[
+    e.act>0?{icon:'⚠️',txt:`${e.act} correctivos activos`,sub:`${e.pct_a}% del total`,cls:'al-err'}:{icon:'✅',txt:'Sin correctivos activos',sub:'Todo cerrado',cls:'al-ok'},
+    enTaller.length>0?{icon:'🔧',txt:`${enTaller.length} unidad${enTaller.length>1?'es':''} en taller`,sub:enTaller.map(v=>v.p).join(', '),cls:'al-warn'}:{icon:'✅',txt:'Flota sin unidades en taller',sub:'Toda la flota operativa',cls:'al-ok'},
+    defDot>0?{icon:'👥',txt:`${defDot} servicios con déficit`,sub:'Real por debajo de lo aprobado',cls:'al-warn'}:{icon:'✅',txt:'Dotación completa',sub:'Sin déficit',cls:'al-ok'},
+    noComp>0?{icon:'📋',txt:`${noComp} preventivos no completados`,sub:'Requieren atención',cls:'al-warn'}:{icon:'✅',txt:'Preventivos al día',sub:'Sin pendientes',cls:'al-ok'},
+    abonosVenc>0?{icon:'📑',txt:`${abonosVenc} abonos vencidos`,sub:'Revisar sitios críticos',cls:'al-err'}:{icon:'✅',txt:'Abonos de ley vigentes',sub:'Sin vencidos',cls:'al-ok'},
+  ];
+  // Render cada alerta dentro de su arc card correspondiente
+  alertas.forEach((a,i)=>{
+    const slot=document.getElementById(`arc-alert-${i}`);
+    if(slot) slot.innerHTML=`<div class="alerta-item ${a.cls}"><div class="alerta-icon">${a.icon}</div><div class="alerta-body"><strong>${a.txt}</strong><span>${a.sub}</span></div></div>`;
+  });
 
   // Evolución — % Cerrados y Abiertos (default tab)
   const evoBase={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
@@ -1150,12 +1135,13 @@ window.renderCorr=function(){
   // ── KPIs ──
   document.getElementById("k-corr-det").innerHTML=`
     <div class="kc bl"><span class="ki">📂</span><div class="kl">Total correctivos</div><div class="kv">${tot.toLocaleString()}</div><div class="ks">Trabajos acumulados</div></div>
-    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div><div class="ks">Col B — estado Abierto</div></div>
-    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div><div class="ks">Col D — estado En curso</div></div>
-    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div><div class="ks">Ab + EC + Pend (col N)</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div><div class="ks">Col J — Finalizado</div></div>
-    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div><div class="ks">Col H — Cerrado compl.</div></div>
-    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>`;
+    <div class="kc re"><span class="ki">🔴</span><div class="kl">Abiertos (solo)</div><div class="kv">${abt}</div></div>
+    <div class="kc am"><span class="ki">🔄</span><div class="kl">En curso</div><div class="kv">${ect}</div></div>
+    <div class="kc or"><span class="ki">⏳</span><div class="kl">Activos totales</div><div class="kv">${actTot}</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Finalizados</div><div class="kv">${fint.toLocaleString()}</div></div>
+    <div class="kc pu"><span class="ki">🔁</span><div class="kl">Complementarios</div><div class="kv">${compt}</div></div>
+    <div class="kc te"><span class="ki">📈</span><div class="kl">% Tasa de cierre</div><div class="kv">${tasa}%</div><div class="ks">${cert.toLocaleString()} cerrados / ${tot.toLocaleString()} total</div></div>
+    <div class="kc blue" style="--kc-color:var(--ac)"><span class="ki">⏱️</span><div class="kl">Lead time prom.</div><div class="kv">${leadProm>0?leadProm+"d":"—"}</div><div class="ks">Días desde emisión a cierre</div></div>`;
 
   const COLORS = ['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
 
@@ -1670,75 +1656,20 @@ window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversibl
 
 // ══ CONTRATOS ══
 window.renderContratos=function(){
-  const fr   = document.getElementById("f-cont-resp")?.value||"";
-  const femp = document.getElementById("f-cont-emp")?.value||"";
-  const fest = document.getElementById("f-cont-estado")?.value||"";
-  const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
-  const cont = document.getElementById("contratos-cont");
-  if(!cont) return;
-  const psub = document.getElementById("cont-psub");
-  if(psub && CONTRATOS_RT.length>0){
-    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
-    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
-    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
-    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
-  }
-  if(!CONTRATOS_RT.length){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando...</div>";return;}
-  const filtered=CONTRATOS_RT.filter(ct=>{
-    if(fr&&ct.jefe!==fr) return false;
-    if(femp&&ct.empresa!==femp) return false;
-    if(fest&&ct.estado!==fest) return false;
-    if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
-    return true;
-  });
-  const totF=filtered.length, actF=filtered.filter(c=>c.estado==="Activo").length;
-  const inactF=filtered.filter(c=>c.estado==="Inactivo").length;
-  const jefesF=new Set(filtered.map(c=>c.jefe).filter(Boolean)).size;
-  const hoy=new Date();
-  function parseFecha(s){try{const p=(s||"").trim().split("/");return p.length===3?new Date(parseInt(p[2]),parseInt(p[1])-1,parseInt(p[0])):null;}catch(e){return null;}}
-  function diasRestantes(s){const d=parseFecha(s);return d?Math.round((d-hoy)/864e5):null;}
-  const venc15=filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d>=0&&d<=15;}).length;
-  const venc30=filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d>15&&d<=30;}).length;
-  const vencidos=filtered.filter(c=>{const d=diasRestantes(c.vence);return d!==null&&d<0;}).length;
-  let html="<div class='kg' style='margin-bottom:14px;'>"
-    +"<div class='kc bl'><span class='ki'>📋</span><div class='kl'>Total</div><div class='kv'>"+totF+"</div><div class='ks'>Contratos filtrados</div></div>"
-    +"<div class='kc gr'><span class='ki'>✅</span><div class='kl'>Activos</div><div class='kv'>"+actF+"</div></div>"
-    +"<div class='kc re'><span class='ki'>⛔</span><div class='kl'>Inactivos</div><div class='kv'>"+inactF+"</div></div>"
-    +"<div class='kc pu'><span class='ki'>👤</span><div class='kl'>Responsables</div><div class='kv'>"+jefesF+"</div></div>"
-    +(vencidos>0?"<div class='kc re'><span class='ki'>🚨</span><div class='kl'>Vencidos</div><div class='kv'>"+vencidos+"</div></div>":"")
-    +(venc15>0?"<div class='kc re'><span class='ki'>🔴</span><div class='kl'>Vence ≤15d</div><div class='kv'>"+venc15+"</div></div>":"")
-    +(venc30>0?"<div class='kc am'><span class='ki'>🟡</span><div class='kl'>Vence ≤30d</div><div class='kv'>"+venc30+"</div></div>":"")
-    +"</div>";
-  const byJefe={};
-  filtered.forEach(ct=>{if(!byJefe[ct.jefe])byJefe[ct.jefe]=[];byJefe[ct.jefe].push(ct);});
-  Object.entries(byJefe).sort((a,b)=>a[0].localeCompare(b[0])).forEach(function([jefe,cts]){
-    const i2=ini(jefe),ec2={};
-    cts.forEach(ct=>{ec2[ct.empresa]=(ec2[ct.empresa]||0)+1;});
-    const aJ=cts.filter(c=>c.estado==="Activo").length, iJ=cts.filter(c=>c.estado==="Inactivo").length;
-    html+="<div class='card' style='margin-bottom:10px;'><div class='ch'><div style='display:flex;align-items:center;gap:10px;'>"
-      +"<div style='width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);'>"+i2+"</div>"
-      +"<div><div class='ct'>"+jefe+"</div><div class='cs'>"+cts.length+" contratos · "+aJ+" activos · "+iJ+" inactivos · "+Object.entries(ec2).map(([e,n])=>n+" "+e).join(" · ")+"</div></div></div></div>"
-      +"<div style='display:grid;gap:4px;'>";
-    cts.forEach(function(ct){
-      const ecl=ct.estado==="Inactivo"?"p-err":"p-ok";
-      const eml=ct.empresa==="GRUB"?"p-pu":ct.empresa==="LMSG"?"p-bl":"p-mu";
-      const dias=diasRestantes(ct.vence||"");
-      let fechaColor="var(--mu)",fechaTxt=ct.vence||"Sin fecha";
-      if(dias!==null){
-        if(dias<0){fechaColor="var(--err)";fechaTxt="Vencido "+Math.abs(dias)+"d";}
-        else if(dias<=15){fechaColor="var(--err)";fechaTxt=ct.vence+" ("+dias+"d)";}
-        else if(dias<=30){fechaColor="var(--warn)";fechaTxt=ct.vence+" ("+dias+"d)";}
-        else{fechaColor="var(--mu)";fechaTxt=ct.vence;}
-      }
-      html+="<div class='ci'><span class='cb' style='min-width:70px;'>"+(ct.ceco||"—")+"</span>"
-        +"<span class='cn'>"+(ct.servicio||"—")+"</span>"
-        +"<span class='p "+eml+"' style='font-size:10px;'>"+(ct.empresa||"")+"</span>"
-        +"<span class='p "+ecl+"' style='font-size:10px;'>"+(ct.estado||"—")+"</span>"
-        +"<span style='font-size:11px;color:"+fechaColor+";'>📅 "+fechaTxt+"</span></div>";
-    });
-    html+="</div></div>";
-  });
-  cont.innerHTML=html;
+  // Use real-time data if available, fallback to static
+  const useRT = CONTRATOS_RT.length > 0;
+
+  const fr=document.getElementById("f-cont-resp")?.value||"",femp=document.getElementById("f-cont-emp")?.value||"",busq=(document.getElementById("f-cont-busq")?.value||"").toLowerCase();
+  const c=document.getElementById("contratos-cont");if(!c)return;
+  c.innerHTML=RESP.map(r=>{
+    if(fr&&r!==fr)return "";
+    let cs=CONTR[r]||[];
+    if(femp)cs=cs.filter(c2=>c2.e===femp);
+    if(busq)cs=cs.filter(c2=>c2.n.toLowerCase().includes(busq)||c2.c.toLowerCase().includes(busq));
+    if(!cs.length)return `<div class="card" style="margin-bottom:8px;opacity:.35;"><div style="font-size:13px;font-weight:600;">${r}</div><div style="font-size:12px;color:var(--mu);">${(CONTR[r]||[]).length===0?"Sin contratos.":"Sin contratos para los filtros."}</div></div>`;
+    const init=ini(r);const emp2={};cs.forEach(c2=>{emp2[c2.e]=(emp2[c2.e]||0)+1;});
+    return `<div class="card" style="margin-bottom:10px;"><div class="ch"><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:rgba(79,142,247,.15);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--ac);">${init}</div><div><div class="ct">${r}</div><div class="cs">${cs.length} contratos · ${Object.entries(emp2).map(([e,n])=>n+" "+e).join(" · ")}</div></div></div></div><div style="display:grid;gap:4px;">${cs.map(c2=>`<div class="ci"><span class="cb">${c2.c}</span><span class="cn">${c2.n}</span>${empBadge(c2.e)}</div>`).join("")}</div></div>`;
+  }).join("");
 };
 
 // ══ FLOTA ══
@@ -1755,11 +1686,11 @@ function renderFlotaResumen(){
   if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Col W = Mantenimiento) · ${op} operativas · ${tal} en taller`;
   const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
-    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks">Col W = Mantenimiento</div></div>
+    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks"></div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${pctOp}%</div></div>
     <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div><div class="ks">${totalFlota>0?Math.round(tal/totalFlota*100):0}%</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Col N acumulado</div></div>
-    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Col P = SI</div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks"></div></div>
+    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks"></div></div>`;
 
   dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{
     type:"doughnut",
@@ -1845,10 +1776,10 @@ function renderFlotaImpacto(){
   // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota)
   const totalHTurnos = Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   document.getElementById("k-impacto").innerHTML=`
-    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual (Est. 3)</div></div>
-    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — camionetas equiv./mes</div></div>
+    <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks"></div></div>
+    <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks"></div></div>
     <div class="kc re"><span class="ki">📉</span><div class="kl">Mes crítico</div><div class="kv">${mw.mes}</div><div class="ks">${mw.disp}% disp. · ${Math.round(mw.h)}h taller</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks">Col N — Turnos unidades</div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalHTurnos}</div><div class="ks"></div></div>`;
   const mes=EST3.map(d=>d.mes);
   dc("ch-disp");charts["ch-disp"]=new Chart(document.getElementById("ch-disp"),{
     type:"bar",
@@ -2101,65 +2032,6 @@ window.renderComplementariosPage = function(){
 };
 
 
-// ── Actualizar No OCA ──
-async function actualizarNoOca(){
-  try {
-    const rows=await fetchSheet(GS_COMPL,'Resumen comercial');
-    if(rows.length<2) return false;
-    const pn=v=>{const n=parseFloat(v);return isNaN(n)?0:n;};
-    const jefeMap={},svcList=[],jefeSvcMap={};let ventaTotal=0;
-    rows.slice(1).forEach(row=>{
-      const jefeJ=String(row[9]||'').trim(),valK=pn(row[10]);
-      if(jefeJ==='Suma total'&&valK>0) ventaTotal=valK;
-      else if(jefeJ&&jefeJ!=='Suma total'&&valK>0&&!jefeMap[jefeJ]) jefeMap[jefeJ]=valK;
-      const jefeM=String(row[12]||'').trim(),svc=String(row[13]||'').trim(),valO=pn(row[14]);
-      if(svc&&svc!=='Suma total'&&valO>0){
-        svcList.push({servicio:svc,valor:valO,jefe:jefeM});
-        if(jefeM&&jefeM!=='Suma total'){if(!jefeSvcMap[jefeM])jefeSvcMap[jefeM]=[];jefeSvcMap[jefeM].push({servicio:svc,valor:valO});}
-      }
-    });
-    if(!ventaTotal) ventaTotal=Object.values(jefeMap).reduce((s,v)=>s+v,0);
-    NO_OCA_DATA.venta_total=ventaTotal;
-    NO_OCA_DATA.porJefe=Object.entries(jefeMap).map(([jefe,valor])=>({jefe,valor})).sort((a,b)=>b.valor-a.valor);
-    NO_OCA_DATA.porServicio=[...svcList].sort((a,b)=>b.valor-a.valor);
-    NO_OCA_DATA.detallePorJefe={};
-    Object.entries(jefeSvcMap).forEach(([j,svcs])=>{NO_OCA_DATA.detallePorJefe[j]=[...svcs].sort((a,b)=>b.valor-a.valor);});
-    renderNoOcaPage(); return true;
-  } catch(err){console.warn('Error No OCA:',err);return false;}
-}
-window.renderNoOcaPage=function(){
-  const fj=document.getElementById('f-nooca-jefe')?.value||'';
-  const ventaTotal=NO_OCA_DATA.venta_total||0;
-  const COLORS=['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
-  const sel=document.getElementById('f-nooca-jefe');
-  if(sel&&sel.options.length<=1) NO_OCA_DATA.porJefe.forEach(j=>{sel.innerHTML+=`<option value="${j.jefe}">${j.jefe}</option>`;});
-  const jefes=fj?NO_OCA_DATA.porJefe.filter(j=>j.jefe===fj):NO_OCA_DATA.porJefe;
-  const ventaFiltrada=fj?jefes.reduce((s,j)=>s+j.valor,0):ventaTotal;
-  const svcsData=fj?(NO_OCA_DATA.detallePorJefe[fj]||[]):NO_OCA_DATA.porServicio;
-  const topJefe=[...NO_OCA_DATA.porJefe].sort((a,b)=>b.valor-a.valor)[0];
-  const topSvc=[...svcsData].sort((a,b)=>b.valor-a.valor)[0];
-  const kp=document.getElementById('k-nooca-page');
-  if(kp) kp.innerHTML=`<div class="kc gr"><span class="ki">💰</span><div class="kl">${fj?'Venta — '+fj.split(' ')[0]:'Venta total No OCA'}</div><div class="kv" style="font-size:18px;">${fmtARS(ventaFiltrada)}</div><div class="ks">${fj?Math.round(ventaFiltrada/ventaTotal*100)+'% del total':'Acumulado'}</div></div><div class="kc pu"><span class="ki">👤</span><div class="kl">Jefes con adicionales</div><div class="kv">${NO_OCA_DATA.porJefe.length}</div><div class="ks">${topJefe?'Top: '+topJefe.jefe.split(' ')[0]:''}</div></div><div class="kc or"><span class="ki">🏢</span><div class="kl">Servicios${fj?' ('+fj.split(' ')[0]+')':''}</div><div class="kv">${svcsData.length}</div><div class="ks">${topSvc?'Top: '+topSvc.servicio:'—'}</div></div><div class="kc te"><span class="ki">🏆</span><div class="kl">Mayor venta</div><div class="kv" style="font-size:13px;">${topSvc?topSvc.servicio:'—'}</div><div class="ks">${topSvc?fmtARS(topSvc.valor):''}</div></div>`;
-  const jefesSort=[...jefes].sort((a,b)=>b.valor-a.valor);
-  dc('ch-nooca-jefe');
-  if(jefesSort.length>0) charts['ch-nooca-jefe']=new Chart(document.getElementById('ch-nooca-jefe'),{type:'bar',data:{labels:jefesSort.map(j=>j.jefe.split(' ').slice(0,2).join(' ')),datasets:[{label:'Venta',data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/(ventaTotal||1)*100)+'%)'}}},scales:{x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-  dc('ch-nooca-pie');
-  if(jefesSort.length>0) charts['ch-nooca-pie']=new Chart(document.getElementById('ch-nooca-pie'),{type:'doughnut',data:{labels:jefesSort.map(j=>j.jefe.split(' ')[0]),datasets:[{data:jefesSort.map(j=>j.valor),backgroundColor:COLORS.slice(0,jefesSort.length),borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'60%',plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:10},position:'right'},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' · '+Math.round(c.raw/(ventaTotal||1)*100)+'%'}}}}});
-  const svcsSort=[...svcsData].sort((a,b)=>b.valor-a.valor);
-  dc('ch-nooca-svc');
-  if(svcsSort.length>0) charts['ch-nooca-svc']=new Chart(document.getElementById('ch-nooca-svc'),{type:'bar',data:{labels:svcsSort.map(d=>d.servicio),datasets:[{label:'Venta',data:svcsSort.map(d=>d.valor),backgroundColor:svcsSort.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtARS(c.raw)+' ('+Math.round(c.raw/(ventaFiltrada||ventaTotal||1)*100)+'%)'}}},scales:{x:{ticks:{color:'#8b8fa8',font:{size:9},callback:v=>fmtARS(v)},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-  const tbody=document.getElementById('tb-nooca');
-  if(tbody){
-    const maxRows=Math.max(jefesSort.length,svcsSort.length),ventaRef=ventaFiltrada||ventaTotal||1;
-    let rows='';
-    for(let i=0;i<maxRows;i++){
-      const j=jefesSort[i],s=svcsSort[i];
-      const pctJ=j?Math.round(j.valor/ventaTotal*100):0,pctS=s?Math.round(s.valor/ventaRef*100):0;
-      rows+=`<tr><td style="font-weight:600;">${j?j.jefe:'—'}</td><td style="font-family:'JetBrains Mono';color:var(--ok);">${j?fmtARS(j.valor):'—'}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctJ*2)}%;background:var(--ok);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctJ}%</span></div></td><td style="border-left:1px solid var(--b);padding-left:16px;color:var(--ac);">${s?s.servicio:'—'}</td><td style="font-family:'JetBrains Mono';color:var(--ac);">${s?fmtARS(s.valor):'—'}</td><td><div style="display:flex;align-items:center;gap:6px;"><div style="width:60px;height:4px;background:var(--s2);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,pctS*2)}%;background:var(--ac);border-radius:2px;"></div></div><span style="font-size:10px;color:var(--mu);">${pctS}%</span></div></td></tr>`;
-    }
-    tbody.innerHTML=rows;
-  }
-};
 window.exportJSON=function(){const blob=new Blob([JSON.stringify({sitios,correctivos:CORR_ZONAL,estado_actual:ESTADO_ACTUAL,flota:FLOTA,horas_taller:HORAS_PAT},null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".json";a.click();toast("JSON exportado");};
 window.exportCSV=function(){const h=["Responsable","Activos","Finalizados","Complementario","Anulados","Total","Lead avg","Contratos"];const rows=RESP.map(r=>{const d=CORR_ZONAL[r]||{};return[`"${r}"`,d.ab+d.ec,d.fin,d.comp,d.an,d.total,d.lead,(CONTR[r]||[]).length];});const csv=[h,...rows].map(r=>r.join(",")).join("\n");const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="opscontrol_"+new Date().toISOString().slice(0,10)+".csv";a.click();toast("CSV exportado");};
 
@@ -2660,10 +2532,10 @@ async function actualizarComplementarios(){
           porJefe.push({jefe, valor: valorJefe});
         }
 
-        // Tabla servicios: col G(6) = jefe del servicio, col H(7) = servicio, col I(8) = valor
-        const jefesSvc = String(row[6]||'').trim(); // G = jefe asociado al servicio
-        const svc      = String(row[7]||'').trim(); // H = nombre servicio
-        const valorSvc = parseFloat(row[8])||0;     // I = valor venta
+        // Tabla servicios: col F(5) = jefe del servicio, col G(6) = servicio, col H(7) = valor
+        const jefesSvc = String(row[5]||'').trim(); // F = jefe asociado al servicio
+        const svc      = String(row[6]||'').trim(); // G = nombre servicio
+        const valorSvc = parseFloat(row[7])||0;     // H = valor venta
 
         if(svc && svc !== 'Suma total' && valorSvc > 0){
           porServicio.push({servicio: svc, valor: valorSvc});
@@ -2720,23 +2592,25 @@ async function actualizarContratos(){
   setGsStatus('cont','loading');
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
-    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=FECHA VENCIMIENTO
+    // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO/CECO, D(3)=ESTADO
     const result = [];
     rows.slice(1).forEach(row=>{
-      const empresa=String(row[0]||'').trim(), jefe=String(row[1]||'').trim();
-      const servicio=String(row[2]||'').trim(), ceco=String(row[3]||'').trim();
-      const estado=String(row[4]||'').trim(), vence=String(row[5]||'').trim();
+      const empresa  = String(row[0]||'').trim();
+      const jefe     = String(row[1]||'').trim();
+      const servicio = String(row[2]||'').trim();
+      const estado   = String(row[3]||'').trim();
       if(!jefe && !servicio) return;
-      result.push({empresa, jefe, servicio, ceco, estado, vence});
+      result.push({empresa, jefe, servicio, estado});
     });
     if(result.length > 0){
       CONTRATOS_RT = result;
+      // Populate jefe filter in contratos page
       const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
-      const emps=[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
-      const selR=document.getElementById("f-cont-resp");
-      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
-      const selE=document.getElementById("f-cont-emp");
-      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
+      const sel=document.getElementById("f-cont-resp");
+      if(sel){
+        sel.innerHTML='<option value="">Todos</option>';
+        jefes.forEach(j=>{ sel.innerHTML+=`<option value="${j}">${j}</option>`; });
+      }
     }
     setGsStatus('cont','ok');
     renderContratos();
@@ -2749,11 +2623,10 @@ async function actualizarContratos(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
-    actualizarComplementarios(), actualizarContratos(),
-    actualizarNoOca()
+    actualizarComplementarios(), actualizarContratos()
   ]);
   renderAll();
   if(showToast){
@@ -2822,7 +2695,6 @@ function injectRefreshButton(){
 let DOTACION_DATA = [];
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}};
-let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 
 // ── Parser Dotación ──
