@@ -353,7 +353,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="dash-bottom-grid">
     <div class="dash-chart-card">
       <div class="evo-header">
-        <div><div class="dash-chart-label">Evolución de Indicadores (%)</div></div>
+        <div><div class="dash-chart-label">Tendencia de resolucion correctivos OCA</div></div>
         <div class="evo-tabs">
           <button class="evo-tab active" onclick="window.switchEvoTab('pct',this)">% Correctivos</button>
           <button class="evo-tab" onclick="window.switchEvoTab('np',this)">Abiertos vs Cerrados</button>
@@ -364,6 +364,19 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <canvas id="ch-evo-pct" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
         <canvas id="ch-evo-np" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
         <canvas id="ch-evo-flujo" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
+        <!-- Overlay: punto de inflexión 11/4/2025 -->
+        <div id="evo-inflection" style="display:none;position:absolute;top:0;bottom:0;width:1px;border-left:2px dashed #FFD700;pointer-events:none;z-index:10;">
+          <div style="position:absolute;top:4px;left:5px;background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.5);border-radius:4px;padding:2px 6px;font-size:9px;font-weight:600;color:#FFD700;white-space:nowrap;">Cerrados superan a abiertos</div>
+        </div>
+        <!-- Overlay: zona de estabilidad -->
+        <div id="evo-stability" style="display:none;position:absolute;top:0;bottom:0;background:rgba(76,175,80,0.10);border:1px dashed rgba(76,175,80,0.5);border-radius:4px;pointer-events:none;z-index:9;">
+          <div style="position:absolute;top:4px;right:6px;font-size:9px;font-weight:600;color:#4caf50;white-space:nowrap;">Estabilidad sostenida — 13 meses</div>
+        </div>
+      </div>
+      <!-- Card lectura ejecutiva -->
+      <div style="margin-top:10px;padding:10px 13px;background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.25);border-radius:8px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:14px;">📈</span>
+        <span style="font-size:11px;color:#e8d87a;font-weight:500;line-height:1.4;">La tasa de resolución supera sistemáticamente la generación de nuevos correctivos</span>
       </div>
     </div>
 
@@ -1164,7 +1177,58 @@ function renderDashboard(){
     data:{labels:SERIE.f,datasets:[
       {label:'% Cerrados (Col T)',data:SERIE.T,borderColor:'#22c55e',backgroundColor:'#22c55e14',tension:0.3,fill:true,pointRadius:0,borderWidth:2.5},
       {label:'% Abiertos (Col X)',data:SERIE.X,borderColor:'#ef4444',backgroundColor:'#ef444414',tension:0.3,fill:true,pointRadius:0,borderWidth:2.5}
-    ]},options:evoBase});
+    ]},options:{...evoBase,animation:{onComplete:()=>posicionarOverlaysEvo()}}});
+
+  // Posicionar overlays HTML sobre el canvas del gráfico de % Correctivos
+  function posicionarOverlaysEvo(){
+    const chart = charts['ch-evo-pct'];
+    if(!chart || !SERIE.f || !SERIE.f.length) return;
+    const wrap = document.getElementById('evo-wrap');
+    if(!wrap) return;
+    const inflEl = document.getElementById('evo-inflection');
+    const stabEl = document.getElementById('evo-stability');
+    if(!inflEl || !stabEl) return;
+
+    // Punto de inflexión: buscar '11/4/25' o '11/4/2025' en SERIE.f
+    const inflLabel = SERIE.f.find(f => f === '11/4/25' || f === '11/4/2025');
+    const inflIdx   = inflLabel ? SERIE.f.indexOf(inflLabel) : -1;
+
+    if(inflIdx >= 0){
+      const meta = chart.getDatasetMeta(0);
+      if(meta && meta.data && meta.data[inflIdx]){
+        const xPx = meta.data[inflIdx].x;
+        const chartArea = chart.chartArea;
+        // Convert chart pixel x to wrap-relative %
+        const wrapW = wrap.offsetWidth || 1;
+        const leftPct = (xPx / wrapW) * 100;
+        inflEl.style.left = leftPct + '%';
+        inflEl.style.top  = (chartArea.top  / (wrap.offsetHeight||200) * 100) + '%';
+        inflEl.style.bottom = ((wrap.offsetHeight - chartArea.bottom) / (wrap.offsetHeight||200) * 100) + '%';
+        inflEl.style.display = 'block';
+      }
+    }
+
+    // Zona de estabilidad: últimos 13 meses desde el final
+    const stabCount = Math.min(13 * 4, SERIE.f.length); // ~13 meses de datos (aprox 4 puntos/mes)
+    const stabStartIdx = SERIE.f.length - stabCount;
+    if(stabStartIdx >= 0){
+      const meta = chart.getDatasetMeta(0);
+      if(meta && meta.data && meta.data[stabStartIdx] && meta.data[SERIE.f.length - 1]){
+        const xStart = meta.data[stabStartIdx].x;
+        const xEnd   = meta.data[SERIE.f.length - 1].x;
+        const chartArea = chart.chartArea;
+        const wrapW = wrap.offsetWidth || 1;
+        const wrapH = wrap.offsetHeight || 200;
+        stabEl.style.left   = (xStart / wrapW * 100) + '%';
+        stabEl.style.width  = ((xEnd - xStart) / wrapW * 100) + '%';
+        stabEl.style.top    = (chartArea.top  / wrapH * 100) + '%';
+        stabEl.style.bottom = ((wrapH - chartArea.bottom) / wrapH * 100) + '%';
+        stabEl.style.display = 'block';
+      }
+    }
+  }
+  // También reposicionar al resize
+  window.addEventListener('resize', ()=>{ setTimeout(posicionarOverlaysEvo, 100); });
 
   dc('ch-evo-np');
   charts['ch-evo-np']=new Chart(document.getElementById('ch-evo-np'),{type:'line',
