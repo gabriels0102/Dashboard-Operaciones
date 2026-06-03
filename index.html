@@ -2849,23 +2849,12 @@ async function actualizarComplementarios(){
         COMPL_DATA.detallePorJefe[j] = [...svcs].sort((a,b)=>b.valor-a.valor);
       });
 
-    // Parse "Complementarios y presupuestos": A(0)=jefe, C(2)=servicio, AD(29)=valor
-    const detallePorJefe = {};
-    rowsDetalle.slice(1).forEach(row=>{
-      const jefe    = String(row[0]||'').trim();
-      const servicio= String(row[2]||'').trim();
-      const valor   = parseFloat(row[29])||0;
-      if(!jefe || !servicio || valor<=0) return;
-      if(!detallePorJefe[jefe]) detallePorJefe[jefe]={};
-      detallePorJefe[jefe][servicio]=(detallePorJefe[jefe][servicio]||0)+valor;
-    });
-    // Convert to sorted arrays per jefe
-    COMPL_DATA.detallePorJefe = {};
-    Object.entries(detallePorJefe).forEach(([j,svcs])=>{
-      COMPL_DATA.detallePorJefe[j] = Object.entries(svcs)
-        .map(([servicio,valor])=>({servicio,valor}))
-        .sort((a,b)=>b.valor-a.valor);
-    });
+    // Parse "Complementarios y presupuestos" solo para datos adicionales (NO sobreescribe detallePorJefe)
+    // La fuente autorizada para Mayor Venta es Resumen comercial col G(jefe)→H(servicio)→I(valor)
+    if(rowsDetalle.length > 1) {
+      // Solo usamos esta hoja para enriquecer COMPL_DATA.adicionales si no vino del resumen
+      // No tocamos detallePorJefe ni porServicio — ya están correctos desde Resumen comercial
+    }
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
