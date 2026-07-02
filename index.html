@@ -2329,8 +2329,8 @@ window.cerrarModal=function(){document.getElementById("modal-confirm").classList
 
 // ── Modal detalle de dotación por CECO ──
 window.abrirModalDotDetalle=function(ceco, servicio, jefe){
-  const filas = DOTACION_DETALLE_BY_CECO[ceco] || [];
-  document.getElementById('mdd-title').textContent = `Detalle de personal — CECO ${ceco}`;
+  const filas = DOTACION_DETALLE_BY_CECO[normCeco(ceco)] || [];
+  document.getElementById('mdd-title').textContent = `Detalle de personal — CECO ${ceco||'—'}`;
   document.getElementById('mdd-sub').textContent = `${jefe||'—'} · ${servicio||'—'}`;
   const tbody = document.getElementById('mdd-tbody');
   tbody.innerHTML = filas.length
@@ -2340,7 +2340,7 @@ window.abrirModalDotDetalle=function(ceco, servicio, jefe){
         <td style="font-size:11px;">${f.estado||'—'}</td>
         <td style="font-size:11px;">${f.motivo||'—'}</td>
       </tr>`).join('')
-    : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin registros de detalle para este CECO</td></tr>`;
+    : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">No se encontraron filas en "Dotacion detalle" con CECO = ${ceco||'(vacío)'}. Verificá que el CECO esté escrito igual en ambas hojas.</td></tr>`;
   document.getElementById('modal-dot-detalle').classList.add('open');
 };
 window.cerrarModalDotDetalle=function(){document.getElementById('modal-dot-detalle').classList.remove('open');};
@@ -3157,12 +3157,19 @@ function parseDotacionDetalle(rows){
   return result;
 }
 
+// ── Normalizar CECO (evita que espacios/mayúsculas rompan el vínculo) ──
+function normCeco(v){
+  return String(v==null?'':v).trim().toUpperCase().replace(/\s+/g,' ');
+}
+
 // ── Agrupar detalle por CECO ──
 function agruparDetallePorCeco(rows){
   const map = {};
   rows.forEach(r=>{
-    if(!map[r.ceco]) map[r.ceco] = [];
-    map[r.ceco].push(r);
+    const key = normCeco(r.ceco);
+    if(!key) return;
+    if(!map[key]) map[key] = [];
+    map[key].push(r);
   });
   return map;
 }
@@ -3272,6 +3279,12 @@ window.renderDotacion = function(){
   const superavit = data.filter(d=>d.real>d.aprobada).length;
   const pct = totalAprob>0?Math.round(totalReal/totalAprob*100):0;
 
+  // % de personas de ART (Dotacion detalle, Col E = Motivo) sobre el total relevado (Col E de Relevamiento)
+  const cecosVisibles = new Set(data.map(d=>normCeco(d.ceco)).filter(Boolean));
+  const detalleVisible = DOTACION_DETALLE_DATA.filter(r=>cecosVisibles.has(normCeco(r.ceco)));
+  const countART = detalleVisible.filter(r=>/\bART\b/i.test(r.motivo)).length;
+  const pctART = totalReal>0 ? Math.round((countART/totalReal)*1000)/10 : 0;
+
   const kdiv = document.getElementById('k-dotacion');
   if(kdiv) kdiv.innerHTML = `
     <div class="kc bl"><span class="ki">👥</span><div class="kl">Dotación aprobada</div><div class="kv">${totalAprob}</div></div>
@@ -3279,7 +3292,8 @@ window.renderDotacion = function(){
     <div class="kc ${totalReal-totalAprob>=0?'gr':'re'}"><span class="ki">📊</span><div class="kl">Diferencia total</div><div class="kv">${totalReal-totalAprob>=0?'+':''}${totalReal-totalAprob}</div></div>
     <div class="kc re"><span class="ki">⚠️</span><div class="kl">Servicios con déficit</div><div class="kv">${deficit}</div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Servicios OK</div><div class="kv">${superavit}</div></div>
-    <div class="kc te"><span class="ki">📈</span><div class="kl">% Cobertura</div><div class="kv">${pct}%</div></div>`;
+    <div class="kc te"><span class="ki">📈</span><div class="kl">% Cobertura</div><div class="kv">${pct}%</div></div>
+    <div class="kc or"><span class="ki">🏥</span><div class="kl">% Personal de ART</div><div class="kv">${pctART}%</div><div class="ks">${countART} de ${totalReal} relevados</div></div>`;
 
   // Chart por zonal
   const byZonal = {};
@@ -3322,8 +3336,9 @@ window.renderDotacion = function(){
       const diff = d.real - d.aprobada;
       const cls = diff<0?'p-err':diff>0?'p-ok':'p-mu';
       const label = diff<0?'Déficit':diff>0?'Superávit':'Exacto';
-      const tieneDetalle = diff!==0 && d.ceco && DOTACION_DETALLE_BY_CECO[d.ceco]?.length>0;
-      const rowAttrs = tieneDetalle
+      const tieneCeco = diff!==0 && !!d.ceco;
+      const tieneDetalle = tieneCeco && (DOTACION_DETALLE_BY_CECO[normCeco(d.ceco)]?.length>0);
+      const rowAttrs = tieneCeco
         ? `style="cursor:pointer;" onclick='abrirModalDotDetalle(${JSON.stringify(d.ceco)}, ${JSON.stringify(d.servicio)}, ${JSON.stringify(d.jefe)})' title="Ver detalle de personal"`
         : '';
       return `<tr ${rowAttrs}>
