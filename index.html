@@ -251,7 +251,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
-    <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">% COBERTURA DE ABONOS CRÍTICOS - OCA</span></button>
+    <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de Ley - OCA</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
     <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
 
@@ -336,7 +336,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
     <div class="kpi-arc-card kac-teal" id="arc-card-4">
       <span class="kpi-arc-trend trend-nt" id="arc-trend-4">—</span>
-      <div class="kpi-arc-title">% COBERTURA DE<br>ABONOS CRÍTICOS - OCA</div>
+      <div class="kpi-arc-title">% COBERTURA DE<br>ACTIVOS CRÍTICOS</div>
       <div class="kpi-arc-wrap"><canvas id="arc-canvas-4"></canvas>
         <div class="kpi-arc-center"><div class="kpi-arc-pct" id="arc-pct-4" style="color:#14b8a6;">—%</div><div class="kpi-arc-icon">📋</div></div>
       </div>
@@ -353,7 +353,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="dash-bottom-grid">
     <div class="dash-chart-card">
       <div class="evo-header">
-        <div><div class="dash-chart-label">Tendencia de resolución correctivos OCA</div></div>
+        <div><div class="dash-chart-label">Evolución de Indicadores (%)</div></div>
         <div class="evo-tabs">
           <button class="evo-tab active" onclick="window.switchEvoTab('pct',this)">% Correctivos</button>
           <button class="evo-tab" onclick="window.switchEvoTab('np',this)">Abiertos vs Cerrados</button>
@@ -364,16 +364,6 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
         <canvas id="ch-evo-pct" style="position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
         <canvas id="ch-evo-np" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
         <canvas id="ch-evo-flujo" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;"></canvas>
-        <!-- Línea de inflexión dorada 11/4/25 — solo visible en tab % Correctivos -->
-        <div id="evo-infl-line" style="display:none;position:absolute;pointer-events:none;z-index:10;top:0;bottom:0;width:0;border-left:1.5px dashed rgba(201,168,76,0.7);">
-          <span style="position:absolute;top:6px;left:5px;font-size:9px;font-weight:600;color:rgba(201,168,76,0.85);white-space:nowrap;letter-spacing:0.3px;">Punto de inflexión</span>
-        </div>
-      </div>
-      <!-- Recuadro sutil debajo del gráfico -->
-      <div id="evo-infl-card" style="display:none;margin-top:8px;padding:8px 13px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.22);border-radius:7px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <span style="font-size:10px;font-weight:700;color:rgba(74,222,128,0.85);white-space:nowrap;letter-spacing:0.3px;">📍 Punto de inflexión 11/4/2025</span>
-        <span style="width:1px;height:12px;background:rgba(34,197,94,0.25);display:inline-block;flex-shrink:0;"></span>
-        <span style="font-size:10px;color:rgba(74,222,128,0.7);letter-spacing:0.2px;">Tendencia sostenida durante 13 meses</span>
       </div>
     </div>
 
@@ -541,7 +531,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <!-- SITIOS -->
 <section class="page" id="page-sitios">
-  <div class="topbar"><div><div class="ptitle">% COBERTURA DE ABONOS CRÍTICOS - OCA</div></div><button class="btn btn-p" onclick="abrirModalSitio()">+ Nuevo sitio</button></div>
+  <div class="topbar"><div><div class="ptitle">Abonos de Ley - OCA</div></div><button class="btn btn-p" onclick="abrirModalSitio()">+ Nuevo sitio</button></div>
   <div class="fb">
     <label>Zonal:</label><select id="f-sit-zonal" onchange="renderSitios()" style="min-width:180px;"><option value="">Todos</option></select>
     <label>Estado:</label><select id="f-sit-est" onchange="renderSitios()" style="min-width:130px;"><option value="">Todos</option><option value="vencido">Con vencidos</option><option value="vence pronto">Con vence pronto</option><option value="No realizado">Con no realizados</option></select>
@@ -808,6 +798,18 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 </div>
 
 <div id="toast">✓ <span id="toast-msg"></span></div>
+<div class="mo" id="modal-dot-detalle">
+  <div class="modal" style="max-width:620px;width:96%;max-height:85vh;overflow-y:auto;">
+    <h3 id="mdd-title">Detalle de personal — CECO</h3>
+    <p id="mdd-sub">Jefe zonal · Servicio</p>
+    <div class="tw"><table>
+      <thead><tr><th>Empresa</th><th>Operario</th><th>Estado</th><th>Motivo</th></tr></thead>
+      <tbody id="mdd-tbody"></tbody>
+    </table></div>
+    <div class="btr" style="margin-top:14px;"><button class="btn btn-g" onclick="cerrarModalDotDetalle()">Cerrar</button></div>
+  </div>
+</div>
+
 <div class="mo" id="modal-confirm">
   <div class="modal"><h3 id="mc-title">¿Confirmar?</h3><p id="mc-msg">Irreversible.</p>
   <div class="btr"><button class="btn btn-d" id="mc-ok">Confirmar</button><button class="btn btn-g" onclick="cerrarModal()">Cancelar</button></div></div>
@@ -987,12 +989,6 @@ window.switchEvoTab = function(tab, btn){
   if(el) el.style.display='block';
   document.querySelectorAll('.evo-tab').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  // Mostrar elementos de inflexión solo en tab % Correctivos
-  const inflLine=document.getElementById('evo-infl-line');
-  const inflCard=document.getElementById('evo-infl-card');
-  const show=tab==='pct';
-  if(inflLine) inflLine.style.visibility=show?'visible':'hidden';
-  if(inflCard){ inflCard.style.display=show?'flex':'none'; }
 };
 
 window.dashRefresh = function(){
@@ -1180,29 +1176,7 @@ function renderDashboard(){
     data:{labels:SERIE.f,datasets:[
       {label:'% Cerrados (Col T)',data:SERIE.T,borderColor:'#22c55e',backgroundColor:'#22c55e14',tension:0.3,fill:true,pointRadius:0,borderWidth:2.5},
       {label:'% Abiertos (Col X)',data:SERIE.X,borderColor:'#ef4444',backgroundColor:'#ef444414',tension:0.3,fill:true,pointRadius:0,borderWidth:2.5}
-    ]},options:{...evoBase,animation:{onComplete:()=>setTimeout(posInflLine,80)}}});
-
-  function posInflLine(){
-    const ch=charts['ch-evo-pct'];
-    if(!ch||!SERIE.f) return;
-    const wrap=document.getElementById('evo-wrap');
-    const line=document.getElementById('evo-infl-line');
-    if(!wrap||!line) return;
-    const ca=ch.chartArea;
-    const meta=ch.getDatasetMeta(0);
-    if(!ca||!meta||!meta.data) return;
-    const idx=SERIE.f.findIndex(f=>f==='11/4/25'||f==='11/4/2025');
-    if(idx>=0&&meta.data[idx]){
-      const xPx=meta.data[idx].x;
-      if(xPx>=ca.left&&xPx<=ca.right){
-        line.style.left=(xPx)+'px';
-        line.style.top=ca.top+'px';
-        line.style.bottom=(wrap.offsetHeight-ca.bottom)+'px';
-        line.style.display='block';
-      }
-    }
-  }
-  window.addEventListener('resize',()=>setTimeout(posInflLine,150));
+    ]},options:evoBase});
 
   dc('ch-evo-np');
   charts['ch-evo-np']=new Chart(document.getElementById('ch-evo-np'),{type:'line',
@@ -1966,19 +1940,13 @@ window.renderFlotaTaller = function renderFlotaTaller(){
   dc("ch-taller-all");charts["ch-taller-all"]=new Chart(document.getElementById("ch-taller-all"),{type:"bar",data:{labels:allP.map(p=>p[0]),datasets:[{label:"Horas",data:allP.map(p=>p[1]),backgroundColor:allP.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:9},maxRotation:70},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   dc("ch-turnos-mes");charts["ch-turnos-mes"]=new Chart(document.getElementById("ch-turnos-mes"),{type:"bar",data:{labels:Object.keys(useTM),datasets:[{label:"Turnos",data:Object.values(useTM),backgroundColor:"#7c3aed99",borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
 
-  // Tipo de arreglo — doughnut: usa datos reales del Dashboard (col B/C) si están disponibles
+  // Tipo de arreglo — doughnut (Col I de Turnos)
   const tipoData = {};
-  if(window.DASHBOARD_TIPO_DATA && Object.keys(window.DASHBOARD_TIPO_DATA).length > 0){
-    // Fuente: hoja Dashboard — tabla limpia col B=tipo, C=cantidad
-    Object.assign(tipoData, window.DASHBOARD_TIPO_DATA);
-  } else {
-    // Fallback: TURNOS_DETALLE con filtros aplicados
-    (window.TURNOS_DETALLE||[]).filter(t=>{
-      if(femp && t.empresa!==femp) return false;
-      if(fanio && t.anio!==fanio) return false;
-      return true;
-    }).forEach(t=>{ if(t.tipoArr) tipoData[t.tipoArr]=(tipoData[t.tipoArr]||0)+1; });
-  }
+  (window.TURNOS_DETALLE||[]).filter(t=>{
+    if(femp && t.empresa!==femp) return false;
+    if(fanio && t.anio!==fanio) return false;
+    return true;
+  }).forEach(t=>{ if(t.tipoArr) tipoData[t.tipoArr]=(tipoData[t.tipoArr]||0)+1; });
   const tipoEntries = Object.entries(tipoData).sort((a,b)=>b[1]-a[1]);
   dc("ch-taller-tipo");
   if(tipoEntries.length>0){
@@ -2358,6 +2326,24 @@ window.toggleSidebar=function(){const sb=document.getElementById("sidebar"),mn=d
 // ══ CONFIRM & TOAST ══
 window.confirmar=function(t,m,cb){document.getElementById("mc-title").textContent=t;document.getElementById("mc-msg").textContent=m;modalCb=cb;document.getElementById("modal-confirm").classList.add("open");document.getElementById("mc-ok").onclick=()=>{cerrarModal();if(modalCb)modalCb();};};
 window.cerrarModal=function(){document.getElementById("modal-confirm").classList.remove("open");};
+
+// ── Modal detalle de dotación por CECO ──
+window.abrirModalDotDetalle=function(ceco, servicio, jefe){
+  const filas = DOTACION_DETALLE_BY_CECO[ceco] || [];
+  document.getElementById('mdd-title').textContent = `Detalle de personal — CECO ${ceco}`;
+  document.getElementById('mdd-sub').textContent = `${jefe||'—'} · ${servicio||'—'}`;
+  const tbody = document.getElementById('mdd-tbody');
+  tbody.innerHTML = filas.length
+    ? filas.map(f=>`<tr>
+        <td>${pill(f.empresa||'—','p-bl')}</td>
+        <td style="font-size:11px;">${f.operario||'—'}</td>
+        <td style="font-size:11px;">${f.estado||'—'}</td>
+        <td style="font-size:11px;">${f.motivo||'—'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin registros de detalle para este CECO</td></tr>`;
+  document.getElementById('modal-dot-detalle').classList.add('open');
+};
+window.cerrarModalDotDetalle=function(){document.getElementById('modal-dot-detalle').classList.remove('open');};
 let tTimer;window.toast=function(msg){const el=document.getElementById("toast");document.getElementById("toast-msg").textContent=msg;el.classList.add("show");clearTimeout(tTimer);tTimer=setTimeout(()=>el.classList.remove("show"),2800);};
 
 // ══════════════════════════════════════════════════════
@@ -2818,21 +2804,6 @@ async function actualizarFlota(){
           window.DASHBOARD_HS_DISP   = hsD;
         }
       }
-
-      // Tipo de arreglo: segunda tabla limpia en la hoja Dashboard
-      // Col A(0)=Periodo, B(1)=Tipo, C(2)=Cantidad — filas sin "Total" y sin "Suma total"
-      const tipoAccum = {};
-      rowsDash.forEach(row => {
-        const tipo = String(row[1]||'').trim();
-        const cant = typeof row[2]==='number' ? row[2] : parseFloat(row[2])||0;
-        if(!tipo || tipo.startsWith('Total') || tipo==='Suma total' ||
-           tipo==='TIPO DE ARREGLO' || tipo==='PERIODO' || cant<=0) return;
-        // Solo filas de detalle (tipo limpio sin prefijo "Total ")
-        tipoAccum[tipo] = (tipoAccum[tipo]||0) + cant;
-      });
-      if(Object.keys(tipoAccum).length > 0){
-        window.DASHBOARD_TIPO_DATA = tipoAccum;
-      }
     } catch(dashErr){ console.warn('Dashboard sheet no disponible:', dashErr); }
 
     lastUpdateFlota = new Date();
@@ -3143,12 +3114,14 @@ let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
+let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
+let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
 
 // ── Parser Dotación ──
 function parseDotacion(rows){
   // HOJA: Dotacion - Relevamiento
   // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO
-  // D(3)=CANTIDAD APROBADA, E(4)=CANTIDAD RELEVADA
+  // D(3)=CANTIDAD APROBADA, E(4)=CANTIDAD RELEVADA, F(5)=CECO
   const result = [];
   rows.slice(1).forEach(row => {
     if(!row[1] && !row[2]) return;
@@ -3158,10 +3131,40 @@ function parseDotacion(rows){
     const aprobada = parseFloat(row[3])||0;
     // Col E puede venir vacía — tratarla como 0
     const real     = row[4]===''||row[4]===null||row[4]===undefined ? 0 : parseFloat(row[4])||0;
+    const ceco     = String(row[5]||'').trim();
     if(!jefe && !servicio) return;
-    result.push({empresa, jefe, servicio, aprobada, real, diff: real - aprobada});
+    result.push({empresa, jefe, servicio, aprobada, real, ceco, diff: real - aprobada});
   });
   return result;
+}
+
+// ── Parser Dotación Detalle ──
+function parseDotacionDetalle(rows){
+  // HOJA: Dotacion detalle
+  // A(0)=EMPRESA, B(1)=CECO, C(2)=OPERARIO, D(3)=ESTADO, E(4)=MOTIVO
+  const result = [];
+  rows.slice(1).forEach(row => {
+    const ceco = String(row[1]||'').trim();
+    if(!ceco) return;
+    result.push({
+      empresa:  String(row[0]||'').trim(),
+      ceco,
+      operario: String(row[2]||'').trim(),
+      estado:   String(row[3]||'').trim(),
+      motivo:   String(row[4]||'').trim(),
+    });
+  });
+  return result;
+}
+
+// ── Agrupar detalle por CECO ──
+function agruparDetallePorCeco(rows){
+  const map = {};
+  rows.forEach(r=>{
+    if(!map[r.ceco]) map[r.ceco] = [];
+    map[r.ceco].push(r);
+  });
+  return map;
 }
 
 // ── Parser Preventivos ──
@@ -3194,6 +3197,17 @@ async function actualizarDotacion(){
       const sel2 = document.getElementById('f-dot-empresa');
       if(sel2){ sel2.innerHTML = '<option value="">Todas las empresas</option>' + empresas.map(e=>`<option value="${e}">${e}</option>`).join(''); }
     }
+
+    // Hoja 2: Dotacion detalle — vinculada por CECO
+    try {
+      const rowsDetalle = await fetchSheet(GS_DOTACION, 'Dotacion detalle');
+      const detalle = parseDotacionDetalle(rowsDetalle);
+      DOTACION_DETALLE_DATA = detalle;
+      DOTACION_DETALLE_BY_CECO = agruparDetallePorCeco(detalle);
+    } catch(errDet) {
+      console.warn('Error dotacion detalle:', errDet);
+    }
+
     setGsStatus('dot','ok');
     renderDotacion();
     return true;
@@ -3264,7 +3278,7 @@ window.renderDotacion = function(){
     <div class="kc ${totalReal>=totalAprob?'gr':'re'}"><span class="ki">👤</span><div class="kl">Dotación real</div><div class="kv">${totalReal}</div></div>
     <div class="kc ${totalReal-totalAprob>=0?'gr':'re'}"><span class="ki">📊</span><div class="kl">Diferencia total</div><div class="kv">${totalReal-totalAprob>=0?'+':''}${totalReal-totalAprob}</div></div>
     <div class="kc re"><span class="ki">⚠️</span><div class="kl">Servicios con déficit</div><div class="kv">${deficit}</div></div>
-    <div class="kc gr"><span class="ki">✅</span><div class="kl">Servicios con superávit</div><div class="kv">${superavit}</div></div>
+    <div class="kc gr"><span class="ki">✅</span><div class="kl">Servicios OK</div><div class="kv">${superavit}</div></div>
     <div class="kc te"><span class="ki">📈</span><div class="kl">% Cobertura</div><div class="kv">${pct}%</div></div>`;
 
   // Chart por zonal
@@ -3308,14 +3322,18 @@ window.renderDotacion = function(){
       const diff = d.real - d.aprobada;
       const cls = diff<0?'p-err':diff>0?'p-ok':'p-mu';
       const label = diff<0?'Déficit':diff>0?'Superávit':'Exacto';
-      return `<tr>
+      const tieneDetalle = diff!==0 && d.ceco && DOTACION_DETALLE_BY_CECO[d.ceco]?.length>0;
+      const rowAttrs = tieneDetalle
+        ? `style="cursor:pointer;" onclick='abrirModalDotDetalle(${JSON.stringify(d.ceco)}, ${JSON.stringify(d.servicio)}, ${JSON.stringify(d.jefe)})' title="Ver detalle de personal"`
+        : '';
+      return `<tr ${rowAttrs}>
         <td>${pill(d.empresa||'—','p-bl')}</td>
         <td style="font-size:11px;">${d.jefe}</td>
         <td style="font-size:11px;">${d.servicio}</td>
         <td style="font-family:'JetBrains Mono';text-align:center;">${d.aprobada}</td>
         <td style="font-family:'JetBrains Mono';text-align:center;">${d.real}</td>
         <td style="font-family:'JetBrains Mono';text-align:center;color:${diff<0?'var(--err)':diff>0?'var(--ok)':'var(--mu)'};">${diff>=0?'+':''}${diff}</td>
-        <td>${pill(label,cls)}</td>
+        <td>${pill(label,cls)}${tieneDetalle?' <span style="opacity:.6;font-size:11px;">🔍</span>':''}</td>
       </tr>`;
     }).join('');
   }
