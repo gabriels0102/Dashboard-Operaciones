@@ -3285,6 +3285,10 @@ window.renderDotacion = function(){
   const countART = detalleVisible.filter(r=>/\bART\b/i.test(r.motivo)).length;
   const pctART = totalReal>0 ? Math.round((countART/totalReal)*1000)/10 : 0;
 
+  // % de personas FALTANTES (aprobada - real, solo servicios en déficit) que corresponden a ART
+  const totalFaltantes = data.filter(d=>d.real<d.aprobada).reduce((s,d)=>s+(d.aprobada-d.real),0);
+  const pctARTFaltantes = totalFaltantes>0 ? Math.round((countART/totalFaltantes)*1000)/10 : 0;
+
   const kdiv = document.getElementById('k-dotacion');
   if(kdiv) kdiv.innerHTML = `
     <div class="kc bl"><span class="ki">👥</span><div class="kl">Dotación aprobada</div><div class="kv">${totalAprob}</div></div>
@@ -3293,7 +3297,8 @@ window.renderDotacion = function(){
     <div class="kc re"><span class="ki">⚠️</span><div class="kl">Servicios con déficit</div><div class="kv">${deficit}</div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Servicios OK</div><div class="kv">${superavit}</div></div>
     <div class="kc te"><span class="ki">📈</span><div class="kl">% Cobertura</div><div class="kv">${pct}%</div></div>
-    <div class="kc or"><span class="ki">🏥</span><div class="kl">% Personal de ART</div><div class="kv">${pctART}%</div><div class="ks">${countART} de ${totalReal} relevados</div></div>`;
+    <div class="kc or"><span class="ki">🏥</span><div class="kl">% Personal de ART</div><div class="kv">${pctART}%</div><div class="ks">${countART} de ${totalReal} relevados</div></div>
+    <div class="kc am"><span class="ki">🚑</span><div class="kl">% Faltantes por ART</div><div class="kv">${pctARTFaltantes}%</div><div class="ks">${countART} de ${totalFaltantes} faltantes</div></div>`;
 
   // Chart por zonal
   const byZonal = {};
