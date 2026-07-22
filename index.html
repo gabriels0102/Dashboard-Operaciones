@@ -2910,7 +2910,9 @@ async function fetchMaquinariasAPI(){
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(), 45000);
   try{
-    const res = await fetch(GS_MAQUINARIAS, {signal: controller.signal});
+    // Cache-busting: evita que el navegador sirva una respuesta vieja guardada en caché
+    const url = GS_MAQUINARIAS + '?_=' + Date.now();
+    const res = await fetch(url, {signal: controller.signal, cache: 'no-store'});
     clearTimeout(timeout);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const json = await res.json();
