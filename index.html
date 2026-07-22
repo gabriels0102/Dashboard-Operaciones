@@ -262,6 +262,9 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni" data-page="flota-impacto"><span class="ni-icon">📉</span><span class="ni-label">Impacto Operativo</span></button>
     <button class="ni" data-page="siniestros"><span class="ni-icon">⚠️</span><span class="ni-label">Siniestros</span></button>
 
+    <div class="nav-section">Maquinarias</div>
+    <button class="ni" data-page="maquinarias"><span class="ni-icon">🚜</span><span class="ni-label">Detalle de Máquinas</span></button>
+
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
     
@@ -673,6 +676,22 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
 </section>
 
+<!-- MAQUINARIAS -->
+<section class="page" id="page-maquinarias">
+  <div class="topbar"><div><div class="ptitle">Maquinarias</div><div class="psub" id="maq-psub">Cargando datos en tiempo real...</div></div></div>
+  <div class="fb">
+    <label>Estado:</label><select id="f-maq-tipo" onchange="window.renderMaquinariasTabla()" style="min-width:160px;"><option value="">Todos</option></select>
+    <input type="text" id="f-maq-busq" placeholder="Buscar..." style="width:180px;" oninput="window.renderMaquinariasTabla()"/>
+  </div>
+  <div class="kg" id="k-maquinarias" style="margin-bottom:14px;"></div>
+  <div class="card">
+    <div class="tw"><table>
+      <thead id="maq-thead"></thead>
+      <tbody id="tb-maquinarias"></tbody>
+    </table></div>
+  </div>
+</section>
+
 <!-- DOTACION -->
 <section class="page" id="page-dotacion">
   <div class="topbar">
@@ -931,6 +950,10 @@ const SITIOS_SEED=[
 // ══ STATE ══
 let sitios=[], charts={}, editSitioId=null, modalCb=null;
 
+// Maquinarias — cargado exclusivamente desde GS_MAQUINARIAS (hoja "Detalle de maquinas")
+let MAQUINARIAS=[];
+let MAQ_HEADERS=["Columna A","Columna B","Columna C","Columna D","Estado"];
+
 // Sitios se cargan EXCLUSIVAMENTE desde Google Sheets (GS_SITIOS)
 // Firebase ya no se usa para sitios — se eliminó el onSnapshot y seedSitios
 document.getElementById("loading").style.display="none";
@@ -960,6 +983,7 @@ function renderAll(){
   renderDashboard();renderCorr();renderMotivos();renderZonales();
   renderSitios();renderContratos();renderFlotaResumen();
   renderFlotaTabla();renderFlotaTaller();renderFlotaImpacto();renderSiniestros();
+  renderMaquinariasTabla();
   if(DOTACION_DATA.length>0) renderDotacion();
   if(PREV_DATA.length>0) renderPreventivos();
   renderComplementarios();
@@ -1897,6 +1921,46 @@ window.renderFlotaTabla=function(){
   }).join("");
 };
 
+window.renderMaquinariasTabla = function(){
+  const fe = document.getElementById("f-maq-tipo")?.value || "";
+  const busq = (document.getElementById("f-maq-busq")?.value || "").toLowerCase();
+  const fil = MAQUINARIAS.filter(m=>{
+    if(fe && m.e !== fe) return false;
+    if(busq && !`${m.a} ${m.b} ${m.c} ${m.d}`.toLowerCase().includes(busq)) return false;
+    return true;
+  });
+
+  const thead = document.getElementById("maq-thead");
+  if(thead) thead.innerHTML = `<tr><th>${MAQ_HEADERS[0]}</th><th>${MAQ_HEADERS[1]}</th><th>${MAQ_HEADERS[2]}</th><th>${MAQ_HEADERS[3]}</th><th>${MAQ_HEADERS[4]}</th></tr>`;
+
+  const estColor = (e)=>{
+    const v = (e||"").toLowerCase();
+    if(v.includes("operativ")||v.includes("disponib")||v.includes("activ")) return "p-ok";
+    if(v.includes("taller")||v.includes("mantenim")||v.includes("repar")) return "p-warn";
+    if(v.includes("fuera")||v.includes("baja")||v.includes("inactiv")) return "p-err";
+    return "p-mu";
+  };
+
+  const tb = document.getElementById("tb-maquinarias");
+  if(tb){
+    tb.innerHTML = fil.length ? fil.map(m=>{
+      return `<tr><td style="font-weight:600;">${m.a||"—"}</td><td>${m.b||"—"}</td><td>${m.c||"—"}</td><td>${m.d||"—"}</td><td>${m.e?pill(m.e,estColor(m.e)):"—"}</td></tr>`;
+    }).join("") : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin resultados para el filtro aplicado</td></tr>`;
+  }
+
+  // KPIs: total + distribución por columna E (estado)
+  const kEl = document.getElementById("k-maquinarias");
+  if(kEl){
+    const total = MAQUINARIAS.length;
+    const porEstado = {};
+    MAQUINARIAS.forEach(m=>{ if(m.e) porEstado[m.e] = (porEstado[m.e]||0)+1; });
+    const estados = Object.entries(porEstado).sort((a,b)=>b[1]-a[1]).slice(0,4);
+    const colores = ["gr","am","or","pu"];
+    kEl.innerHTML = `<div class="kc bl"><span class="ki">🚜</span><div class="kl">Total de máquinas</div><div class="kv">${total}</div><div class="ks">Hoja "Detalle de maquinas"</div></div>`
+      + estados.map(([est,cnt],i)=>`<div class="kc ${colores[i%colores.length]}"><span class="ki">🔧</span><div class="kl">${est}</div><div class="kv">${cnt}</div><div class="ks">${total>0?Math.round(cnt/total*100):0}%</div></div>`).join("");
+  }
+};
+
 window.renderFlotaTaller = function renderFlotaTaller(){
   const femp  = document.getElementById("f-taller-emp")?.value||"";
   const fanio = document.getElementById("f-taller-anio")?.value||"";
@@ -2357,16 +2421,18 @@ const GS_PREV        = "https://script.google.com/macros/s/AKfycby8xumMghsFwHw5U
 const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qxfKWPdopWMVn7uV2WDIpc0I6hLvoUImEJAaGwEnGbHaIvvy8_d7X6Q/exec";
 const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycby4uQ4OiPkTrY96Puy8d5vPaO77Qv2QtFzJP4gc26BWfLUexXm5T0pekMkrtsum69N7Ew/exec";
 const GS_SITIOS      = "https://script.google.com/macros/s/AKfycbzABBckbx9Twj9DgGsoAxBSolfhNwN2I_YbYccajMI29oN0gL9H27sLFSibiYmZd4gd/exec";
+const GS_MAQUINARIAS = "https://script.google.com/a/macros/lamantovana.com.ar/s/AKfycbwe4JDqqNlUrPgxg2_5Yo7YOc0pD35HftAwoZ2oWrMDX4DStuoUxzbBjW71JYwJSPlkug/exec";
 const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
 let lastUpdateCorr   = null;
 let lastUpdateFlota  = null;
+let lastUpdateMaquinarias = null;
 let refreshTimer     = null;
 
 // ── Indicador de estado en la barra lateral ──
 function setGsStatus(source, status){
   // source: 'corr' | 'flota' | 'dot' | 'prev'
   // status: 'loading' | 'ok' | 'error'
-  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status'};
+  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status','maq':'gs-maq-status'};
   const id = ids[source] || 'gs-corr-status';
   const el = document.getElementById(id);
   if(!el) return;
@@ -2558,6 +2624,29 @@ function parseControlVehicular(rows){
       m: String(row[6]||'').trim(),
       e: empresa||'Sin empresa',
       tipo: tipo22
+    });
+  });
+  return result;
+}
+
+// ── Parser: "Detalle de maquinas" → MAQUINARIAS (columnas A:E) ──
+function parseDetalleMaquinas(rows){
+  // Fila 0 = encabezados (se usan tal cual vienen de la planilla).
+  // Columna E (índice 4) es un desplegable en la planilla y se usa como filtro/estado.
+  if(rows.length){
+    const hdr = rows[0];
+    MAQ_HEADERS = [0,1,2,3,4].map(i=>String(hdr[i]||"").trim() || MAQ_HEADERS[i]);
+  }
+  const result = [];
+  rows.slice(1).forEach(row=>{
+    const a = String(row[0]||"").trim();
+    if(!a) return; // fila vacía
+    result.push({
+      a,
+      b: String(row[1]||"").trim(),
+      c: String(row[2]||"").trim(),
+      d: String(row[3]||"").trim(),
+      e: String(row[4]||"").trim() // Estado (desplegable, col. E)
     });
   });
   return result;
@@ -2817,6 +2906,40 @@ async function actualizarFlota(){
   }
 }
 
+// ── ACTUALIZAR MAQUINARIAS ──
+async function actualizarMaquinarias(){
+  setGsStatus('maq','loading');
+  try{
+    const rows = await fetchSheet(GS_MAQUINARIAS, 'Detalle de maquinas');
+    const nuevas = parseDetalleMaquinas(rows);
+    if(nuevas.length > 0){
+      MAQUINARIAS.length = 0;
+      nuevas.forEach(m => MAQUINARIAS.push(m));
+    }
+
+    // Refrescar opciones del filtro (columna E), preservando la selección actual
+    const filtroSel = document.getElementById('f-maq-tipo');
+    if(filtroSel){
+      const actual = filtroSel.value;
+      const opciones = [...new Set(MAQUINARIAS.map(m=>m.e).filter(Boolean))].sort();
+      filtroSel.innerHTML = '<option value="">Todos</option>' + opciones.map(o=>`<option value="${o}">${o}</option>`).join('');
+      if(opciones.includes(actual)) filtroSel.value = actual;
+    }
+
+    const psub = document.getElementById('maq-psub');
+    if(psub) psub.textContent = `${MAQUINARIAS.length} máquinas registradas · hoja "Detalle de maquinas"`;
+
+    lastUpdateMaquinarias = new Date();
+    setGsStatus('maq','ok');
+    updateLastUpdateLabel();
+    return true;
+  }catch(err){
+    console.warn('Error maquinarias:', err);
+    setGsStatus('maq','error');
+    return false;
+  }
+}
+
 // ── Actualización completa ──
 // ── Actualizar Complementarios ──
 async function actualizarComplementarios(){
@@ -3039,11 +3162,12 @@ async function actualizarSitiosGS(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
     actualizarComplementarios(), actualizarContratos(),
-    actualizarNoOca(), actualizarSitiosGS()
+    actualizarNoOca(), actualizarSitiosGS(),
+    actualizarMaquinarias()
   ]);
   renderAll();
   if(showToast){
@@ -3056,7 +3180,7 @@ async function actualizarTodo(showToast=false){
 }
 
 function updateLastUpdateLabel(){
-  const times = [lastUpdateCorr, lastUpdateFlota].filter(Boolean);
+  const times = [lastUpdateCorr, lastUpdateFlota, lastUpdateMaquinarias].filter(Boolean);
   if(!times.length) return;
   const last = new Date(Math.max(...times.map(t=>t.getTime())));
   const label = document.getElementById("last-update-label");
@@ -3099,6 +3223,7 @@ function injectRefreshButton(){
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Preventivos:</span> <span id="gs-prev-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Complementarios:</span> <span id="gs-compl-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Contratos:</span> <span id="gs-contratos-status" style="color:var(--warn);">⏳ Conectando...</span></div>
+      <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Maquinarias:</span> <span id="gs-maq-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div id="last-update-label" style="font-size:10px;color:var(--mu);"></div>`;
     nav.appendChild(statusDiv);
   }
