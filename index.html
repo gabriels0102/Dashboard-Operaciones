@@ -952,7 +952,7 @@ let sitios=[], charts={}, editSitioId=null, modalCb=null;
 
 // Maquinarias — cargado exclusivamente desde GS_MAQUINARIAS (hoja "Detalle de maquinas")
 let MAQUINARIAS=[];
-let MAQ_HEADERS=["Columna A","Columna B","Columna C","Columna D","Estado"];
+let MAQ_HEADERS=["CECO","Servicio","Máquina","Ubicación","Estado"];
 
 // Sitios se cargan EXCLUSIVAMENTE desde Google Sheets (GS_SITIOS)
 // Firebase ya no se usa para sitios — se eliminó el onSnapshot y seedSitios
@@ -1935,9 +1935,10 @@ window.renderMaquinariasTabla = function(){
 
   const estColor = (e)=>{
     const v = (e||"").toLowerCase();
-    if(v.includes("operativ")||v.includes("disponib")||v.includes("activ")) return "p-ok";
+    // Primero las negaciones/estados de baja, para que "No operativa" no matchee "operativ"
+    if(v.includes("no operativ")||v.includes("fuera")||v.includes("baja")||v.includes("inactiv")) return "p-err";
     if(v.includes("taller")||v.includes("mantenim")||v.includes("repar")) return "p-warn";
-    if(v.includes("fuera")||v.includes("baja")||v.includes("inactiv")) return "p-err";
+    if(v.includes("operativ")||v.includes("disponib")||v.includes("activ")) return "p-ok";
     return "p-mu";
   };
 
@@ -2629,24 +2630,21 @@ function parseControlVehicular(rows){
   return result;
 }
 
-// ── Parser: "Detalle de maquinas" → MAQUINARIAS (columnas A:E) ──
-function parseDetalleMaquinas(rows){
-  // Fila 0 = encabezados (se usan tal cual vienen de la planilla).
-  // Columna E (índice 4) es un desplegable en la planilla y se usa como filtro/estado.
-  if(rows.length){
-    const hdr = rows[0];
-    MAQ_HEADERS = [0,1,2,3,4].map(i=>String(hdr[i]||"").trim() || MAQ_HEADERS[i]);
-  }
+// ── Parser: API Maquinarias → MAQUINARIAS ──
+// El endpoint devuelve { status, timestamp, count, data:[{ceco,servicio,maquina,ubicacion,estado}, ...] }
+// (columnas A:E de "Detalle de maquinas" ya mapeadas a claves por el propio Apps Script).
+function parseDetalleMaquinas(data){
+  MAQ_HEADERS = ["CECO","Servicio","Máquina","Ubicación","Estado"];
   const result = [];
-  rows.slice(1).forEach(row=>{
-    const a = String(row[0]||"").trim();
-    if(!a) return; // fila vacía
+  (data||[]).forEach(item=>{
+    const c = String(item.maquina||"").trim();
+    if(!c) return; // fila vacía
     result.push({
-      a,
-      b: String(row[1]||"").trim(),
-      c: String(row[2]||"").trim(),
-      d: String(row[3]||"").trim(),
-      e: String(row[4]||"").trim() // Estado (desplegable, col. E)
+      a: String(item.ceco ?? "").trim(),      // Col A
+      b: String(item.servicio||"").trim(),    // Col B
+      c: c,                                   // Col C
+      d: String(item.ubicacion||"").trim(),   // Col D
+      e: String(item.estado||"").trim()       // Col E (desplegable → filtro/estado)
     });
   });
   return result;
@@ -2906,12 +2904,30 @@ async function actualizarFlota(){
   }
 }
 
+// ── Fetch dedicado: la API de Maquinarias no usa el parámetro ?sheet= ──
+// ni el contrato {rows:[[...]]} — devuelve {status,data:[{...}]}.
+async function fetchMaquinariasAPI(){
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(), 45000);
+  try{
+    const res = await fetch(GS_MAQUINARIAS, {signal: controller.signal});
+    clearTimeout(timeout);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    if(json.status === 'error') throw new Error(json.message || 'Error desconocido');
+    return json.data || [];
+  }catch(err){
+    clearTimeout(timeout);
+    throw err;
+  }
+}
+
 // ── ACTUALIZAR MAQUINARIAS ──
 async function actualizarMaquinarias(){
   setGsStatus('maq','loading');
   try{
-    const rows = await fetchSheet(GS_MAQUINARIAS, 'Detalle de maquinas');
-    const nuevas = parseDetalleMaquinas(rows);
+    const data = await fetchMaquinariasAPI();
+    const nuevas = parseDetalleMaquinas(data);
     if(nuevas.length > 0){
       MAQUINARIAS.length = 0;
       nuevas.forEach(m => MAQUINARIAS.push(m));
