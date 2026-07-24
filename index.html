@@ -253,6 +253,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de Ley - OCA</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
+    <button class="ni" data-page="resumen-operativo"><span class="ni-icon">🗂️</span><span class="ni-label">Resumen Operativo</span></button>
     <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
 
     <div class="nav-section">Flota</div>
@@ -797,6 +798,32 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </table></div>
   </div>
 </section>
+
+<!-- RESUMEN OPERATIVO -->
+<section class="page" id="page-resumen-operativo">
+  <div class="topbar"><div><div class="ptitle">Resumen Operativo</div><div class="psub" id="resop-psub">Cargando datos en tiempo real...</div></div></div>
+
+  <div class="sl">Adicionales OCA (sin PCP)</div>
+  <div class="fb">
+    <label>Jefe zonal:</label><select id="f-resop-jefe" onchange="window.renderResumenOperativo()" style="min-width:200px;"><option value="">Todos</option></select>
+    <label>Servicio:</label><select id="f-resop-svc" onchange="window.renderResumenOperativo()" style="min-width:200px;"><option value="">Todos</option></select>
+  </div>
+  <div class="card">
+    <div class="tw"><table>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>N° OSD</th><th>Estado</th></tr></thead>
+      <tbody id="tb-resop-oca"></tbody>
+    </table></div>
+  </div>
+
+  <div class="sl" style="margin-top:14px;">Adicionales PCP</div>
+  <div class="card">
+    <div class="tw"><table>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>N° Ticket</th><th>Estado</th></tr></thead>
+      <tbody id="tb-resop-pcp"></tbody>
+    </table></div>
+  </div>
+</section>
+
 <!-- NO OCA -->
 <section class="page" id="page-no-oca">
   <div class="topbar">
@@ -954,6 +981,10 @@ let sitios=[], charts={}, editSitioId=null, modalCb=null;
 let MAQUINARIAS=[];
 let MAQ_HEADERS=["CECO","Servicio","Máquina","Ubicación","Estado"];
 
+// Resumen Operativo — cargado desde GS_RESUMEN_OP (hoja "Resumen operativo")
+let RESOP_OCA=[]; // Columnas A:D → jefe, servicio, osd, estado
+let RESOP_PCP=[]; // Columnas L:O → jefe, servicio, ticket, estado
+
 // Sitios se cargan EXCLUSIVAMENTE desde Google Sheets (GS_SITIOS)
 // Firebase ya no se usa para sitios — se eliminó el onSnapshot y seedSitios
 document.getElementById("loading").style.display="none";
@@ -984,6 +1015,7 @@ function renderAll(){
   renderSitios();renderContratos();renderFlotaResumen();
   renderFlotaTabla();renderFlotaTaller();renderFlotaImpacto();renderSiniestros();
   renderMaquinariasTabla();
+  renderResumenOperativo();
   if(DOTACION_DATA.length>0) renderDotacion();
   if(PREV_DATA.length>0) renderPreventivos();
   renderComplementarios();
@@ -1962,6 +1994,32 @@ window.renderMaquinariasTabla = function(){
   }
 };
 
+window.renderResumenOperativo = function(){
+  const fj = document.getElementById("f-resop-jefe")?.value || "";
+  const fs = document.getElementById("f-resop-svc")?.value || "";
+
+  // Cuadro 1: Adicionales OCA (sin PCP) — filtrable por jefe y servicio
+  const filOca = RESOP_OCA.filter(r=>{
+    if(fj && r.jefe !== fj) return false;
+    if(fs && r.servicio !== fs) return false;
+    return true;
+  });
+  const tbOca = document.getElementById("tb-resop-oca");
+  if(tbOca){
+    tbOca.innerHTML = filOca.length ? filOca.map(r=>
+      `<tr><td>${r.jefe||"—"}</td><td>${r.servicio||"—"}</td><td style="font-family:'JetBrains Mono';">${r.osd||"—"}</td><td>${r.estado||"—"}</td></tr>`
+    ).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin resultados para el filtro aplicado</td></tr>`;
+  }
+
+  // Cuadro 2: Adicionales PCP — sin filtros (no solicitados)
+  const tbPcp = document.getElementById("tb-resop-pcp");
+  if(tbPcp){
+    tbPcp.innerHTML = RESOP_PCP.length ? RESOP_PCP.map(r=>
+      `<tr><td>${r.jefe||"—"}</td><td>${r.servicio||"—"}</td><td style="font-family:'JetBrains Mono';">${r.ticket||"—"}</td><td>${r.estado||"—"}</td></tr>`
+    ).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin datos</td></tr>`;
+  }
+};
+
 window.renderFlotaTaller = function renderFlotaTaller(){
   const femp  = document.getElementById("f-taller-emp")?.value||"";
   const fanio = document.getElementById("f-taller-anio")?.value||"";
@@ -2427,13 +2485,14 @@ const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
 let lastUpdateCorr   = null;
 let lastUpdateFlota  = null;
 let lastUpdateMaquinarias = null;
+let lastUpdateResOp  = null;
 let refreshTimer     = null;
 
 // ── Indicador de estado en la barra lateral ──
 function setGsStatus(source, status){
   // source: 'corr' | 'flota' | 'dot' | 'prev'
   // status: 'loading' | 'ok' | 'error'
-  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status','maq':'gs-maq-status'};
+  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status','maq':'gs-maq-status','resop':'gs-resop-status'};
   const id = ids[source] || 'gs-corr-status';
   const el = document.getElementById(id);
   if(!el) return;
@@ -2648,6 +2707,32 @@ function parseDetalleMaquinas(data){
     });
   });
   return result;
+}
+
+// ── Parser: "Resumen operativo" → RESOP_OCA (A:D) + RESOP_PCP (L:O) ──
+function parseResumenOperativo(rows){
+  const oca = [];
+  const pcp = [];
+  rows.slice(1).forEach(row=>{
+    // Cuadro 1: Adicionales OCA (sin PCP) — columnas A(0) B(1) C(2) D(3)
+    const jefeOca = String(row[0]||"").trim();
+    const svcOca  = String(row[1]||"").trim();
+    const osd     = String(row[2]||"").trim();
+    const estOca  = String(row[3]||"").trim();
+    if(jefeOca || svcOca || osd){
+      oca.push({ jefe: jefeOca, servicio: svcOca, osd: osd, estado: estOca });
+    }
+
+    // Cuadro 2: Adicionales PCP — columnas L(11) M(12) N(13) O(14)
+    const jefePcp = String(row[11]||"").trim();
+    const svcPcp  = String(row[12]||"").trim();
+    const ticket  = String(row[13]||"").trim();
+    const estPcp  = String(row[14]||"").trim();
+    if(jefePcp || svcPcp || ticket){
+      pcp.push({ jefe: jefePcp, servicio: svcPcp, ticket: ticket, estado: estPcp });
+    }
+  });
+  return { oca, pcp };
 }
 
 // ── Parser: "Turnos unidades" → HORAS_PAT + HORAS_MES ──
@@ -2958,6 +3043,45 @@ async function actualizarMaquinarias(){
   }
 }
 
+// ── ACTUALIZAR RESUMEN OPERATIVO ──
+async function actualizarResumenOperativo(){
+  setGsStatus('resop','loading');
+  try{
+    const rows = await fetchSheet(GS_COMPL, 'Resumen operativo');
+    const { oca, pcp } = parseResumenOperativo(rows);
+    RESOP_OCA.length = 0; oca.forEach(r=>RESOP_OCA.push(r));
+    RESOP_PCP.length = 0; pcp.forEach(r=>RESOP_PCP.push(r));
+
+    // Refrescar filtros de "Adicionales OCA (sin PCP)", preservando la selección actual
+    const selJefe = document.getElementById('f-resop-jefe');
+    if(selJefe){
+      const actual = selJefe.value;
+      const jefes = [...new Set(RESOP_OCA.map(r=>r.jefe).filter(Boolean))].sort();
+      selJefe.innerHTML = '<option value="">Todos</option>' + jefes.map(j=>`<option value="${j}">${j}</option>`).join('');
+      if(jefes.includes(actual)) selJefe.value = actual;
+    }
+    const selSvc = document.getElementById('f-resop-svc');
+    if(selSvc){
+      const actual = selSvc.value;
+      const svcs = [...new Set(RESOP_OCA.map(r=>r.servicio).filter(Boolean))].sort();
+      selSvc.innerHTML = '<option value="">Todos</option>' + svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
+      if(svcs.includes(actual)) selSvc.value = actual;
+    }
+
+    const psub = document.getElementById('resop-psub');
+    if(psub) psub.textContent = `${RESOP_OCA.length} adicionales OCA (sin PCP) · ${RESOP_PCP.length} adicionales PCP · hoja "Resumen operativo"`;
+
+    lastUpdateResOp = new Date();
+    setGsStatus('resop','ok');
+    updateLastUpdateLabel();
+    return true;
+  }catch(err){
+    console.warn('Error resumen operativo:', err);
+    setGsStatus('resop','error');
+    return false;
+  }
+}
+
 // ── Actualización completa ──
 // ── Actualizar Complementarios ──
 async function actualizarComplementarios(){
@@ -3180,12 +3304,12 @@ async function actualizarSitiosGS(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9, ok10] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
     actualizarComplementarios(), actualizarContratos(),
     actualizarNoOca(), actualizarSitiosGS(),
-    actualizarMaquinarias()
+    actualizarMaquinarias(), actualizarResumenOperativo()
   ]);
   renderAll();
   if(showToast){
@@ -3198,7 +3322,7 @@ async function actualizarTodo(showToast=false){
 }
 
 function updateLastUpdateLabel(){
-  const times = [lastUpdateCorr, lastUpdateFlota, lastUpdateMaquinarias].filter(Boolean);
+  const times = [lastUpdateCorr, lastUpdateFlota, lastUpdateMaquinarias, lastUpdateResOp].filter(Boolean);
   if(!times.length) return;
   const last = new Date(Math.max(...times.map(t=>t.getTime())));
   const label = document.getElementById("last-update-label");
@@ -3242,6 +3366,7 @@ function injectRefreshButton(){
       <div style="font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Complementarios:</span> <span id="gs-compl-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Contratos:</span> <span id="gs-contratos-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Maquinarias:</span> <span id="gs-maq-status" style="color:var(--warn);">⏳ Conectando...</span></div>
+      <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Resumen Operativo:</span> <span id="gs-resop-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div id="last-update-label" style="font-size:10px;color:var(--mu);"></div>`;
     nav.appendChild(statusDiv);
   }
