@@ -253,7 +253,10 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de Ley - OCA</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
-    <button class="ni" data-page="resumen-operativo"><span class="ni-icon">🗂️</span><span class="ni-label">Resumen Operativo</span></button>
+
+    <div class="nav-section">Complementarios resumen operativo</div>
+    <button class="ni" data-page="compl-operativo"><span class="ni-icon">🗂️</span><span class="ni-label">Resumen operativo</span></button>
+
     <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
 
     <div class="nav-section">Flota</div>
@@ -798,32 +801,32 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </table></div>
   </div>
 </section>
-
-<!-- RESUMEN OPERATIVO -->
-<section class="page" id="page-resumen-operativo">
-  <div class="topbar"><div><div class="ptitle">Resumen Operativo</div><div class="psub" id="resop-psub">Cargando datos en tiempo real...</div></div></div>
-
-  <div class="sl">Adicionales OCA (sin PCP)</div>
-  <div class="fb">
-    <label>Jefe zonal:</label><select id="f-resop-jefe" onchange="window.renderResumenOperativo()" style="min-width:200px;"><option value="">Todos</option></select>
-    <label>Servicio:</label><select id="f-resop-svc" onchange="window.renderResumenOperativo()" style="min-width:200px;"><option value="">Todos</option></select>
+<!-- COMPLEMENTARIOS RESUMEN OPERATIVO -->
+<section class="page" id="page-compl-operativo">
+  <div class="topbar">
+    <div><div class="ptitle">Complementarios resumen operativo</div><div class="psub">Trabajos aprobados en curso · Hoja "Complementarios y presupuestos" · Tiempo real</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-operativo-jefe" onchange="window.renderComplementariosOperativo()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
+      <select id="f-operativo-servicio" onchange="window.renderComplementariosOperativo()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
+    </div>
   </div>
-  <div class="card">
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Complementarios OCA - Sin PCP</div><div class="cs">Tipo "OCA" · Servicio ≠ "PSP" · Aprobado · En proceso / No iniciado</div></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>N° OSD</th><th>Estado</th></tr></thead>
-      <tbody id="tb-resop-oca"></tbody>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>Nombre del trabajo</th><th>N° ODS</th><th>Estado</th></tr></thead>
+      <tbody id="tb-operativo-sinpcp"></tbody>
     </table></div>
   </div>
 
-  <div class="sl" style="margin-top:14px;">Adicionales PCP</div>
-  <div class="card">
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Complementarios PCP</div><div class="cs">Servicio = "PSP" · Aprobado · En proceso / No iniciado</div></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>N° Ticket</th><th>Estado</th></tr></thead>
-      <tbody id="tb-resop-pcp"></tbody>
+      <thead><tr><th>Jefe Zonal</th><th>N° de ticket</th><th>Estado</th></tr></thead>
+      <tbody id="tb-operativo-pcp"></tbody>
     </table></div>
   </div>
 </section>
-
 <!-- NO OCA -->
 <section class="page" id="page-no-oca">
   <div class="topbar">
@@ -981,10 +984,6 @@ let sitios=[], charts={}, editSitioId=null, modalCb=null;
 let MAQUINARIAS=[];
 let MAQ_HEADERS=["CECO","Servicio","Máquina","Ubicación","Estado"];
 
-// Resumen Operativo — cargado desde GS_RESUMEN_OP (hoja "Resumen operativo")
-let RESOP_OCA=[]; // Columnas A:D → jefe, servicio, osd, estado
-let RESOP_PCP=[]; // Columnas L:O → jefe, servicio, ticket, estado
-
 // Sitios se cargan EXCLUSIVAMENTE desde Google Sheets (GS_SITIOS)
 // Firebase ya no se usa para sitios — se eliminó el onSnapshot y seedSitios
 document.getElementById("loading").style.display="none";
@@ -1015,11 +1014,11 @@ function renderAll(){
   renderSitios();renderContratos();renderFlotaResumen();
   renderFlotaTabla();renderFlotaTaller();renderFlotaImpacto();renderSiniestros();
   renderMaquinariasTabla();
-  renderResumenOperativo();
   if(DOTACION_DATA.length>0) renderDotacion();
   if(PREV_DATA.length>0) renderPreventivos();
   renderComplementarios();
   if(COMPL_DATA.detalle.length>0) renderComplementariosPage();
+  if(COMPL_DATA.operativo) renderComplementariosOperativo();
 }
 
 // ── HELPERS ──
@@ -1994,32 +1993,6 @@ window.renderMaquinariasTabla = function(){
   }
 };
 
-window.renderResumenOperativo = function(){
-  const fj = document.getElementById("f-resop-jefe")?.value || "";
-  const fs = document.getElementById("f-resop-svc")?.value || "";
-
-  // Cuadro 1: Adicionales OCA (sin PCP) — filtrable por jefe y servicio
-  const filOca = RESOP_OCA.filter(r=>{
-    if(fj && r.jefe !== fj) return false;
-    if(fs && r.servicio !== fs) return false;
-    return true;
-  });
-  const tbOca = document.getElementById("tb-resop-oca");
-  if(tbOca){
-    tbOca.innerHTML = filOca.length ? filOca.map(r=>
-      `<tr><td>${r.jefe||"—"}</td><td>${r.servicio||"—"}</td><td style="font-family:'JetBrains Mono';">${r.osd||"—"}</td><td>${r.estado||"—"}</td></tr>`
-    ).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin resultados para el filtro aplicado</td></tr>`;
-  }
-
-  // Cuadro 2: Adicionales PCP — sin filtros (no solicitados)
-  const tbPcp = document.getElementById("tb-resop-pcp");
-  if(tbPcp){
-    tbPcp.innerHTML = RESOP_PCP.length ? RESOP_PCP.map(r=>
-      `<tr><td>${r.jefe||"—"}</td><td>${r.servicio||"—"}</td><td style="font-family:'JetBrains Mono';">${r.ticket||"—"}</td><td>${r.estado||"—"}</td></tr>`
-    ).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin datos</td></tr>`;
-  }
-};
-
 window.renderFlotaTaller = function renderFlotaTaller(){
   const femp  = document.getElementById("f-taller-emp")?.value||"";
   const fanio = document.getElementById("f-taller-anio")?.value||"";
@@ -2380,6 +2353,87 @@ window.renderComplementariosPage = function(){
   }
 };
 
+// ── Render Complementarios resumen operativo (Cuadro 1 "Sin PCP" + Cuadro 2 "PCP") ──
+function estadoOperativoCls(estado){
+  return estado==='En proceso' ? 'p-warn' : estado==='No iniciado' ? 'p-err' : 'p-mu';
+}
+
+window.renderComplementariosOperativo = function(){
+  const op = COMPL_DATA.operativo || {sinPCP: [], pcp: []};
+  const selJefe = document.getElementById('f-operativo-jefe');
+  const selSvc  = document.getElementById('f-operativo-servicio');
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value || '';
+
+  // Poblar filtro Jefe Zonal (col A) con valores únicos de ambos cuadros
+  if(selJefe && selJefe.options.length <= 1){
+    const jefes = [...new Set([...op.sinPCP.map(r=>r.jefe), ...op.pcp.map(r=>r.jefe)])].filter(Boolean).sort();
+    jefes.forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  // Poblar filtro Servicio (col C) — incluye "PSP" para poder filtrar el Cuadro 2
+  if(selSvc && selSvc.options.length <= 1){
+    const servicios = [...new Set([...op.sinPCP.map(r=>r.servicio), ...op.pcp.map(()=>'PSP')])].filter(Boolean).sort();
+    servicios.forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+
+  // ── Cuadro 1: Complementarios OCA - Sin PCP ──
+  const filaSinPCP = op.sinPCP.filter(r => (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
+  const tbSinPCP = document.getElementById('tb-operativo-sinpcp');
+  if(tbSinPCP){
+    tbSinPCP.innerHTML = filaSinPCP.length ? filaSinPCP.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${r.jefe||'—'}</td>
+        <td>${r.servicio||'—'}</td>
+        <td>${r.nombre||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${r.ods||'—'}</td>
+        <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
+      </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+
+  // ── Cuadro 2: Complementarios PCP ──
+  // Si se filtra por servicio y el valor elegido no es "PSP", el cuadro 2 queda vacío (solo aplica a servicio PSP)
+  const filaPCP = op.pcp.filter(r => (!fj || r.jefe===fj) && (!fs || fs==='PSP'));
+  const tbPCP = document.getElementById('tb-operativo-pcp');
+  if(tbPCP){
+    tbPCP.innerHTML = filaPCP.length ? filaPCP.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${r.jefe||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${r.ticket||'—'}</td>
+        <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
+      </tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+};
+
+// ── Parseo de hoja "Complementarios y presupuestos" para el resumen operativo ──
+// Columnas (0-indexed): A(0)=Jefe Zonal, B(1)=Tipo, C(2)=Servicio, D(3)=Estado aprobación,
+// F(5)=N° de ticket, G(6)=Nombre del trabajo, H(7)=N° ODS, S(18)=Estado del trabajo
+function parseComplOperativo(rows){
+  const sinPCP = [];
+  const pcp = [];
+  rows.slice(1).forEach(row=>{
+    const jefe      = String(row[0]||'').trim();  // Col A — Jefe Zonal
+    const tipo      = String(row[1]||'').trim();  // Col B — "OCA"
+    const servicio  = String(row[2]||'').trim();  // Col C — Servicio (o "PSP")
+    const aprobado  = String(row[3]||'').trim();  // Col D — Estado de aprobación
+    const ticket    = String(row[5]||'').trim();  // Col F — N° de ticket
+    const nombre    = String(row[6]||'').trim();  // Col G — Nombre del trabajo
+    const ods       = String(row[7]||'').trim();  // Col H — N° ODS
+    const estado    = String(row[18]||'').trim(); // Col S — Estado del trabajo
+
+    const estadoValido = estado==='En proceso' || estado==='No iniciado';
+    if(!estadoValido || aprobado!=='Aprobado') return;
+
+    // Cuadro 1 — "Complementarios OCA - Sin PCP": Col B = "OCA" y Col C ≠ "PSP"
+    if(tipo==='OCA' && servicio!=='PSP'){
+      sinPCP.push({jefe, servicio, nombre, ods, estado});
+    }
+    // Cuadro 2 — "Complementarios PCP": Col C = "PSP" (únicamente)
+    if(servicio==='PSP'){
+      pcp.push({jefe, ticket, estado});
+    }
+  });
+  return {sinPCP, pcp};
+}
 
 // ── Actualizar No OCA ──
 async function actualizarNoOca(){
@@ -2485,14 +2539,13 @@ const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
 let lastUpdateCorr   = null;
 let lastUpdateFlota  = null;
 let lastUpdateMaquinarias = null;
-let lastUpdateResOp  = null;
 let refreshTimer     = null;
 
 // ── Indicador de estado en la barra lateral ──
 function setGsStatus(source, status){
   // source: 'corr' | 'flota' | 'dot' | 'prev'
   // status: 'loading' | 'ok' | 'error'
-  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status','maq':'gs-maq-status','resop':'gs-resop-status'};
+  const ids = {'corr':'gs-corr-status','flota':'gs-flota-status','dot':'gs-dot-status','prev':'gs-prev-status','compl':'gs-compl-status','cont':'gs-contratos-status','maq':'gs-maq-status'};
   const id = ids[source] || 'gs-corr-status';
   const el = document.getElementById(id);
   if(!el) return;
@@ -2707,32 +2760,6 @@ function parseDetalleMaquinas(data){
     });
   });
   return result;
-}
-
-// ── Parser: "Resumen operativo" → RESOP_OCA (A:D) + RESOP_PCP (L:O) ──
-function parseResumenOperativo(rows){
-  const oca = [];
-  const pcp = [];
-  rows.slice(1).forEach(row=>{
-    // Cuadro 1: Adicionales OCA (sin PCP) — columnas A(0) B(1) C(2) D(3)
-    const jefeOca = String(row[0]||"").trim();
-    const svcOca  = String(row[1]||"").trim();
-    const osd     = String(row[2]||"").trim();
-    const estOca  = String(row[3]||"").trim();
-    if(jefeOca || svcOca || osd){
-      oca.push({ jefe: jefeOca, servicio: svcOca, osd: osd, estado: estOca });
-    }
-
-    // Cuadro 2: Adicionales PCP — columnas L(11) M(12) N(13) O(14)
-    const jefePcp = String(row[11]||"").trim();
-    const svcPcp  = String(row[12]||"").trim();
-    const ticket  = String(row[13]||"").trim();
-    const estPcp  = String(row[14]||"").trim();
-    if(jefePcp || svcPcp || ticket){
-      pcp.push({ jefe: jefePcp, servicio: svcPcp, ticket: ticket, estado: estPcp });
-    }
-  });
-  return { oca, pcp };
 }
 
 // ── Parser: "Turnos unidades" → HORAS_PAT + HORAS_MES ──
@@ -3043,45 +3070,6 @@ async function actualizarMaquinarias(){
   }
 }
 
-// ── ACTUALIZAR RESUMEN OPERATIVO ──
-async function actualizarResumenOperativo(){
-  setGsStatus('resop','loading');
-  try{
-    const rows = await fetchSheet(GS_COMPL, 'Resumen operativo');
-    const { oca, pcp } = parseResumenOperativo(rows);
-    RESOP_OCA.length = 0; oca.forEach(r=>RESOP_OCA.push(r));
-    RESOP_PCP.length = 0; pcp.forEach(r=>RESOP_PCP.push(r));
-
-    // Refrescar filtros de "Adicionales OCA (sin PCP)", preservando la selección actual
-    const selJefe = document.getElementById('f-resop-jefe');
-    if(selJefe){
-      const actual = selJefe.value;
-      const jefes = [...new Set(RESOP_OCA.map(r=>r.jefe).filter(Boolean))].sort();
-      selJefe.innerHTML = '<option value="">Todos</option>' + jefes.map(j=>`<option value="${j}">${j}</option>`).join('');
-      if(jefes.includes(actual)) selJefe.value = actual;
-    }
-    const selSvc = document.getElementById('f-resop-svc');
-    if(selSvc){
-      const actual = selSvc.value;
-      const svcs = [...new Set(RESOP_OCA.map(r=>r.servicio).filter(Boolean))].sort();
-      selSvc.innerHTML = '<option value="">Todos</option>' + svcs.map(s=>`<option value="${s}">${s}</option>`).join('');
-      if(svcs.includes(actual)) selSvc.value = actual;
-    }
-
-    const psub = document.getElementById('resop-psub');
-    if(psub) psub.textContent = `${RESOP_OCA.length} adicionales OCA (sin PCP) · ${RESOP_PCP.length} adicionales PCP · hoja "Resumen operativo"`;
-
-    lastUpdateResOp = new Date();
-    setGsStatus('resop','ok');
-    updateLastUpdateLabel();
-    return true;
-  }catch(err){
-    console.warn('Error resumen operativo:', err);
-    setGsStatus('resop','error');
-    return false;
-  }
-}
-
 // ── Actualización completa ──
 // ── Actualizar Complementarios ──
 async function actualizarComplementarios(){
@@ -3161,10 +3149,18 @@ async function actualizarComplementarios(){
     if(rowsDetalle.length > 1) {
       // Solo usamos esta hoja para enriquecer COMPL_DATA.adicionales si no vino del resumen
       // No tocamos detallePorJefe ni porServicio — ya están correctos desde Resumen comercial
+
+      // ── Resumen operativo: Cuadro 1 "Sin PCP" y Cuadro 2 "PCP" ──
+      // Columnas (0-indexed): A(0)=Jefe Zonal, B(1)=Tipo, C(2)=Servicio, D(3)=Estado aprobación,
+      // F(5)=N° de ticket, G(6)=Nombre del trabajo, H(7)=N° ODS, S(18)=Estado del trabajo
+      COMPL_DATA.operativo = parseComplOperativo(rowsDetalle);
+    } else {
+      COMPL_DATA.operativo = {sinPCP: [], pcp: []};
     }
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
+    renderComplementariosOperativo();
     return true;
   } catch(err) {
     console.warn('Error complementarios:', err);
@@ -3304,12 +3300,12 @@ async function actualizarSitiosGS(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9, ok10] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
     actualizarComplementarios(), actualizarContratos(),
     actualizarNoOca(), actualizarSitiosGS(),
-    actualizarMaquinarias(), actualizarResumenOperativo()
+    actualizarMaquinarias()
   ]);
   renderAll();
   if(showToast){
@@ -3322,7 +3318,7 @@ async function actualizarTodo(showToast=false){
 }
 
 function updateLastUpdateLabel(){
-  const times = [lastUpdateCorr, lastUpdateFlota, lastUpdateMaquinarias, lastUpdateResOp].filter(Boolean);
+  const times = [lastUpdateCorr, lastUpdateFlota, lastUpdateMaquinarias].filter(Boolean);
   if(!times.length) return;
   const last = new Date(Math.max(...times.map(t=>t.getTime())));
   const label = document.getElementById("last-update-label");
@@ -3366,7 +3362,6 @@ function injectRefreshButton(){
       <div style="font-size:11px;margin-bottom:4px;"><span style="color:var(--mu);">Complementarios:</span> <span id="gs-compl-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Contratos:</span> <span id="gs-contratos-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Maquinarias:</span> <span id="gs-maq-status" style="color:var(--warn);">⏳ Conectando...</span></div>
-      <div style="font-size:11px;margin-bottom:6px;"><span style="color:var(--mu);">Resumen Operativo:</span> <span id="gs-resop-status" style="color:var(--warn);">⏳ Conectando...</span></div>
       <div id="last-update-label" style="font-size:10px;color:var(--mu);"></div>`;
     nav.appendChild(statusDiv);
   }
@@ -3379,7 +3374,7 @@ function injectRefreshButton(){
 // ══════════════════════════════════════════════════════
 let DOTACION_DATA = [];
 let PREV_DATA = [];
-let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}};
+let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
