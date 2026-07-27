@@ -856,7 +856,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div><div class="ct">Complementarios - NO OCA</div><div class="cs">Tipo "NO OCA" · Aprobado · En proceso / No iniciado</div></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Jefe Zonal</th><th>Tipo</th><th>Servicio</th><th>Aprobación</th><th>Nombre del trabajo</th><th>Estado</th></tr></thead>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>Nombre del trabajo</th><th>Estado</th></tr></thead>
       <tbody id="tb-operativo-nooca"></tbody>
     </table></div>
   </div>
@@ -2475,12 +2475,10 @@ window.renderComplementariosOperativoNoOca = function(){
     tb.innerHTML = filas.length ? filas.map(r=>`
       <tr>
         <td style="font-weight:600;">${r.jefe||'—'}</td>
-        <td>${r.tipo||'—'}</td>
         <td>${r.servicio||'—'}</td>
-        <td><span class="p p-ok">${r.aprobado||'—'}</span></td>
         <td>${r.nombre||'—'}</td>
         <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
-      </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+      </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 };
 
