@@ -223,6 +223,20 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 /* Tabla resumen */
 .dash-tabla-card{background:var(--surface);border:1px solid var(--b);border-radius:16px;padding:14px;}
 
+/* Árbol jerárquico — Adicionales No OCA - Resumen Operativo */
+.op-tree{display:flex;flex-direction:column;gap:8px;}
+.op-tree details{background:var(--s2);border:1px solid var(--b);border-radius:10px;padding:10px 14px;}
+.op-tree summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--txt);list-style:none;display:flex;align-items:center;gap:8px;}
+.op-tree summary::-webkit-details-marker{display:none;}
+.op-tree summary::before{content:'▸';color:var(--ac);font-size:11px;transition:transform 0.15s;}
+.op-tree details[open] summary::before{transform:rotate(90deg);}
+.op-tree .op-servicio{margin:10px 0 4px 16px;padding-left:12px;border-left:2px solid var(--b2);}
+.op-tree .op-servicio-title{font-size:11.5px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.4px;margin:6px 0 6px;}
+.op-tree .op-trabajo-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0;font-size:12.5px;border-bottom:1px dashed var(--b);}
+.op-tree .op-trabajo-row:last-child{border-bottom:none;}
+.op-tree .op-trabajo-nombre{color:var(--txt);}
+
+
 @media(max-width:1200px){.kpi-arc-grid{grid-template-columns:repeat(3,1fr);}.dash-bottom-grid{grid-template-columns:1fr 1fr;}.dash-footer{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:800px){.kpi-arc-grid{grid-template-columns:repeat(2,1fr);}.dash-bottom-grid{grid-template-columns:1fr;}.dash-footer{grid-template-columns:repeat(2,1fr);}}
 </style>
@@ -254,10 +268,12 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de Ley - OCA</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
 
-    <div class="nav-section">Complementarios resumen operativo</div>
-    <button class="ni" data-page="compl-operativo"><span class="ni-icon">🗂️</span><span class="ni-label">Resumen operativo</span></button>
+    <div class="nav-section">Adicionales Resumen Operativo</div>
+    <button class="ni" data-page="compl-operativo"><span class="ni-icon">🗂️</span><span class="ni-label">Resumen Operativo - OCA</span></button>
+    <button class="ni" data-page="compl-operativo-nooca"><span class="ni-icon">🗃️</span><span class="ni-label">Resumen Operativo - NO OCA</span></button>
 
     <button class="ni" data-page="no-oca"><span class="ni-icon">📦</span><span class="ni-label">Adicionales — No OCA</span></button>
+    <button class="ni" data-page="no-oca-resumen-operativo"><span class="ni-icon">🧾</span><span class="ni-label">Adicionales No OCA - Resumen Operativo</span></button>
 
     <div class="nav-section">Flota</div>
     <button class="ni" data-page="flota-resumen"><span class="ni-icon">🚐</span><span class="ni-label">Resumen de Flota</span></button>
@@ -804,7 +820,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- COMPLEMENTARIOS RESUMEN OPERATIVO -->
 <section class="page" id="page-compl-operativo">
   <div class="topbar">
-    <div><div class="ptitle">Complementarios resumen operativo</div><div class="psub">Trabajos aprobados en curso · Hoja "Complementarios y presupuestos" · Tiempo real</div></div>
+    <div><div class="ptitle">Resumen Operativo - OCA</div><div class="psub">Trabajos aprobados en curso · Hoja "Complementarios y presupuestos" · Tiempo real</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <select id="f-operativo-jefe" onchange="window.renderComplementariosOperativo()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
       <select id="f-operativo-servicio" onchange="window.renderComplementariosOperativo()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
@@ -827,6 +843,24 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </table></div>
   </div>
 </section>
+<!-- RESUMEN OPERATIVO - NO OCA -->
+<section class="page" id="page-compl-operativo-nooca">
+  <div class="topbar">
+    <div><div class="ptitle">Resumen Operativo - NO OCA</div><div class="psub">Trabajos aprobados en curso · Hoja "Complementarios y presupuestos" · Tiempo real</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-operativo-nooca-jefe" onchange="window.renderComplementariosOperativoNoOca()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
+      <select id="f-operativo-nooca-servicio" onchange="window.renderComplementariosOperativoNoOca()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Complementarios - NO OCA</div><div class="cs">Tipo "NO OCA" · Aprobado · En proceso / No iniciado</div></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Jefe Zonal</th><th>Tipo</th><th>Servicio</th><th>Aprobación</th><th>Nombre del trabajo</th><th>Estado</th></tr></thead>
+      <tbody id="tb-operativo-nooca"></tbody>
+    </table></div>
+  </div>
+</section>
 <!-- NO OCA -->
 <section class="page" id="page-no-oca">
   <div class="topbar">
@@ -841,6 +875,16 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="card" style="margin-top:14px;"><div class="ch"><div><div class="ct">Top servicios por valor de venta</div><div class="cs">Todos los servicios ordenados de mayor a menor</div></div></div><div class="cwtall"><canvas id="ch-nooca-svc"></canvas></div></div>
   <div class="card" style="margin-top:14px;"><div class="ch"><div class="ct">Detalle por jefe zonal y servicio</div></div>
     <div class="tw"><table><thead><tr><th>Jefe Zonal</th><th>Venta</th><th>%</th><th style="border-left:1px solid var(--b);padding-left:16px;">Servicio</th><th>Venta</th><th>%</th></tr></thead><tbody id="tb-nooca"></tbody></table></div>
+  </div>
+</section>
+<!-- ADICIONALES NO OCA - RESUMEN OPERATIVO -->
+<section class="page" id="page-no-oca-resumen-operativo">
+  <div class="topbar">
+    <div><div class="ptitle">Adicionales No OCA - Resumen Operativo</div><div class="psub">Jefe Zonal → Servicio → Nombre del trabajo (Estado) · Fuente: Tabla Dinámica</div></div>
+  </div>
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Detalle jerárquico</div><div class="cs">Agrupado por Jefe Zonal y Servicio</div></div></div>
+    <div id="tree-no-oca-resumen" class="op-tree"></div>
   </div>
 </section>
 </main>
@@ -1019,6 +1063,8 @@ function renderAll(){
   renderComplementarios();
   if(COMPL_DATA.detalle.length>0) renderComplementariosPage();
   if(COMPL_DATA.operativo) renderComplementariosOperativo();
+  if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
+  if(NOOCA_RESUMEN_OPERATIVO.length>0) renderNoOcaResumenOperativo();
 }
 
 // ── HELPERS ──
@@ -2404,15 +2450,115 @@ window.renderComplementariosOperativo = function(){
   }
 };
 
+// ── Render Complementarios resumen operativo — Cuadro "NO OCA" ──
+window.renderComplementariosOperativoNoOca = function(){
+  const noOca = (COMPL_DATA.operativo && COMPL_DATA.operativo.noOca) || [];
+  const selJefe = document.getElementById('f-operativo-nooca-jefe');
+  const selSvc  = document.getElementById('f-operativo-nooca-servicio');
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value || '';
+
+  // Poblar filtro Jefe Zonal (col A)
+  if(selJefe && selJefe.options.length <= 1){
+    const jefes = [...new Set(noOca.map(r=>r.jefe))].filter(Boolean).sort();
+    jefes.forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  // Poblar filtro Servicio (col C)
+  if(selSvc && selSvc.options.length <= 1){
+    const servicios = [...new Set(noOca.map(r=>r.servicio))].filter(Boolean).sort();
+    servicios.forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+
+  const filas = noOca.filter(r => (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
+  const tb = document.getElementById('tb-operativo-nooca');
+  if(tb){
+    tb.innerHTML = filas.length ? filas.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${r.jefe||'—'}</td>
+        <td>${r.tipo||'—'}</td>
+        <td>${r.servicio||'—'}</td>
+        <td><span class="p p-ok">${r.aprobado||'—'}</span></td>
+        <td>${r.nombre||'—'}</td>
+        <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
+      </tr>`).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+};
+
+// ── Render Adicionales No OCA - Resumen Operativo (Jefe Zonal > Servicio > Nombre del Trabajo (Estado)) ──
+// Fuente: "Tabla Dinámica" — Col G(6)=Jefe Zonal, H(7)=Servicio, I(8)=Nombre del Trabajo, J(9)=Estado
+window.renderNoOcaResumenOperativo = function(){
+  const cont = document.getElementById('tree-no-oca-resumen');
+  if(!cont) return;
+
+  if(!NOOCA_RESUMEN_OPERATIVO.length){
+    cont.innerHTML = `<div style="text-align:center;color:var(--mu);padding:20px 0;font-size:12.5px;">Sin datos disponibles en "Tabla Dinámica"</div>`;
+    return;
+  }
+
+  // Agrupar: Jefe Zonal > Servicio > [{nombre, estado}]
+  const porJefe = {};
+  NOOCA_RESUMEN_OPERATIVO.forEach(r=>{
+    if(!porJefe[r.jefe]) porJefe[r.jefe] = {};
+    const svc = r.servicio || 'Sin servicio';
+    if(!porJefe[r.jefe][svc]) porJefe[r.jefe][svc] = [];
+    porJefe[r.jefe][svc].push({nombre: r.nombre, estado: r.estado});
+  });
+
+  cont.innerHTML = Object.keys(porJefe).sort().map(jefe=>{
+    const servicios = porJefe[jefe];
+    const totalTrabajos = Object.values(servicios).reduce((s,arr)=>s+arr.length, 0);
+    const serviciosHtml = Object.keys(servicios).sort().map(svc=>{
+      const trabajos = servicios[svc];
+      const trabajosHtml = trabajos.map(t=>`
+        <div class="op-trabajo-row">
+          <span class="op-trabajo-nombre">${t.nombre||'—'}</span>
+          <span class="p ${estadoOperativoCls(t.estado)}">${t.estado||'—'}</span>
+        </div>`).join('');
+      return `
+        <div class="op-servicio">
+          <div class="op-servicio-title">${svc} <span style="color:var(--mu);font-weight:400;text-transform:none;">(${trabajos.length})</span></div>
+          ${trabajosHtml}
+        </div>`;
+    }).join('');
+    return `
+      <details>
+        <summary>${jefe} <span style="color:var(--mu);font-weight:400;font-size:11px;">· ${totalTrabajos} trabajo${totalTrabajos!==1?'s':''}</span></summary>
+        ${serviciosHtml}
+      </details>`;
+  }).join('');
+};
+
+// ── Actualizar Adicionales No OCA - Resumen Operativo ──
+async function actualizarNoOcaResumenOperativo(){
+  try {
+    const rows = await fetchSheet(GS_COMPL, 'Tabla Dinámica');
+    NOOCA_RESUMEN_OPERATIVO = [];
+    rows.slice(1).forEach(row=>{
+      const jefe     = String(row[6]||'').trim();  // Col G — Jefe Zonal
+      const servicio = String(row[7]||'').trim();  // Col H — Servicio
+      const nombre   = String(row[8]||'').trim();  // Col I — Nombre del Trabajo
+      const estado   = String(row[9]||'').trim();  // Col J — Estado del trabajo
+      if(!jefe || !nombre) return;
+      NOOCA_RESUMEN_OPERATIVO.push({jefe, servicio, nombre, estado});
+    });
+    renderNoOcaResumenOperativo();
+    return true;
+  } catch(err) {
+    console.warn('Error Adicionales No OCA - Resumen Operativo:', err);
+    return false;
+  }
+}
+
 // ── Parseo de hoja "Complementarios y presupuestos" para el resumen operativo ──
 // Columnas (0-indexed): A(0)=Jefe Zonal, B(1)=Tipo, C(2)=Servicio, D(3)=Estado aprobación,
 // F(5)=N° de ticket, G(6)=Nombre del trabajo, H(7)=N° ODS, S(18)=Estado del trabajo
 function parseComplOperativo(rows){
   const sinPCP = [];
   const pcp = [];
+  const noOca = [];
   rows.slice(1).forEach(row=>{
     const jefe      = String(row[0]||'').trim();  // Col A — Jefe Zonal
-    const tipo      = String(row[1]||'').trim();  // Col B — "OCA"
+    const tipo      = String(row[1]||'').trim();  // Col B — "OCA" / "NO OCA"
     const servicio  = String(row[2]||'').trim();  // Col C — Servicio (o "PSP")
     const aprobado  = String(row[3]||'').trim();  // Col D — Estado de aprobación
     const ticket    = String(row[5]||'').trim();  // Col F — N° de ticket
@@ -2421,18 +2567,23 @@ function parseComplOperativo(rows){
     const estado    = String(row[18]||'').trim(); // Col S — Estado del trabajo
 
     const estadoValido = estado==='En proceso' || estado==='No iniciado';
-    if(!estadoValido || aprobado!=='Aprobado') return;
+    const estaAprobado = aprobado.toLowerCase()==='aprobado'; // admite "Aprobado" / "aprobado"
+    if(!estadoValido || !estaAprobado) return;
 
     // Cuadro 1 — "Complementarios OCA - Sin PCP": Col B = "OCA" y Col C ≠ "PSP"
-    if(tipo==='OCA' && servicio!=='PSP'){
+    if(tipo.toUpperCase()==='OCA' && servicio!=='PSP'){
       sinPCP.push({jefe, servicio, nombre, ods, estado});
     }
     // Cuadro 2 — "Complementarios PCP": Col C = "PSP" (únicamente)
     if(servicio==='PSP'){
       pcp.push({jefe, ticket, estado});
     }
+    // Cuadro 3 — "Resumen Operativo - NO OCA": Col B = "NO OCA" exactamente
+    if(tipo.toUpperCase()==='NO OCA'){
+      noOca.push({jefe, tipo, servicio, aprobado, nombre, estado});
+    }
   });
-  return {sinPCP, pcp};
+  return {sinPCP, pcp, noOca};
 }
 
 // ── Actualizar No OCA ──
@@ -3155,12 +3306,13 @@ async function actualizarComplementarios(){
       // F(5)=N° de ticket, G(6)=Nombre del trabajo, H(7)=N° ODS, S(18)=Estado del trabajo
       COMPL_DATA.operativo = parseComplOperativo(rowsDetalle);
     } else {
-      COMPL_DATA.operativo = {sinPCP: [], pcp: []};
+      COMPL_DATA.operativo = {sinPCP: [], pcp: [], noOca: []};
     }
     }
     setGsStatus('compl','ok');
     renderComplementariosPage();
     renderComplementariosOperativo();
+    renderComplementariosOperativoNoOca();
     return true;
   } catch(err) {
     console.warn('Error complementarios:', err);
@@ -3300,12 +3452,12 @@ async function actualizarSitiosGS(){
 }
 
 async function actualizarTodo(showToast=false){
-  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9] = await Promise.all([
+  const [ok1, ok2, ok3, ok4, ok5, ok6, ok7, ok8, ok9, ok10] = await Promise.all([
     actualizarCorrectivos(), actualizarFlota(),
     actualizarDotacion(), actualizarPreventivos(),
     actualizarComplementarios(), actualizarContratos(),
     actualizarNoOca(), actualizarSitiosGS(),
-    actualizarMaquinarias()
+    actualizarMaquinarias(), actualizarNoOcaResumenOperativo()
   ]);
   renderAll();
   if(showToast){
@@ -3374,8 +3526,9 @@ function injectRefreshButton(){
 // ══════════════════════════════════════════════════════
 let DOTACION_DATA = [];
 let PREV_DATA = [];
-let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: []}};
+let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: [], noOca: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
+let NOOCA_RESUMEN_OPERATIVO = []; // Adicionales No OCA - Resumen Operativo (fuente: Tabla Dinámica)
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
 let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
