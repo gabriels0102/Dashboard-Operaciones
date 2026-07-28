@@ -706,15 +706,16 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="topbar">
     <div><div class="ptitle">Control - Auditoría</div><div class="psub" id="aud-psub">Cargando datos en tiempo real...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-aud-mes" onchange="window.renderAuditoria()" style="min-width:160px;"><option value="">Todos los meses</option></select>
       <select id="f-aud-jefe" onchange="window.renderAuditoria()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
       <select id="f-aud-servicio" onchange="window.renderAuditoria()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
     </div>
   </div>
   <div class="kg" id="k-auditoria" style="margin-bottom:14px;"></div>
   <div class="card">
-    <div class="ch"><div><div class="ct">Detalle de relevamiento</div><div class="cs">Jefe Zonal, Servicio y Estado según el último mes cargado (columnas C:J)</div></div></div>
+    <div class="ch"><div><div class="ct">Detalle de relevamiento</div><div class="cs" id="aud-cs">Jefe Zonal, Servicio y Estado por mes (columnas C:J)</div></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>Estado del relevamiento</th></tr></thead>
+      <thead id="aud-thead"></thead>
       <tbody id="tb-auditoria"></tbody>
     </table></div>
   </div>
@@ -1062,7 +1063,7 @@ function renderAll(){
   if(COMPL_DATA.detalle.length>0) renderComplementariosPage();
   if(COMPL_DATA.operativo) renderComplementariosOperativo();
   if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
-  if(AUDITORIA_DATA.length>0) renderAuditoria();
+  if(AUDITORIA_DATA.filas.length>0) renderAuditoria();
 }
 
 // ── HELPERS ──
@@ -3154,29 +3155,36 @@ async function actualizarMaquinarias(){
 }
 
 // ── Control - Auditoría: extracción de datos (hoja "Control - Auditoria") ──
-// Columna A(0)=Jefe Zonal, B(1)=Servicio, C:J(2:10)=Datos de los meses (RELEVADO / NO RELEVADO)
+// Columna A(0)=Jefe Zonal, B(1)=Servicio, C:J(2:10)=Datos por mes (encabezado = nombre del mes, ej. "MAYO 2026")
 async function actualizarAuditoria(){
   try{
     const rows = await fetchSheet(GS_AUDITORIA, 'Control - Auditoria');
-    const datos = [];
+    if(!rows.length) return true;
+
+    // Detectar qué columnas C:J tienen un mes cargado (encabezado no vacío)
+    const header = rows[0] || [];
+    const mesesCols = [];
+    for(let idx=2; idx<=9; idx++){
+      const label = String(header[idx]||'').trim();
+      if(label) mesesCols.push({label, idx});
+    }
+
+    const filas = [];
     rows.slice(1).forEach(row=>{
       const jefe = String(row[0]||'').trim();
       const servicio = String(row[1]||'').trim();
       if(!jefe || !servicio) return;
-
-      // Meses = columnas C:J (índices 2 a 9). Tomamos el último mes con dato cargado
-      // como el estado vigente del relevamiento.
-      const meses = row.slice(2, 10).map(v=>String(v||'').trim().toUpperCase());
-      let estado = '';
-      for(let i=meses.length-1; i>=0; i--){
-        if(meses[i]){ estado = meses[i]; break; }
-      }
-      datos.push({jefe, servicio, estado: estado || 'SIN DATOS'});
+      const valores = {};
+      mesesCols.forEach(({label, idx})=>{
+        valores[label] = String(row[idx]||'').trim().toUpperCase() || 'SIN DATOS';
+      });
+      filas.push({jefe, servicio, valores});
     });
-    AUDITORIA_DATA = datos;
+
+    AUDITORIA_DATA = {meses: mesesCols.map(m=>m.label), filas};
 
     const psub = document.getElementById('aud-psub');
-    if(psub) psub.textContent = `${AUDITORIA_DATA.length} registros · hoja "Control - Auditoria"`;
+    if(psub) psub.textContent = `${filas.length} registros × ${AUDITORIA_DATA.meses.length} meses · hoja "Control - Auditoria"`;
 
     renderAuditoria();
     return true;
@@ -3186,48 +3194,78 @@ async function actualizarAuditoria(){
   }
 }
 
-// ── Control - Auditoría: cuadros resumen (totales / % cumplimiento / % no cumplimiento) + tabla ──
+// Formatea "MAYO 2026" → "Mayo 2026"
+function capMes(s){
+  return String(s).toLowerCase().replace(/(^|\s)\S/g, l=>l.toUpperCase());
+}
+
+// ── Control - Auditoría: cuadros resumen + tabla mensual (un mes o todos los meses juntos) ──
 window.renderAuditoria = function(){
+  const selMes  = document.getElementById('f-aud-mes');
   const selJefe = document.getElementById('f-aud-jefe');
   const selSvc  = document.getElementById('f-aud-servicio');
-  const fj = selJefe?.value || '';
-  const fs = selSvc?.value || '';
 
+  if(selMes && selMes.options.length <= 1){
+    AUDITORIA_DATA.meses.forEach(m=>{ selMes.innerHTML += `<option value="${m}">${capMes(m)}</option>`; });
+  }
   if(selJefe && selJefe.options.length <= 1){
-    const jefes = [...new Set(AUDITORIA_DATA.map(r=>r.jefe))].filter(Boolean).sort();
+    const jefes = [...new Set(AUDITORIA_DATA.filas.map(r=>r.jefe))].filter(Boolean).sort();
     jefes.forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
   }
   if(selSvc && selSvc.options.length <= 1){
-    const servicios = [...new Set(AUDITORIA_DATA.map(r=>r.servicio))].filter(Boolean).sort();
+    const servicios = [...new Set(AUDITORIA_DATA.filas.map(r=>r.servicio))].filter(Boolean).sort();
     servicios.forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
   }
 
-  const filas = AUDITORIA_DATA.filter(r => (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
+  const fm = selMes?.value || '';
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value || '';
 
-  // ── Cuadros resumen ──
-  const total = filas.length;
-  const relevados = filas.filter(r=>r.estado==='RELEVADO').length;
-  const noRelevados = filas.filter(r=>r.estado==='NO RELEVADO').length;
+  const filas = AUDITORIA_DATA.filas.filter(r => (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
+  const meses = fm ? [fm] : AUDITORIA_DATA.meses; // "Todos los meses" → todos juntos, uno al lado del otro
+
+  // ── Cuadros resumen: cuentan cada combinación Jefe+Servicio+Mes visible ──
+  let total = 0, relevados = 0, noRelevados = 0;
+  filas.forEach(r=>{
+    meses.forEach(m=>{
+      const v = r.valores[m];
+      if(v===undefined) return;
+      total++;
+      if(v==='RELEVADO') relevados++;
+      else if(v==='NO RELEVADO') noRelevados++;
+    });
+  });
   const pctCumple = total ? Math.round((relevados/total)*100) : 0;
   const pctNoCumple = total ? Math.round((noRelevados/total)*100) : 0;
 
   const kEl = document.getElementById('k-auditoria');
   if(kEl){
     kEl.innerHTML = `
-      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Jefe Zonal × Servicio</div></div>
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">${fm?capMes(fm):'Todos los meses'} · Jefe Zonal × Servicio</div></div>
       <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${relevados} relevados</div></div>
       <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noRelevados} no relevados</div></div>`;
   }
 
-  // ── Tabla de detalle ──
+  const csEl = document.getElementById('aud-cs');
+  if(csEl) csEl.textContent = fm ? `Jefe Zonal, Servicio y Estado — ${capMes(fm)}` : 'Jefe Zonal, Servicio y Estado por mes (todos los meses juntos)';
+
+  // ── Tabla: cabecera dinámica (1 columna si hay un mes filtrado, N columnas si son todos) ──
+  const thead = document.getElementById('aud-thead');
+  if(thead){
+    thead.innerHTML = `<tr><th>Jefe Zonal</th><th>Servicio</th>${meses.map(m=>`<th>${capMes(m)}</th>`).join('')}</tr>`;
+  }
+
   const tb = document.getElementById('tb-auditoria');
   if(tb){
     tb.innerHTML = filas.length ? filas.map(r=>`
       <tr>
         <td style="font-weight:600;">${r.jefe}</td>
         <td>${r.servicio}</td>
-        <td><span class="p ${r.estado==='RELEVADO'?'p-ok':r.estado==='NO RELEVADO'?'p-err':'p-mu'}">${r.estado}</span></td>
-      </tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+        ${meses.map(m=>{
+          const v = r.valores[m] || 'SIN DATOS';
+          return `<td><span class="p ${v==='RELEVADO'?'p-ok':v==='NO RELEVADO'?'p-err':'p-mu'}">${v}</span></td>`;
+        }).join('')}
+      </tr>`).join('') : `<tr><td colspan="${2+meses.length}" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 };
 
@@ -3539,7 +3577,7 @@ let DOTACION_DATA = [];
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: [], noOca: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
-let AUDITORIA_DATA = []; // Control - Auditoría → [{jefe, servicio, estado}]
+let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
 let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
