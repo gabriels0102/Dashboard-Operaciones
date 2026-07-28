@@ -271,6 +271,9 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="nav-section">Maquinarias</div>
     <button class="ni" data-page="maquinarias"><span class="ni-icon">🚜</span><span class="ni-label">Detalle de Máquinas</span></button>
 
+    <div class="nav-section">Herramientas</div>
+    <button class="ni" data-page="auditoria"><span class="ni-icon">🔍</span><span class="ni-label">Control - Auditoría</span></button>
+
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
     
@@ -698,6 +701,25 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
 </section>
 
+<!-- CONTROL - AUDITORIA -->
+<section class="page" id="page-auditoria">
+  <div class="topbar">
+    <div><div class="ptitle">Control - Auditoría</div><div class="psub" id="aud-psub">Cargando datos en tiempo real...</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-aud-jefe" onchange="window.renderAuditoria()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
+      <select id="f-aud-servicio" onchange="window.renderAuditoria()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
+    </div>
+  </div>
+  <div class="kg" id="k-auditoria" style="margin-bottom:14px;"></div>
+  <div class="card">
+    <div class="ch"><div><div class="ct">Detalle de relevamiento</div><div class="cs">Jefe Zonal, Servicio y Estado según el último mes cargado (columnas C:J)</div></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>Estado del relevamiento</th></tr></thead>
+      <tbody id="tb-auditoria"></tbody>
+    </table></div>
+  </div>
+</section>
+
 <!-- DOTACION -->
 <section class="page" id="page-dotacion">
   <div class="topbar">
@@ -1040,6 +1062,7 @@ function renderAll(){
   if(COMPL_DATA.detalle.length>0) renderComplementariosPage();
   if(COMPL_DATA.operativo) renderComplementariosOperativo();
   if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
+  if(AUDITORIA_DATA.length>0) renderAuditoria();
 }
 
 // ── HELPERS ──
@@ -2594,6 +2617,7 @@ const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qx
 const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycby4uQ4OiPkTrY96Puy8d5vPaO77Qv2QtFzJP4gc26BWfLUexXm5T0pekMkrtsum69N7Ew/exec";
 const GS_SITIOS      = "https://script.google.com/macros/s/AKfycbzABBckbx9Twj9DgGsoAxBSolfhNwN2I_YbYccajMI29oN0gL9H27sLFSibiYmZd4gd/exec";
 const GS_MAQUINARIAS = "https://script.google.com/macros/s/AKfycbyo1aWEVL8Y9TngbRQhspIfRGnf9-xF5K1fuT5jckYvklnzD1fAngRdr5fBy9ncIjPB3Q/exec";
+const GS_AUDITORIA   = "https://script.google.com/macros/s/AKfycbzrY4TevvLFadWfbQkwjCmxKvsQleqqChomW0JZmeKGaqwi3E7RmfHI8cspWNE6izNWRg/exec";
 const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
 let lastUpdateCorr   = null;
 let lastUpdateFlota  = null;
@@ -3129,6 +3153,84 @@ async function actualizarMaquinarias(){
   }
 }
 
+// ── Control - Auditoría: extracción de datos (hoja "Control - Auditoria") ──
+// Columna A(0)=Jefe Zonal, B(1)=Servicio, C:J(2:10)=Datos de los meses (RELEVADO / NO RELEVADO)
+async function actualizarAuditoria(){
+  try{
+    const rows = await fetchSheet(GS_AUDITORIA, 'Control - Auditoria');
+    const datos = [];
+    rows.slice(1).forEach(row=>{
+      const jefe = String(row[0]||'').trim();
+      const servicio = String(row[1]||'').trim();
+      if(!jefe || !servicio) return;
+
+      // Meses = columnas C:J (índices 2 a 9). Tomamos el último mes con dato cargado
+      // como el estado vigente del relevamiento.
+      const meses = row.slice(2, 10).map(v=>String(v||'').trim().toUpperCase());
+      let estado = '';
+      for(let i=meses.length-1; i>=0; i--){
+        if(meses[i]){ estado = meses[i]; break; }
+      }
+      datos.push({jefe, servicio, estado: estado || 'SIN DATOS'});
+    });
+    AUDITORIA_DATA = datos;
+
+    const psub = document.getElementById('aud-psub');
+    if(psub) psub.textContent = `${AUDITORIA_DATA.length} registros · hoja "Control - Auditoria"`;
+
+    renderAuditoria();
+    return true;
+  }catch(err){
+    console.warn('Error Control - Auditoría:', err);
+    return false;
+  }
+}
+
+// ── Control - Auditoría: cuadros resumen (totales / % cumplimiento / % no cumplimiento) + tabla ──
+window.renderAuditoria = function(){
+  const selJefe = document.getElementById('f-aud-jefe');
+  const selSvc  = document.getElementById('f-aud-servicio');
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value || '';
+
+  if(selJefe && selJefe.options.length <= 1){
+    const jefes = [...new Set(AUDITORIA_DATA.map(r=>r.jefe))].filter(Boolean).sort();
+    jefes.forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  if(selSvc && selSvc.options.length <= 1){
+    const servicios = [...new Set(AUDITORIA_DATA.map(r=>r.servicio))].filter(Boolean).sort();
+    servicios.forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+
+  const filas = AUDITORIA_DATA.filter(r => (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
+
+  // ── Cuadros resumen ──
+  const total = filas.length;
+  const relevados = filas.filter(r=>r.estado==='RELEVADO').length;
+  const noRelevados = filas.filter(r=>r.estado==='NO RELEVADO').length;
+  const pctCumple = total ? Math.round((relevados/total)*100) : 0;
+  const pctNoCumple = total ? Math.round((noRelevados/total)*100) : 0;
+
+  const kEl = document.getElementById('k-auditoria');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Jefe Zonal × Servicio</div></div>
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${relevados} relevados</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noRelevados} no relevados</div></div>`;
+  }
+
+  // ── Tabla de detalle ──
+  const tb = document.getElementById('tb-auditoria');
+  if(tb){
+    tb.innerHTML = filas.length ? filas.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${r.jefe}</td>
+        <td>${r.servicio}</td>
+        <td><span class="p ${r.estado==='RELEVADO'?'p-ok':r.estado==='NO RELEVADO'?'p-err':'p-mu'}">${r.estado}</span></td>
+      </tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+};
+
 // ── Actualización completa ──
 // ── Actualizar Complementarios ──
 async function actualizarComplementarios(){
@@ -3367,6 +3469,7 @@ async function actualizarTodo(showToast=false){
     actualizarNoOca(), actualizarSitiosGS(),
     actualizarMaquinarias()
   ]);
+  actualizarAuditoria(); // no bloquea el resto del ciclo de actualización
   renderAll();
   if(showToast){
     const all = ok1&&ok2&&ok3&&ok4&&ok5&&ok6;
@@ -3436,6 +3539,7 @@ let DOTACION_DATA = [];
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: [], noOca: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
+let AUDITORIA_DATA = []; // Control - Auditoría → [{jefe, servicio, estado}]
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
 let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
