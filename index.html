@@ -252,7 +252,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
-    <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de Ley - OCA</span></button>
+    <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de ley</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
 
     <div class="nav-section">Adicionales Resumen Operativo</div>
@@ -543,13 +543,14 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <!-- SITIOS -->
 <section class="page" id="page-sitios">
-  <div class="topbar"><div><div class="ptitle">Abonos de Ley - OCA</div></div><button class="btn btn-p" onclick="abrirModalSitio()">+ Nuevo sitio</button></div>
+  <div class="topbar"><div><div class="ptitle">Abonos de ley</div><div class="psub" id="ably-psub">Cargando datos en tiempo real...</div></div></div>
   <div class="fb">
-    <label>Zonal:</label><select id="f-sit-zonal" onchange="renderSitios()" style="min-width:180px;"><option value="">Todos</option></select>
-    <label>Estado:</label><select id="f-sit-est" onchange="renderSitios()" style="min-width:130px;"><option value="">Todos</option><option value="vencido">Con vencidos</option><option value="vence pronto">Con vence pronto</option><option value="No realizado">Con no realizados</option></select>
-    <input type="text" id="f-sit-busq" placeholder="Buscar sitio..." style="width:170px;" oninput="renderSitios()"/>
+    <label>Jefe Zonal:</label><select id="f-ably-jefe" onchange="renderAbonosLey()" style="min-width:180px;"><option value="">Todos</option></select>
+    <label>Servicio:</label><select id="f-ably-servicio" onchange="renderAbonosLey()" style="min-width:180px;"><option value="">Todos</option></select>
+    <label>Tipo:</label><select id="f-ably-tipo" onchange="renderAbonosLey()" style="min-width:140px;"><option value="">Todos</option></select>
+    <label>Vigencia:</label><select id="f-ably-vigencia" onchange="renderAbonosLey()" style="min-width:140px;"><option value="">Todas</option></select>
   </div>
-  <div id="sitios-cont"></div>
+  <div id="abonos-ley-cont" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;"></div>
 </section>
 
 <!-- MODAL SITIO -->
@@ -1064,6 +1065,7 @@ function renderAll(){
   if(COMPL_DATA.operativo) renderComplementariosOperativo();
   if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
   if(AUDITORIA_DATA.filas.length>0) renderAuditoria();
+  if(ABONOS_LEY_DATA.length>0) renderAbonosLey();
 }
 
 // ── HELPERS ──
@@ -1117,7 +1119,13 @@ function renderDashboard(){
   const prevComp = PREV_DATA.filter(d=>d.estado==='Completada').length;
   const pctPrev = prevTot>0?Math.round(prevComp/prevTot*100):0;
   let abonosVig=0, abonosTot=0;
-  if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{const est=s.servicios?.[ab.id]||"N/A";if(est==="N/A")return;abonosTot++;if(est==="vigente"||est==="vence pronto")abonosVig++;}));
+  ABONOS_LEY_DATA.forEach(r=>{
+    const v = String(r.vigencia||'').trim();
+    if(!v || v.toUpperCase()==='N/A') return;
+    abonosTot++;
+    const cls = vigenciaCls(v);
+    if(cls==='p-ok' || cls==='p-warn') abonosVig++; // vigente o próximo a vencer cuentan como "cobertura"
+  });
   const pctAbonos = abonosTot>0?Math.round(abonosVig/abonosTot*100):0;
 
   // Arc 0 — % cerrados from Col T (last value in SERIE.T)
@@ -1256,10 +1264,9 @@ function renderDashboard(){
     ? {icon:'📋', txt:`${noComp} preventivos no completados`, cls:'al-warn'}
     : {icon:'✅', txt:'Preventivos al día', cls:'al-ok'};
   // Slot 4: Abonos de ley
-  let abonosVenc=0;
-  if(sitios.length) sitios.forEach(s=>ABONOS.forEach(ab=>{if((s.servicios?.[ab.id]||'N/A')==='vencido')abonosVenc++;}));
+  const abonosVenc = ABONOS_LEY_DATA.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
   const alerta4 = abonosVenc>0
-    ? {icon:'📑', txt:`${abonosVenc} abonos vencidos`, sub:'Revisar sitios críticos', cls:'al-err'}
+    ? {icon:'📑', txt:`${abonosVenc} abonos vencidos`, sub:'Revisar Abonos de ley', cls:'al-err'}
     : {icon:'✅', txt:'Abonos al día', cls:'al-ok'};
   const alertas5 = [alerta0, alerta1, alerta2, alerta3, alerta4];
   const strip=document.getElementById('alertas-strip');
@@ -2617,6 +2624,7 @@ const GS_PREV        = "https://script.google.com/macros/s/AKfycby8xumMghsFwHw5U
 const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qxfKWPdopWMVn7uV2WDIpc0I6hLvoUImEJAaGwEnGbHaIvvy8_d7X6Q/exec";
 const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycby4uQ4OiPkTrY96Puy8d5vPaO77Qv2QtFzJP4gc26BWfLUexXm5T0pekMkrtsum69N7Ew/exec";
 const GS_SITIOS      = "https://script.google.com/macros/s/AKfycbzABBckbx9Twj9DgGsoAxBSolfhNwN2I_YbYccajMI29oN0gL9H27sLFSibiYmZd4gd/exec";
+const GS_ABONOS_LEY  = "https://script.google.com/macros/s/AKfycbyf-ToIQ9g4onwmS1R3KApcZpmr3k_efLpKrolweYdJ6TMXxc2ZKxZPHQCY_ZA0NRTl/exec";
 const GS_MAQUINARIAS = "https://script.google.com/macros/s/AKfycbyo1aWEVL8Y9TngbRQhspIfRGnf9-xF5K1fuT5jckYvklnzD1fAngRdr5fBy9ncIjPB3Q/exec";
 const GS_AUDITORIA   = "https://script.google.com/macros/s/AKfycbzrY4TevvLFadWfbQkwjCmxKvsQleqqChomW0JZmeKGaqwi3E7RmfHI8cspWNE6izNWRg/exec";
 const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
@@ -3269,6 +3277,99 @@ window.renderAuditoria = function(){
   }
 };
 
+// ── Abonos de ley: extracción de datos (hoja "Consolidado") ──
+// A(0)=Empresa, B(1)=Jefe Zonal, C(2)=OCA/NO OCA, D(3)=CECO, E(4)=Servicio,
+// F(5)=Clasificación, G(6)=Tipo, H(7)=Estado, I(8)=Frecuencia,
+// J(9)=Fecha de realización, K(10)=Fecha de vencimiento, M(12)=Vigencia
+async function actualizarAbonosLey(){
+  try{
+    const rows = await fetchSheet(GS_ABONOS_LEY, 'Consolidado');
+    const datos = [];
+    rows.slice(1).forEach(row=>{
+      const clasificacion = String(row[5]||'').trim();
+      if(clasificacion !== 'Abonos de ley') return; // filtro estricto por Columna F
+
+      datos.push({
+        empresa:    String(row[0]||'').trim(),
+        jefe:       String(row[1]||'').trim(),
+        ocaNoOca:   String(row[2]||'').trim(),
+        servicio:   String(row[4]||'').trim(),
+        tipo:       String(row[6]||'').trim(),
+        estado:     String(row[7]||'').trim(),
+        vencimiento:String(row[10]||'').trim(),
+        vigencia:   String(row[12]||'').trim()
+      });
+    });
+    ABONOS_LEY_DATA = datos;
+
+    const psub = document.getElementById('ably-psub');
+    if(psub) psub.textContent = `${ABONOS_LEY_DATA.length} registros · hoja "Consolidado" (Clasificación = Abonos de ley)`;
+
+    renderAbonosLey();
+    renderDashboard(); // refresca el KPI "% Cobertura de Activos Críticos" del home
+    return true;
+  }catch(err){
+    console.warn('Error Abonos de ley:', err);
+    return false;
+  }
+}
+
+function vigenciaCls(v){
+  const t = String(v||'').toLowerCase();
+  if(t.includes('venc')) return 'p-err';
+  if(t.includes('próx') || t.includes('prox') || t.includes('pronto')) return 'p-warn';
+  if(t.includes('vig')) return 'p-ok';
+  return 'p-mu';
+}
+
+// ── Abonos de ley: cards + filtros (Jefe Zonal, Servicio, Tipo, Vigencia) ──
+window.renderAbonosLey = function(){
+  const selJefe = document.getElementById('f-ably-jefe');
+  const selSvc  = document.getElementById('f-ably-servicio');
+  const selTipo = document.getElementById('f-ably-tipo');
+  const selVig  = document.getElementById('f-ably-vigencia');
+
+  if(selJefe && selJefe.options.length <= 1){
+    [...new Set(ABONOS_LEY_DATA.map(r=>r.jefe))].filter(Boolean).sort().forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  if(selSvc && selSvc.options.length <= 1){
+    [...new Set(ABONOS_LEY_DATA.map(r=>r.servicio))].filter(Boolean).sort().forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+  if(selTipo && selTipo.options.length <= 1){
+    [...new Set(ABONOS_LEY_DATA.map(r=>r.tipo))].filter(Boolean).sort().forEach(t=>{ selTipo.innerHTML += `<option value="${t}">${t}</option>`; });
+  }
+  if(selVig && selVig.options.length <= 1){
+    [...new Set(ABONOS_LEY_DATA.map(r=>r.vigencia))].filter(Boolean).sort().forEach(v=>{ selVig.innerHTML += `<option value="${v}">${v}</option>`; });
+  }
+
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value  || '';
+  const ft = selTipo?.value || '';
+  const fv = selVig?.value  || '';
+
+  const filas = ABONOS_LEY_DATA.filter(r =>
+    (!fj || r.jefe===fj) && (!fs || r.servicio===fs) && (!ft || r.tipo===ft) && (!fv || r.vigencia===fv)
+  );
+
+  const cont = document.getElementById('abonos-ley-cont');
+  if(!cont) return;
+  cont.innerHTML = filas.length ? filas.map(r=>`
+    <div class="sc">
+      <div class="sh">
+        <div>
+          <div class="sn">${r.servicio||'—'}</div>
+          <div class="sm">${r.empresa||'—'} · ${r.jefe||'—'} · ${r.ocaNoOca||'—'}</div>
+        </div>
+        <span class="p ${vigenciaCls(r.vigencia)}">${r.vigencia||'—'}</span>
+      </div>
+      <div class="sr">
+        <span class="p p-mu">Tipo: ${r.tipo||'—'}</span>
+        <span class="p p-mu">Estado: ${r.estado||'—'}</span>
+        <span class="p p-mu">Vence: ${r.vencimiento||'—'}</span>
+      </div>
+    </div>`).join('') : `<div style="grid-column:1/-1;text-align:center;color:var(--mu);padding:40px;">Sin registros para el filtro seleccionado</div>`;
+};
+
 // ── Actualización completa ──
 // ── Actualizar Complementarios ──
 async function actualizarComplementarios(){
@@ -3508,6 +3609,7 @@ async function actualizarTodo(showToast=false){
     actualizarMaquinarias()
   ]);
   actualizarAuditoria(); // no bloquea el resto del ciclo de actualización
+  actualizarAbonosLey(); // no bloquea el resto del ciclo de actualización
   renderAll();
   if(showToast){
     const all = ok1&&ok2&&ok3&&ok4&&ok5&&ok6;
@@ -3578,6 +3680,7 @@ let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: [], noOca: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
+let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
 let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
