@@ -550,6 +550,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <label>Tipo:</label><select id="f-ably-tipo" onchange="renderAbonosLey()" style="min-width:140px;"><option value="">Todos</option></select>
     <label>Vigencia:</label><select id="f-ably-vigencia" onchange="renderAbonosLey()" style="min-width:140px;"><option value="">Todas</option></select>
   </div>
+  <div class="kg" id="k-ably" style="margin-bottom:14px;"></div>
   <div id="abonos-ley-cont" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;"></div>
 </section>
 
@@ -3290,6 +3291,11 @@ async function actualizarAbonosLey(){
       // El dato real en la planilla es "Abono de Ley" (singular); admitimos también el plural por robustez.
       if(clasificacion !== 'abono de ley' && clasificacion !== 'abonos de ley') return;
 
+      const vigencia = String(row[12]||'').trim();
+      const vigenciaNorm = vigencia.toLowerCase();
+      // "Sin datos" y "Obsoleto" quedan fuera de todo el análisis (no cuentan ni se muestran)
+      if(vigenciaNorm === 'sin datos' || vigenciaNorm === 'obsoleto') return;
+
       datos.push({
         empresa:    String(row[0]||'').trim(),
         jefe:       String(row[1]||'').trim(),
@@ -3298,7 +3304,7 @@ async function actualizarAbonosLey(){
         tipo:       String(row[6]||'').trim(),
         estado:     String(row[7]||'').trim(),
         vencimiento:String(row[10]||'').trim(),
-        vigencia:   String(row[12]||'').trim()
+        vigencia
       });
     });
     ABONOS_LEY_DATA = datos;
@@ -3352,6 +3358,21 @@ window.renderAbonosLey = function(){
   const filas = ABONOS_LEY_DATA.filter(r =>
     (!fj || r.jefe===fj) && (!fs || r.servicio===fs) && (!ft || r.tipo===ft) && (!fv || r.vigencia===fv)
   );
+
+  // ── Cuadros resumen (se recalculan según los filtros activos) ──
+  const total = filas.length;
+  const cumplen = filas.filter(r=>{const c=vigenciaCls(r.vigencia); return c==='p-ok'||c==='p-warn';}).length;
+  const noCumplen = filas.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
+  const pctCumple = total ? Math.round((cumplen/total)*100) : 0;
+  const pctNoCumple = total ? Math.round((noCumplen/total)*100) : 0;
+
+  const kEl = document.getElementById('k-ably');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Abonos de Ley</div></div>
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${cumplen} vigentes / cerca de vencer</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noCumplen} vencidos</div></div>`;
+  }
 
   const cont = document.getElementById('abonos-ley-cont');
   if(!cont) return;
