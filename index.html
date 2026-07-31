@@ -3278,16 +3278,17 @@ window.renderAuditoria = function(){
 };
 
 // ── Abonos de ley: extracción de datos (hoja "Consolidado") ──
-// A(0)=Empresa, B(1)=Jefe Zonal, C(2)=OCA/NO OCA, D(3)=CECO, E(4)=Servicio,
-// F(5)=Clasificación, G(6)=Tipo, H(7)=Estado, I(8)=Frecuencia,
-// J(9)=Fecha de realización, K(10)=Fecha de vencimiento, M(12)=Vigencia
+// A(0)=Empresa, B(1)=Jefe Zonal, C(2)=OCA/NO OCA, D(3)=CECO, E(4)=Servicio (Cliente),
+// F(5)=Clasificacion, G(6)=Tipo, H(7)=Estado, I(8)=Frecuencia,
+// J(9)=Fecha de Realizacion, K(10)=Fecha de Finalización (vencimiento), M(12)=Vigencia
 async function actualizarAbonosLey(){
   try{
     const rows = await fetchSheet(GS_ABONOS_LEY, 'Consolidado');
     const datos = [];
     rows.slice(1).forEach(row=>{
-      const clasificacion = String(row[5]||'').trim();
-      if(clasificacion !== 'Abonos de ley') return; // filtro estricto por Columna F
+      const clasificacion = String(row[5]||'').trim().toLowerCase();
+      // El dato real en la planilla es "Abono de Ley" (singular); admitimos también el plural por robustez.
+      if(clasificacion !== 'abono de ley' && clasificacion !== 'abonos de ley') return;
 
       datos.push({
         empresa:    String(row[0]||'').trim(),
@@ -3303,7 +3304,7 @@ async function actualizarAbonosLey(){
     ABONOS_LEY_DATA = datos;
 
     const psub = document.getElementById('ably-psub');
-    if(psub) psub.textContent = `${ABONOS_LEY_DATA.length} registros · hoja "Consolidado" (Clasificación = Abonos de ley)`;
+    if(psub) psub.textContent = `${ABONOS_LEY_DATA.length} registros · hoja "Consolidado" (Clasificación = Abono de Ley)`;
 
     renderAbonosLey();
     renderDashboard(); // refresca el KPI "% Cobertura de Activos Críticos" del home
@@ -3316,10 +3317,11 @@ async function actualizarAbonosLey(){
 
 function vigenciaCls(v){
   const t = String(v||'').toLowerCase();
-  if(t.includes('venc')) return 'p-err';
-  if(t.includes('próx') || t.includes('prox') || t.includes('pronto')) return 'p-warn';
-  if(t.includes('vig')) return 'p-ok';
-  return 'p-mu';
+  // Primero los estados de alerta "próximo a vencer" (contienen la palabra "vencer", no confundir con "vencido")
+  if(t.includes('cerca de vencer') || t.includes('por vencer') || t.includes('próx') || t.includes('prox') || t.includes('pronto')) return 'p-warn';
+  if(t.includes('vencido') || t.includes('vencida')) return 'p-err';
+  if(t.includes('vigente')) return 'p-ok';
+  return 'p-mu'; // No corresponde, No realizado, Sin datos, etc.
 }
 
 // ── Abonos de ley: cards + filtros (Jefe Zonal, Servicio, Tipo, Vigencia) ──
