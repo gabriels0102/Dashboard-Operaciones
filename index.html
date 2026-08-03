@@ -3713,9 +3713,13 @@ function parseDotacion(rows){
   // HOJA: Dotacion - Relevamiento
   // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO
   // D(3)=CANTIDAD APROBADA, E(4)=CANTIDAD RELEVADA, F(5)=CECO
+  // I(8)=Incluir en análisis ("Si" = se incluye, "No" = se excluye)
   const result = [];
   rows.slice(1).forEach(row => {
     if(!row[1] && !row[2]) return;
+    // Columna I: solo las filas marcadas "Si" entran al análisis; "No" se excluye por completo.
+    const incluir = String(row[8]||'').trim().toLowerCase();
+    if(incluir !== 'si' && incluir !== 'sí') return;
     const empresa  = String(row[0]||'').trim();
     const jefe     = String(row[1]||'').trim();
     const servicio = String(row[2]||'').trim();
