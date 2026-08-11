@@ -841,7 +841,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div><div class="ct">Complementarios OCA - Sin PCP</div><div class="cs">Tipo "OCA" · Servicio ≠ "PSP" · Aprobado · En proceso / No iniciado</div></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>Nombre del trabajo</th><th>N° ODS</th><th>Estado</th></tr></thead>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>Nombre del trabajo</th><th>N° ODS</th><th>Estado</th><th>Fecha de inicio contractual</th><th>Fecha de finalización contractual</th><th>Valor de venta</th></tr></thead>
       <tbody id="tb-operativo-sinpcp"></tbody>
     </table></div>
   </div>
@@ -2440,7 +2440,10 @@ window.renderComplementariosOperativo = function(){
         <td>${r.nombre||'—'}</td>
         <td style="font-family:'JetBrains Mono';">${r.ods||'—'}</td>
         <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
-      </tr>`).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+        <td style="font-family:'JetBrains Mono';">${r.fechaInicio||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${r.fechaFin||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${r.valorVenta||'—'}</td>
+      </tr>`).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 
   // ── Cuadro 2: Complementarios PCP ──
@@ -2504,6 +2507,9 @@ function parseComplOperativo(rows){
     const ticket    = String(row[5]||'').trim();  // Col F — N° de ticket
     const nombre    = String(row[6]||'').trim();  // Col G — Nombre del trabajo
     const ods       = String(row[7]||'').trim();  // Col H — N° ODS
+    const fechaInicio = String(row[9]||'').trim();  // Col J — Fecha de inicio contractual
+    const fechaFin    = String(row[10]||'').trim(); // Col K — Fecha de finalización contractual
+    const valorVenta  = String(row[29]||'').trim(); // Col AD — Valor de venta
     const estado    = String(row[18]||'').trim(); // Col S — Estado del trabajo
 
     const estadoValido = estado==='En proceso' || estado==='No iniciado';
@@ -2512,7 +2518,7 @@ function parseComplOperativo(rows){
 
     // Cuadro 1 — "Complementarios OCA - Sin PCP": Col B = "OCA" y Col C ≠ "PSP"
     if(tipo.toUpperCase()==='OCA' && servicio!=='PSP'){
-      sinPCP.push({jefe, servicio, nombre, ods, estado});
+      sinPCP.push({jefe, servicio, nombre, ods, estado, fechaInicio, fechaFin, valorVenta});
     }
     // Cuadro 2 — "Complementarios PCP": Col C = "PSP" (únicamente)
     if(servicio==='PSP'){
