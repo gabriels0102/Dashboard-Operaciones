@@ -2442,7 +2442,7 @@ window.renderComplementariosOperativo = function(){
         <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
         <td style="font-family:'JetBrains Mono';">${r.fechaInicio||'—'}</td>
         <td style="font-family:'JetBrains Mono';">${r.fechaFin||'—'}</td>
-        <td style="font-family:'JetBrains Mono';">${r.valorVenta||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${fmtARS(parseFloat(r.valorVenta))}</td>
       </tr>`).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 
