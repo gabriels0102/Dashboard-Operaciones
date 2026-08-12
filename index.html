@@ -848,7 +848,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div><div class="ct">Complementarios PCP</div><div class="cs">Servicio = "PSP" · Aprobado · En proceso / No iniciado</div></div></div>
     <div class="tw"><table>
-      <thead><tr><th>Jefe Zonal</th><th>N° de ticket</th><th>Estado</th></tr></thead>
+      <thead><tr><th>Jefe Zonal</th><th>N° de ticket</th><th>Estado</th><th>Valor de Venta</th></tr></thead>
       <tbody id="tb-operativo-pcp"></tbody>
     </table></div>
   </div>
@@ -2455,7 +2455,8 @@ window.renderComplementariosOperativo = function(){
         <td style="font-weight:600;">${r.jefe||'—'}</td>
         <td style="font-family:'JetBrains Mono';">${r.ticket||'—'}</td>
         <td><span class="p ${estadoOperativoCls(r.estado)}">${r.estado||'—'}</span></td>
-      </tr>`).join('') : `<tr><td colspan="3" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+        <td style="font-family:'JetBrains Mono';">${fmtARS(parseFloat(r.valorVenta))}</td>
+      </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 };
 
@@ -2521,7 +2522,7 @@ function parseComplOperativo(rows){
     }
     // Cuadro 2 — "Complementarios PCP": Col C = "PSP" (únicamente)
     if(servicio==='PSP'){
-      pcp.push({jefe, ticket, estado});
+      pcp.push({jefe, ticket, estado, valorVenta});
     }
     // Cuadro 3 — "Resumen Operativo - NO OCA": Col B = "NO OCA" exactamente
     if(tipo.toUpperCase()==='NO OCA'){
