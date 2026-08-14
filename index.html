@@ -749,6 +749,20 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <tbody id="tb-dotacion"></tbody>
     </table></div>
   </div>
+
+  <!-- PANEL ANALÍTICO: FALTANTES DE PERSONAL Y CAUSAS -->
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Análisis de faltantes — causas</div><div class="cs">Basado exclusivamente en "Dotacion detalle" con Columna G = "Vigente"</div></div></div>
+    <div class="kg" id="k-dot-faltantes" style="margin-bottom:14px;"></div>
+    <div class="cwtall"><canvas id="ch-dot-motivos"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div class="ct">Detalle de faltantes por servicio</div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Jefe Zonal</th><th>Servicio</th><th>CECO</th><th>Faltantes</th><th>Motivos vigentes</th></tr></thead>
+      <tbody id="tb-dot-faltantes"></tbody>
+    </table></div>
+  </div>
 </section>
 
 <!-- PREVENTIVOS -->
@@ -3744,16 +3758,20 @@ function parseDotacion(rows){
 function parseDotacionDetalle(rows){
   // HOJA: Dotacion detalle
   // A(0)=EMPRESA, B(1)=CECO, C(2)=OPERARIO, D(3)=ESTADO, E(4)=MOTIVO
+  // G(6)=Vigencia del registro ("Vigente" / "Desestimar") — solo se analizan los "Vigente"
   const result = [];
   rows.slice(1).forEach(row => {
     const ceco = String(row[1]||'').trim();
     if(!ceco) return;
+    const vigencia = String(row[6]||'').trim();
+    if(vigencia.toLowerCase() !== 'vigente') return; // excluye "Desestimar" e histórico
     result.push({
       empresa:  String(row[0]||'').trim(),
       ceco,
       operario: String(row[2]||'').trim(),
       estado:   String(row[3]||'').trim(),
       motivo:   String(row[4]||'').trim(),
+      vigencia,
     });
   });
   return result;
@@ -3958,6 +3976,58 @@ window.renderDotacion = function(){
         <td>${pill(label,cls)}${tieneDetalle?' <span style="opacity:.6;font-size:11px;">🔍</span>':''}</td>
       </tr>`;
     }).join('');
+  }
+
+  // ── Panel analítico: Faltantes de personal — causas ──
+  // Usa exclusivamente registros de "Dotacion detalle" con Columna G = "Vigente"
+  // (ya filtrado en origen por parseDotacionDetalle / DOTACION_DETALLE_BY_CECO)
+  const deficitRows = data.filter(d=>d.real<d.aprobada && d.ceco);
+  const totalFaltantesPanel = deficitRows.reduce((s,d)=>s+(d.aprobada-d.real),0);
+
+  const motivosCount = {};
+  deficitRows.forEach(d=>{
+    const filasCeco = DOTACION_DETALLE_BY_CECO[normCeco(d.ceco)] || [];
+    filasCeco.forEach(r=>{
+      const m = r.motivo || 'Sin motivo registrado';
+      motivosCount[m] = (motivosCount[m]||0) + 1;
+    });
+  });
+  const motivosOrdenados = Object.entries(motivosCount).sort((a,b)=>b[1]-a[1]);
+  const totalMotivos = motivosOrdenados.reduce((s,[,c])=>s+c,0);
+  const motivoPrincipal = motivosOrdenados[0]?.[0] || '—';
+  const pctConCausa = totalFaltantesPanel>0 ? Math.round((totalMotivos/totalFaltantesPanel)*100) : 0;
+
+  const kf = document.getElementById('k-dot-faltantes');
+  if(kf) kf.innerHTML = `
+    <div class="kc re"><span class="ki">⚠️</span><div class="kl">Total faltantes</div><div class="kv">${totalFaltantesPanel}</div><div class="ks">${deficitRows.length} servicios en déficit</div></div>
+    <div class="kc am"><span class="ki">🔎</span><div class="kl">Motivo principal</div><div class="kv" style="font-size:16px;">${motivoPrincipal}</div><div class="ks">${motivosOrdenados[0]?.[1]||0} casos vigentes</div></div>
+    <div class="kc bl"><span class="ki">📋</span><div class="kl">% con causa registrada</div><div class="kv">${pctConCausa}%</div><div class="ks">${totalMotivos} de ${totalFaltantesPanel} vinculados a un motivo vigente</div></div>`;
+
+  dc('ch-dot-motivos');
+  if(motivosOrdenados.length>0){
+    charts['ch-dot-motivos'] = new Chart(document.getElementById('ch-dot-motivos'),{
+      type:'bar',
+      data:{labels:motivosOrdenados.map(([m])=>m.substring(0,30)),
+        datasets:[{label:'Casos', data:motivosOrdenados.map(([,c])=>c), backgroundColor:'#f59e0b99', borderRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true},y:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}}}}
+    });
+  }
+
+  const tbf = document.getElementById('tb-dot-faltantes');
+  if(tbf){
+    const sortedDeficit = [...deficitRows].sort((a,b)=>(a.real-a.aprobada)-(b.real-b.aprobada));
+    tbf.innerHTML = sortedDeficit.length ? sortedDeficit.map(d=>{
+      const filasCeco = DOTACION_DETALLE_BY_CECO[normCeco(d.ceco)] || [];
+      const motivos = [...new Set(filasCeco.map(r=>r.motivo).filter(Boolean))];
+      const motivosTxt = motivos.length ? motivos.join(', ') : 'Sin causa vigente registrada';
+      return `<tr>
+        <td style="font-size:11px;">${d.jefe}</td>
+        <td style="font-size:11px;">${d.servicio}</td>
+        <td style="font-family:'JetBrains Mono';">${d.ceco||'—'}</td>
+        <td style="font-family:'JetBrains Mono';text-align:center;color:var(--err);">${Math.abs(d.real-d.aprobada)}</td>
+        <td style="font-size:11px;">${motivosTxt}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin servicios en déficit para el filtro seleccionado</td></tr>`;
   }
 };
 
