@@ -158,6 +158,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 .dash-header-left p{font-size:12px;color:var(--mu);margin-top:3px;}
 .dash-header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .dash-period-badge{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--txt);}
+.fum-tab{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:7px;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--b2);background:var(--s2);color:var(--mu);transition:all .15s;}
+.fum-tab.active{background:var(--ac);color:#fff;border-color:var(--ac);}
 .dash-refresh-btn{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--mu);cursor:pointer;transition:all .15s;}
 .dash-refresh-btn:hover{background:var(--surface);color:var(--txt);}
 
@@ -569,21 +571,46 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
 <section class="page" id="page-fumigacion">
   <div class="topbar">
-    <div><div class="ptitle">Fumigacion y limpieza de tanques</div><div class="psub" id="fum-psub">Cargando datos en tiempo real...</div></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <div><div class="ptitle">Fumigacion y limpieza de tanques</div><div class="psub">Elegí una vista para ver el detalle actualizado</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="fum-tab active" id="fum-tab-btn-fumigacion" onclick="window.setFumTab('fumigacion')">🧴 Fumigación</button>
+      <button class="fum-tab" id="fum-tab-btn-remitos" onclick="window.setFumTab('remitos')">🚰 Limpieza de tanques</button>
+    </div>
+  </div>
+
+  <div id="fum-view-fumigacion">
+    <p class="psub" id="fum-psub" style="margin-bottom:10px;">Cargando datos en tiempo real...</p>
+    <div class="fb" style="margin-bottom:14px;">
       <select id="f-fum-mes" onchange="window.renderFumigacion()" style="min-width:160px;"><option value="">Todos los meses</option></select>
       <select id="f-fum-anio" onchange="window.renderFumigacion()" style="min-width:120px;"><option value="">Todos los años</option></select>
       <select id="f-fum-jefe" onchange="window.renderFumigacion()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
       <select id="f-fum-servicio" onchange="window.renderFumigacion()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
     </div>
+    <div class="kg" id="k-fum" style="margin-bottom:14px;"></div>
+    <div class="card">
+      <div class="ch"><div><div class="ct">Detalle de fumigación y limpieza de tanques</div><div class="cs" id="fum-cs">Jefe Zonal, Servicio, Año y Estado por mes (columnas B:K)</div></div></div>
+      <div class="tw"><table>
+        <thead id="fum-thead"></thead>
+        <tbody id="tb-fumigacion"></tbody>
+      </table></div>
+    </div>
   </div>
-  <div class="kg" id="k-fum" style="margin-bottom:14px;"></div>
-  <div class="card">
-    <div class="ch"><div><div class="ct">Detalle de fumigación y limpieza de tanques</div><div class="cs" id="fum-cs">Jefe Zonal, Servicio, Año y Estado por mes (columnas B:K)</div></div></div>
-    <div class="tw"><table>
-      <thead id="fum-thead"></thead>
-      <tbody id="tb-fumigacion"></tbody>
-    </table></div>
+
+  <div id="fum-view-remitos" style="display:none;">
+    <p class="psub" id="rem-psub" style="margin-bottom:10px;">Cargando datos en tiempo real...</p>
+    <div class="fb" style="margin-bottom:14px;">
+      <select id="f-rem-jefe" onchange="window.renderRemitosTanques()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
+      <select id="f-rem-servicio" onchange="window.renderRemitosTanques()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
+      <select id="f-rem-estado" onchange="window.renderRemitosTanques()" style="min-width:160px;"><option value="">Todos los estados</option></select>
+    </div>
+    <div class="kg" id="k-rem" style="margin-bottom:14px;"></div>
+    <div class="card">
+      <div class="ch"><div><div class="ct">Detalle de remitos</div><div class="cs">Servicio, Jefe Zonal, Fecha de vencimiento y Estado · hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)</div></div></div>
+      <div class="tw"><table>
+        <thead><tr><th>Servicio</th><th>Jefe Zonal</th><th>Fecha de vencimiento</th><th>Estado</th></tr></thead>
+        <tbody id="tb-remitos-tanques"></tbody>
+      </table></div>
+    </div>
   </div>
 </section>
 
@@ -1114,6 +1141,7 @@ function renderAll(){
   if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
   if(AUDITORIA_DATA.filas.length>0) renderAuditoria();
   if(FUMIGACION_DATA.filas.length>0) renderFumigacion();
+  if(REMITOS_TANQUES_DATA.length>0) renderRemitosTanques();
   if(ABONOS_LEY_DATA.length>0) renderAbonosLey();
   if(MEDICIONES_DATA.length>0) renderMediciones();
 }
@@ -3459,6 +3487,107 @@ window.renderFumigacion = function(){
   }
 };
 
+// ── Remitos de limpieza de tanques: extracción de datos (hoja "Detalle de remitos Limpieza de Tanques") ──
+// Columna Q(16) = filtro estricto "SI" para incluir el registro en el análisis.
+// K(10)=Servicio, L(11)=Jefe Zonal, N(13)=Fecha de vencimiento, O(14)=Estado (Vigente/Vencido/Cerca de vencer)
+async function actualizarRemitosTanques(){
+  try{
+    const rows = await fetchSheet(GS_FUMIGACION, 'Detalle de remitos Limpieza de Tanques');
+    const datos = [];
+    rows.slice(1).forEach(row=>{
+      const incluir = String(row[16]||'').trim().toUpperCase();
+      if(incluir !== 'SI') return; // Columna Q: solo "SI" entra al análisis
+
+      const servicio    = String(row[10]||'').trim(); // Col K
+      const jefe         = String(row[11]||'').trim(); // Col L
+      const vencimiento = String(row[13]||'').trim(); // Col N
+      const estado       = String(row[14]||'').trim(); // Col O
+      if(!jefe && !servicio) return;
+
+      datos.push({servicio, jefe, vencimiento, estado});
+    });
+    REMITOS_TANQUES_DATA = datos;
+
+    const psub = document.getElementById('rem-psub');
+    if(psub) psub.textContent = `${REMITOS_TANQUES_DATA.length} registros · hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)`;
+
+    renderRemitosTanques();
+    return true;
+  }catch(err){
+    console.warn('Error Remitos de limpieza de tanques:', err);
+    return false;
+  }
+}
+
+// ── Remitos de limpieza de tanques: cuadros resumen + tabla + filtros (Jefe Zonal, Servicio, Estado) ──
+window.renderRemitosTanques = function(){
+  const selJefe  = document.getElementById('f-rem-jefe');
+  const selSvc   = document.getElementById('f-rem-servicio');
+  const selEst   = document.getElementById('f-rem-estado');
+
+  if(selJefe && selJefe.options.length <= 1){
+    [...new Set(REMITOS_TANQUES_DATA.map(r=>r.jefe))].filter(Boolean).sort().forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  if(selSvc && selSvc.options.length <= 1){
+    [...new Set(REMITOS_TANQUES_DATA.map(r=>r.servicio))].filter(Boolean).sort().forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+  if(selEst && selEst.options.length <= 1){
+    [...new Set(REMITOS_TANQUES_DATA.map(r=>r.estado))].filter(Boolean).sort().forEach(e=>{ selEst.innerHTML += `<option value="${e}">${e}</option>`; });
+  }
+
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value  || '';
+  const fe = selEst?.value  || '';
+
+  const filas = REMITOS_TANQUES_DATA.filter(r =>
+    (!fj || r.jefe===fj) && (!fs || r.servicio===fs) && (!fe || r.estado===fe)
+  );
+
+  // ── Cuadros resumen (mismo criterio que Abonos de ley: Vigente/Cerca de vencer = cumple, Vencido = no cumple) ──
+  const total = filas.length;
+  const cumplen = filas.filter(r=>{const c=vigenciaCls(r.estado); return c==='p-ok'||c==='p-warn';}).length;
+  const noCumplen = filas.filter(r=>vigenciaCls(r.estado)==='p-err').length;
+  const pctCumple = total ? Math.round((cumplen/total)*100) : 0;
+  const pctNoCumple = total ? Math.round((noCumplen/total)*100) : 0;
+
+  const kEl = document.getElementById('k-rem');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Remitos</div></div>
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${cumplen} vigentes / cerca de vencer</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noCumplen} vencidos</div></div>`;
+  }
+
+  const tb = document.getElementById('tb-remitos-tanques');
+  if(tb){
+    tb.innerHTML = filas.length ? filas.map(r=>`
+      <tr>
+        <td>${r.servicio||'—'}</td>
+        <td style="font-weight:600;">${r.jefe||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${r.vencimiento||'—'}</td>
+        <td><span class="p ${vigenciaCls(r.estado)}">${r.estado||'—'}</span></td>
+      </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+};
+
+// ── Toggle entre "Fumigación" y "Limpieza de tanques" dentro del mismo apartado ──
+window.setFumTab = function(tab){
+  const viewFum = document.getElementById('fum-view-fumigacion');
+  const viewRem = document.getElementById('fum-view-remitos');
+  const btnFum  = document.getElementById('fum-tab-btn-fumigacion');
+  const btnRem  = document.getElementById('fum-tab-btn-remitos');
+  if(!viewFum || !viewRem) return;
+
+  const esFumigacion = tab !== 'remitos';
+  viewFum.style.display = esFumigacion ? '' : 'none';
+  viewRem.style.display = esFumigacion ? 'none' : '';
+  btnFum?.classList.toggle('active', esFumigacion);
+  btnRem?.classList.toggle('active', !esFumigacion);
+
+  // Recalcula y redibuja los datos/estadísticas de la vista recién activada
+  if(esFumigacion) renderFumigacion(); else renderRemitosTanques();
+};
+
 // ── Abonos de ley: extracción de datos (hoja "Consolidado") ──
 // A(0)=Empresa, B(1)=Jefe Zonal, C(2)=OCA/NO OCA, D(3)=CECO, E(4)=Servicio (Cliente),
 // F(5)=Clasificacion, G(6)=Tipo, H(7)=Estado, I(8)=Frecuencia,
@@ -3919,6 +4048,7 @@ async function actualizarTodo(showToast=false){
   ]);
   actualizarAuditoria(); // no bloquea el resto del ciclo de actualización
   actualizarFumigacion(); // no bloquea el resto del ciclo de actualización
+  actualizarRemitosTanques(); // no bloquea el resto del ciclo de actualización
   actualizarAbonosLey(); // no bloquea el resto del ciclo de actualización
   actualizarMediciones(); // no bloquea el resto del ciclo de actualización
   renderAll();
@@ -3992,6 +4122,7 @@ let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porS
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
 let FUMIGACION_DATA = {meses: [], filas: []}; // Fumigacion y limpieza de tanques → {meses:[...], filas:[{jefe,servicio,anio,valores:{mes:estado}}]}
+let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
