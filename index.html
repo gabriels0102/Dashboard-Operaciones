@@ -254,6 +254,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de ley</span></button>
     <button class="ni" data-page="mediciones"><span class="ni-icon">🌡️</span><span class="ni-label">Mediciones</span></button>
+    <button class="ni" data-page="fumigacion"><span class="ni-icon">🧴</span><span class="ni-label">Fumigacion y limpieza de tanques</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
 
     <div class="nav-section">Adicionales Resumen Operativo</div>
@@ -564,6 +565,26 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="kg" id="k-med" style="margin-bottom:14px;"></div>
   <div id="mediciones-cont" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;"></div>
+</section>
+
+<section class="page" id="page-fumigacion">
+  <div class="topbar">
+    <div><div class="ptitle">Fumigacion y limpieza de tanques</div><div class="psub" id="fum-psub">Cargando datos en tiempo real...</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <select id="f-fum-mes" onchange="window.renderFumigacion()" style="min-width:160px;"><option value="">Todos los meses</option></select>
+      <select id="f-fum-anio" onchange="window.renderFumigacion()" style="min-width:120px;"><option value="">Todos los años</option></select>
+      <select id="f-fum-jefe" onchange="window.renderFumigacion()" style="min-width:200px;"><option value="">Todos los jefes zonales</option></select>
+      <select id="f-fum-servicio" onchange="window.renderFumigacion()" style="min-width:200px;"><option value="">Todos los servicios</option></select>
+    </div>
+  </div>
+  <div class="kg" id="k-fum" style="margin-bottom:14px;"></div>
+  <div class="card">
+    <div class="ch"><div><div class="ct">Detalle de fumigación y limpieza de tanques</div><div class="cs" id="fum-cs">Jefe Zonal, Servicio, Año y Estado por mes (columnas B:K)</div></div></div>
+    <div class="tw"><table>
+      <thead id="fum-thead"></thead>
+      <tbody id="tb-fumigacion"></tbody>
+    </table></div>
+  </div>
 </section>
 
 <!-- MODAL SITIO -->
@@ -1092,6 +1113,7 @@ function renderAll(){
   if(COMPL_DATA.operativo) renderComplementariosOperativo();
   if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
   if(AUDITORIA_DATA.filas.length>0) renderAuditoria();
+  if(FUMIGACION_DATA.filas.length>0) renderFumigacion();
   if(ABONOS_LEY_DATA.length>0) renderAbonosLey();
   if(MEDICIONES_DATA.length>0) renderMediciones();
 }
@@ -2661,6 +2683,7 @@ const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qx
 const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycby4uQ4OiPkTrY96Puy8d5vPaO77Qv2QtFzJP4gc26BWfLUexXm5T0pekMkrtsum69N7Ew/exec";
 const GS_SITIOS      = "https://script.google.com/macros/s/AKfycbzABBckbx9Twj9DgGsoAxBSolfhNwN2I_YbYccajMI29oN0gL9H27sLFSibiYmZd4gd/exec";
 const GS_ABONOS_LEY  = "https://script.google.com/macros/s/AKfycbyf-ToIQ9g4onwmS1R3KApcZpmr3k_efLpKrolweYdJ6TMXxc2ZKxZPHQCY_ZA0NRTl/exec";
+const GS_FUMIGACION  = "https://script.google.com/macros/s/AKfycbwC_aJHRCS0GHjoAW9RB0oqwWSF8kYxypFp0nZ4bzBt1-FuX2UNY9-GhuP8q8cp8qge/exec";
 const GS_MAQUINARIAS = "https://script.google.com/macros/s/AKfycbyo1aWEVL8Y9TngbRQhspIfRGnf9-xF5K1fuT5jckYvklnzD1fAngRdr5fBy9ncIjPB3Q/exec";
 const GS_AUDITORIA   = "https://script.google.com/macros/s/AKfycbzrY4TevvLFadWfbQkwjCmxKvsQleqqChomW0JZmeKGaqwi3E7RmfHI8cspWNE6izNWRg/exec";
 const REFRESH_MS     = 5 * 60 * 1000; // 5 minutos
@@ -3313,6 +3336,129 @@ window.renderAuditoria = function(){
   }
 };
 
+// ── Fumigacion y limpieza de tanques: extracción de datos (hoja "Fumigacion Dashboard") ──
+// Columna Q(16) = filtro estricto "SI" para incluir el registro en el análisis.
+// N(13)=Servicio, O(14)=Jefe Zonal, L(11)=Año, B:K(1:11)=Meses (encabezado = nombre del mes, valor = "FUMIGADO"/"PENDIENTE")
+async function actualizarFumigacion(){
+  try{
+    const rows = await fetchSheet(GS_FUMIGACION, 'Fumigacion Dashboard');
+    if(!rows.length) return true;
+
+    // Detectar qué columnas B:K tienen un mes cargado (encabezado no vacío)
+    const header = rows[0] || [];
+    const mesesCols = [];
+    for(let idx=1; idx<=10; idx++){
+      const label = String(header[idx]||'').trim();
+      if(label) mesesCols.push({label, idx});
+    }
+
+    const filas = [];
+    rows.slice(1).forEach(row=>{
+      const incluir = String(row[16]||'').trim().toUpperCase();
+      if(incluir !== 'SI') return; // Columna Q: solo "SI" entra al análisis
+
+      const servicio = String(row[13]||'').trim(); // Col N
+      const jefe     = String(row[14]||'').trim(); // Col O
+      const anio     = String(row[11]||'').trim(); // Col L
+      if(!jefe && !servicio) return;
+
+      const valores = {};
+      mesesCols.forEach(({label, idx})=>{
+        valores[label] = String(row[idx]||'').trim().toUpperCase() || 'SIN DATOS';
+      });
+      filas.push({jefe, servicio, anio, valores});
+    });
+
+    FUMIGACION_DATA = {meses: mesesCols.map(m=>m.label), filas};
+
+    const psub = document.getElementById('fum-psub');
+    if(psub) psub.textContent = `${filas.length} registros × ${FUMIGACION_DATA.meses.length} meses · hoja "Fumigacion Dashboard" (Columna Q = SI)`;
+
+    renderFumigacion();
+    return true;
+  }catch(err){
+    console.warn('Error Fumigación y limpieza de tanques:', err);
+    return false;
+  }
+}
+
+// ── Fumigacion y limpieza de tanques: cuadros resumen + tabla mensual (un mes o todos los meses juntos) ──
+window.renderFumigacion = function(){
+  const selMes  = document.getElementById('f-fum-mes');
+  const selAnio = document.getElementById('f-fum-anio');
+  const selJefe = document.getElementById('f-fum-jefe');
+  const selSvc  = document.getElementById('f-fum-servicio');
+
+  if(selMes && selMes.options.length <= 1){
+    FUMIGACION_DATA.meses.forEach(m=>{ selMes.innerHTML += `<option value="${m}">${capMes(m)}</option>`; });
+  }
+  if(selAnio && selAnio.options.length <= 1){
+    const anios = [...new Set(FUMIGACION_DATA.filas.map(r=>r.anio))].filter(Boolean).sort();
+    anios.forEach(a=>{ selAnio.innerHTML += `<option value="${a}">${a}</option>`; });
+  }
+  if(selJefe && selJefe.options.length <= 1){
+    const jefes = [...new Set(FUMIGACION_DATA.filas.map(r=>r.jefe))].filter(Boolean).sort();
+    jefes.forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  if(selSvc && selSvc.options.length <= 1){
+    const servicios = [...new Set(FUMIGACION_DATA.filas.map(r=>r.servicio))].filter(Boolean).sort();
+    servicios.forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+
+  const fm = selMes?.value || '';
+  const fa = selAnio?.value || '';
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value || '';
+
+  const filas = FUMIGACION_DATA.filas.filter(r => (!fa || r.anio===fa) && (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
+  const meses = fm ? [fm] : FUMIGACION_DATA.meses; // "Todos los meses" → todos juntos, uno al lado del otro
+
+  // ── Cuadros resumen: cuentan cada combinación Jefe+Servicio+Mes visible ──
+  let total = 0, fumigados = 0, pendientes = 0;
+  filas.forEach(r=>{
+    meses.forEach(m=>{
+      const v = r.valores[m];
+      if(v===undefined) return;
+      total++;
+      if(v==='FUMIGADO') fumigados++;
+      else if(v==='PENDIENTE') pendientes++;
+    });
+  });
+  const pctCumple = total ? Math.round((fumigados/total)*100) : 0;
+  const pctNoCumple = total ? Math.round((pendientes/total)*100) : 0;
+
+  const kEl = document.getElementById('k-fum');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">${fm?capMes(fm):'Todos los meses'} · Jefe Zonal × Servicio</div></div>
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${fumigados} fumigados</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${pendientes} pendientes</div></div>`;
+  }
+
+  const csEl = document.getElementById('fum-cs');
+  if(csEl) csEl.textContent = fm ? `Jefe Zonal, Servicio, Año y Estado — ${capMes(fm)}` : 'Jefe Zonal, Servicio, Año y Estado por mes (todos los meses juntos)';
+
+  // ── Tabla: cabecera dinámica (1 columna si hay un mes filtrado, N columnas si son todos) ──
+  const thead = document.getElementById('fum-thead');
+  if(thead){
+    thead.innerHTML = `<tr><th>Jefe Zonal</th><th>Servicio</th><th>Año</th>${meses.map(m=>`<th>${capMes(m)}</th>`).join('')}</tr>`;
+  }
+
+  const tb = document.getElementById('tb-fumigacion');
+  if(tb){
+    tb.innerHTML = filas.length ? filas.map(r=>`
+      <tr>
+        <td style="font-weight:600;">${r.jefe||'—'}</td>
+        <td>${r.servicio||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${r.anio||'—'}</td>
+        ${meses.map(m=>{
+          const v = r.valores[m] || 'SIN DATOS';
+          return `<td><span class="p ${v==='FUMIGADO'?'p-ok':v==='PENDIENTE'?'p-err':'p-mu'}">${v}</span></td>`;
+        }).join('')}
+      </tr>`).join('') : `<tr><td colspan="${3+meses.length}" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+};
+
 // ── Abonos de ley: extracción de datos (hoja "Consolidado") ──
 // A(0)=Empresa, B(1)=Jefe Zonal, C(2)=OCA/NO OCA, D(3)=CECO, E(4)=Servicio (Cliente),
 // F(5)=Clasificacion, G(6)=Tipo, H(7)=Estado, I(8)=Frecuencia,
@@ -3772,6 +3918,7 @@ async function actualizarTodo(showToast=false){
     actualizarMaquinarias()
   ]);
   actualizarAuditoria(); // no bloquea el resto del ciclo de actualización
+  actualizarFumigacion(); // no bloquea el resto del ciclo de actualización
   actualizarAbonosLey(); // no bloquea el resto del ciclo de actualización
   actualizarMediciones(); // no bloquea el resto del ciclo de actualización
   renderAll();
@@ -3844,6 +3991,7 @@ let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: [], noOca: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
+let FUMIGACION_DATA = {meses: [], filas: []}; // Fumigacion y limpieza de tanques → {meses:[...], filas:[{jefe,servicio,anio,valores:{mes:estado}}]}
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
