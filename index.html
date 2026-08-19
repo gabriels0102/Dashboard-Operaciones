@@ -253,6 +253,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de ley</span></button>
+    <button class="ni" data-page="mediciones"><span class="ni-icon">🌡️</span><span class="ni-label">Mediciones</span></button>
     <button class="ni" data-page="complementarios"><span class="ni-icon">💼</span><span class="ni-label">Complementarios — OCA</span></button>
 
     <div class="nav-section">Adicionales Resumen Operativo</div>
@@ -551,6 +552,18 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="kg" id="k-ably" style="margin-bottom:14px;"></div>
   <div id="abonos-ley-cont" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;"></div>
+</section>
+
+<section class="page" id="page-mediciones">
+  <div class="topbar"><div><div class="ptitle">Mediciones</div><div class="psub" id="med-psub">Cargando datos en tiempo real...</div></div></div>
+  <div class="fb">
+    <label>Jefe Zonal:</label><select id="f-med-jefe" onchange="renderMediciones()" style="min-width:180px;"><option value="">Todos</option></select>
+    <label>Servicio:</label><select id="f-med-servicio" onchange="renderMediciones()" style="min-width:180px;"><option value="">Todos</option></select>
+    <label>Tipo:</label><select id="f-med-tipo" onchange="renderMediciones()" style="min-width:140px;"><option value="">Todos</option></select>
+    <label>Vigencia:</label><select id="f-med-vigencia" onchange="renderMediciones()" style="min-width:140px;"><option value="">Todas</option></select>
+  </div>
+  <div class="kg" id="k-med" style="margin-bottom:14px;"></div>
+  <div id="mediciones-cont" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;"></div>
 </section>
 
 <!-- MODAL SITIO -->
@@ -1080,6 +1093,7 @@ function renderAll(){
   if(COMPL_DATA.operativo) renderComplementariosOperativoNoOca();
   if(AUDITORIA_DATA.filas.length>0) renderAuditoria();
   if(ABONOS_LEY_DATA.length>0) renderAbonosLey();
+  if(MEDICIONES_DATA.length>0) renderMediciones();
 }
 
 // ── HELPERS ──
@@ -3414,6 +3428,111 @@ window.renderAbonosLey = function(){
     </div>`).join('') : `<div style="grid-column:1/-1;text-align:center;color:var(--mu);padding:40px;">Sin registros para el filtro seleccionado</div>`;
 };
 
+// ── Mediciones: extracción de datos (hoja "Consolidado") — misma fuente y estructura que Abonos de ley ──
+// A(0)=Empresa, B(1)=Jefe Zonal, C(2)=OCA/NO OCA, D(3)=CECO, E(4)=Servicio (Cliente),
+// F(5)=Clasificacion, G(6)=Tipo, H(7)=Estado, I(8)=Frecuencia,
+// J(9)=Fecha de Realizacion, K(10)=Fecha de Finalización (vencimiento), M(12)=Vigencia
+async function actualizarMediciones(){
+  try{
+    const rows = await fetchSheet(GS_ABONOS_LEY, 'Consolidado');
+    const datos = [];
+    rows.slice(1).forEach(row=>{
+      const clasificacion = String(row[5]||'').trim().toLowerCase();
+      // El dato real en la planilla es "Medicion" (sin tilde); admitimos variantes por robustez.
+      if(clasificacion !== 'medicion' && clasificacion !== 'medición' && clasificacion !== 'mediciones') return;
+
+      const vigencia = String(row[12]||'').trim();
+      const vigenciaNorm = vigencia.toLowerCase();
+      // "Sin datos" y "Obsoleto" quedan fuera de todo el análisis (no cuentan ni se muestran)
+      if(vigenciaNorm === 'sin datos' || vigenciaNorm === 'obsoleto') return;
+
+      datos.push({
+        empresa:    String(row[0]||'').trim(),
+        jefe:       String(row[1]||'').trim(),
+        ocaNoOca:   String(row[2]||'').trim(),
+        servicio:   String(row[4]||'').trim(),
+        tipo:       String(row[6]||'').trim(),
+        estado:     String(row[7]||'').trim(),
+        vencimiento:String(row[10]||'').trim(),
+        vigencia
+      });
+    });
+    MEDICIONES_DATA = datos;
+
+    const psub = document.getElementById('med-psub');
+    if(psub) psub.textContent = `${MEDICIONES_DATA.length} registros · hoja "Consolidado" (Clasificación = Medicion)`;
+
+    renderMediciones();
+    return true;
+  }catch(err){
+    console.warn('Error Mediciones:', err);
+    return false;
+  }
+}
+
+// ── Mediciones: cards + filtros (Jefe Zonal, Servicio, Tipo, Vigencia) ──
+window.renderMediciones = function(){
+  const selJefe = document.getElementById('f-med-jefe');
+  const selSvc  = document.getElementById('f-med-servicio');
+  const selTipo = document.getElementById('f-med-tipo');
+  const selVig  = document.getElementById('f-med-vigencia');
+
+  if(selJefe && selJefe.options.length <= 1){
+    [...new Set(MEDICIONES_DATA.map(r=>r.jefe))].filter(Boolean).sort().forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  if(selSvc && selSvc.options.length <= 1){
+    [...new Set(MEDICIONES_DATA.map(r=>r.servicio))].filter(Boolean).sort().forEach(s=>{ selSvc.innerHTML += `<option value="${s}">${s}</option>`; });
+  }
+  if(selTipo && selTipo.options.length <= 1){
+    [...new Set(MEDICIONES_DATA.map(r=>r.tipo))].filter(Boolean).sort().forEach(t=>{ selTipo.innerHTML += `<option value="${t}">${t}</option>`; });
+  }
+  if(selVig && selVig.options.length <= 1){
+    [...new Set(MEDICIONES_DATA.map(r=>r.vigencia))].filter(Boolean).sort().forEach(v=>{ selVig.innerHTML += `<option value="${v}">${v}</option>`; });
+  }
+
+  const fj = selJefe?.value || '';
+  const fs = selSvc?.value  || '';
+  const ft = selTipo?.value || '';
+  const fv = selVig?.value  || '';
+
+  const filas = MEDICIONES_DATA.filter(r =>
+    (!fj || r.jefe===fj) && (!fs || r.servicio===fs) && (!ft || r.tipo===ft) && (!fv || r.vigencia===fv)
+  );
+
+  // ── Cuadros resumen (se recalculan según los filtros activos) ──
+  const total = filas.length;
+  const cumplen = filas.filter(r=>{const c=vigenciaCls(r.vigencia); return c==='p-ok'||c==='p-warn';}).length;
+  const noCumplen = filas.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
+  const pctCumple = total ? Math.round((cumplen/total)*100) : 0;
+  const pctNoCumple = total ? Math.round((noCumplen/total)*100) : 0;
+
+  const kEl = document.getElementById('k-med');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Mediciones</div></div>
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${cumplen} vigentes / cerca de vencer</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noCumplen} vencidos</div></div>`;
+  }
+
+  const cont = document.getElementById('mediciones-cont');
+  if(!cont) return;
+  cont.innerHTML = filas.length ? filas.map(r=>`
+    <div class="sc">
+      <div class="sh">
+        <div>
+          <div class="sn">${r.servicio||'—'}</div>
+          <div class="sm">${r.empresa||'—'} · ${r.jefe||'—'} · ${r.ocaNoOca||'—'}</div>
+        </div>
+        <span class="p ${vigenciaCls(r.vigencia)}">${r.vigencia||'—'}</span>
+      </div>
+      <div class="sr">
+        <span class="p p-mu">Tipo: ${r.tipo||'—'}</span>
+        <span class="p p-mu">Estado: ${r.estado||'—'}</span>
+        <span class="p p-mu">Vence: ${r.vencimiento||'—'}</span>
+      </div>
+    </div>`).join('') : `<div style="grid-column:1/-1;text-align:center;color:var(--mu);padding:40px;">Sin registros para el filtro seleccionado</div>`;
+};
+
 // ── Actualización completa ──
 // ── Actualizar Complementarios ──
 async function actualizarComplementarios(){
@@ -3654,6 +3773,7 @@ async function actualizarTodo(showToast=false){
   ]);
   actualizarAuditoria(); // no bloquea el resto del ciclo de actualización
   actualizarAbonosLey(); // no bloquea el resto del ciclo de actualización
+  actualizarMediciones(); // no bloquea el resto del ciclo de actualización
   renderAll();
   if(showToast){
     const all = ok1&&ok2&&ok3&&ok4&&ok5&&ok6;
@@ -3725,6 +3845,7 @@ let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porS
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
+let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
 let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
