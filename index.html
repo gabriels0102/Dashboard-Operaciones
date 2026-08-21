@@ -2157,7 +2157,9 @@ window.renderFlotaTaller = function renderFlotaTaller(){
     useHP={};useHM={};useTM={};useHA={};
     det.forEach(t=>{
       if(t.horas>0){useHP[t.pat]=(useHP[t.pat]||0)+t.horas;useHM[t.mesKey]=(useHM[t.mesKey]||0)+t.horas;useHA[t.area]=(useHA[t.area]||0)+t.horas;}
-      useTM[t.mesKey]=(useTM[t.mesKey]||0)+1;
+      // Col I — "Desdoble - VTV/Correctivo/Service": suman horas (arriba) pero no cuentan como turno nuevo
+      const esDesdoble = t.tipoArr === 'Desdoble - VTV' || t.tipoArr === 'Desdoble - Correctivo' || t.tipoArr === 'Desdoble - Service';
+      if(!esDesdoble) useTM[t.mesKey]=(useTM[t.mesKey]||0)+1;
     });
     Object.keys(useHP).forEach(k=>{useHP[k]=Math.round(useHP[k]*10)/10;});
   }
@@ -3020,8 +3022,12 @@ function parseTurnos(rows){
       horasArea[area]=(horasArea[area]||0)+horas;
       horasMes[mesKey]=(horasMes[mesKey]||0)+horas;
     }
-    // Turnos gestionados = col P = "SI" (vehículo asistió y finalizó)
-    if(asistioVal==='SI'){
+    // Col I — "Desdoble - VTV/Correctivo/Service": son partes de un turno de correctivo ya existente
+    // que se dividió al cambiar de mes. Sus horas SÍ se suman (arriba), pero NO deben contar como
+    // un turno nuevo/individual.
+    const esDesdoble = tipoArr === 'Desdoble - VTV' || tipoArr === 'Desdoble - Correctivo' || tipoArr === 'Desdoble - Service';
+    // Turnos gestionados = col P = "SI" (vehículo asistió y finalizó), excluyendo desdobles
+    if(asistioVal==='SI' && !esDesdoble){
       turnosMes[mesKey]=(turnosMes[mesKey]||0)+1;
     }
   });
