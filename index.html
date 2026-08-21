@@ -661,9 +661,8 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <div class="ch"><div><div class="ct">Horas en taller por mes</div><div class="cs">Oct 2025 — May 2026</div></div></div>
     <div class="cw"><canvas id="ch-fl-mes"></canvas></div>
   </div>
-  <div class="c2">
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Top 10 — Más horas en taller</div></div></div><div class="cwtall"><canvas id="ch-fl-top10"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por área</div></div></div><div class="cw"><canvas id="ch-fl-area"></canvas></div></div>
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Top 10 — Más horas en taller</div></div></div><div class="cwtall"><canvas id="ch-fl-top10"></canvas></div>
   </div>
 </section>
 
@@ -1186,7 +1185,9 @@ function renderDashboard(){
   if(lu) lu.textContent = 'Actualizado: '+new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 
   // KPIs
-  const flotaActiva = FLOTA.filter(v=>!v.est?.toLowerCase().includes('fuera'));
+  // FLOTA ya viene filtrada exclusivamente por Columna AB = "Si" (parseControlVehicular),
+  // que ya contempla mantenimiento y descarta "fuera de servicio" — no hace falta filtrar de nuevo.
+  const flotaActiva = FLOTA;
   const op = flotaActiva.filter(v=>v.est==="Operativa").length;
   const flotaTot = flotaActiva.length||1;
   const pctFlota = Math.round(op/flotaTot*100);
@@ -2037,23 +2038,22 @@ window.renderContratos=function(){
 
 // ══ FLOTA ══
 function renderFlotaResumen(){
-  // Only show mantenimiento fleet (already filtered by parseControlVehicular)
-  // Exclude fuera de servicio from analysis
-  const flotaActiva = FLOTA.filter(v=>!v.est?.toLowerCase().includes('fuera'));
+  // FLOTA ya viene filtrada exclusivamente por Columna AB = "Si" (parseControlVehicular),
+  // que ya contempla mantenimiento y descarta "fuera de servicio" — no hace falta filtrar de nuevo.
+  const flotaActiva = FLOTA;
   const op  = flotaActiva.filter(v=>v.est==="Operativa").length;
   const tal = flotaActiva.filter(v=>v.est==="En taller").length;
-  const fs  = FLOTA.filter(v=>v.est?.toLowerCase().includes('fuera')).length;
   const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
   const totalFlota = flotaActiva.length;
   const psubFlota = document.getElementById("flota-res-psub");
-  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Col W = Mantenimiento) · ${op} operativas · ${tal} en taller`;
+  if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Columna AB = Sí) · ${op} operativas · ${tal} en taller`;
   const pctOp = totalFlota>0?Math.round(op/totalFlota*100):0;
   document.getElementById("k-flota-res").innerHTML=`
-    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks">Col W = Mantenimiento</div></div>
+    <div class="kc bl"><span class="ki">🚐</span><div class="kl">Flota activa (Mtto)</div><div class="kv">${totalFlota}</div><div class="ks">Columna AB = Sí</div></div>
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${pctOp}%</div></div>
     <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div><div class="ks">${totalFlota>0?Math.round(tal/totalFlota*100):0}%</div></div>
-    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Col N acumulado</div></div>
-    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Col P = SI</div></div>`;
+    <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Columna AB = Sí</div></div>
+    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Columna AB = Sí</div></div>`;
 
   dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{
     type:"doughnut",
@@ -2070,7 +2070,6 @@ function renderFlotaResumen(){
   dc("ch-fl-mes");charts["ch-fl-mes"]=new Chart(document.getElementById("ch-fl-mes"),{type:"bar",data:{labels:Object.keys(HORAS_MES),datasets:[{label:"Horas hábiles",data:Object.values(HORAS_MES),backgroundColor:Object.values(HORAS_MES).map(h=>h>700?"#ef444499":h>500?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
   const top10=Object.entries(HORAS_PAT).sort((a,b)=>b[1]-a[1]).slice(0,10);
   dc("ch-fl-top10");charts["ch-fl-top10"]=new Chart(document.getElementById("ch-fl-top10"),{type:"bar",data:{labels:top10.map(p=>p[0]),datasets:[{label:"Horas",data:top10.map(p=>p[1]),backgroundColor:top10.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
-  dc("ch-fl-area");charts["ch-fl-area"]=new Chart(document.getElementById("ch-fl-area"),{type:"doughnut",data:{labels:Object.keys(HORAS_AREA),datasets:[{data:Object.values(HORAS_AREA),backgroundColor:["#4f8ef799","#f59e0b99","#7c3aed99"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
 }
 
 window.renderFlotaTabla=function(){
@@ -2896,18 +2895,17 @@ function parseCorrZonal(rows){
 
 // ── Parser: "Control vehicular" → FLOTA ──
 function parseControlVehicular(rows){
-  // col 0=patente, 2=jefe, 4=servicio, 5=estado, 6=modelo, 21=empresa
+  // col 0=patente, 2=jefe, 4=servicio, 5=estado, 6=modelo, 21=empresa, 27=Col AB (único criterio de inclusión)
   const result = [];
   rows.slice(1).forEach(row=>{
     const pat = String(row[0]||'').trim();
     if(!pat || pat==='DOMINIO' || pat==='MAQUINARIA') return;
     const empresa = String(row[21]||'').trim();
     if(empresa.toUpperCase().includes('PREVIAL')) return;
-    const tipo22 = String(row[22]||'').trim();
-    const est22  = String(row[5]||'Sin estado').trim();
-    // Only mantenimiento type, exclude fuera de servicio
-    if(tipo22.toLowerCase() !== 'mantenimiento') return;
-    if(est22.toLowerCase().includes('fuera de servicio')) return;
+    const colAB = String(row[27]||'').trim();
+    // Único criterio de inclusión: Columna AB = "Si" (ya contempla mantenimiento y descarta fuera de servicio)
+    if(colAB.toLowerCase() !== 'si') return;
+    const est22 = String(row[5]||'Sin estado').trim();
     result.push({
       p: pat,
       j: String(row[2]||'Sin asignar').trim(),
@@ -2915,7 +2913,6 @@ function parseControlVehicular(rows){
       est: est22,
       m: String(row[6]||'').trim(),
       e: empresa||'Sin empresa',
-      tipo: tipo22
     });
   });
   return result;
@@ -2943,10 +2940,13 @@ function parseDetalleMaquinas(data){
 
 // ── Parser: "Turnos unidades" → HORAS_PAT + HORAS_MES ──
 function parseTurnos(rows){
-  // col 0=periodo, 1=patente, 2=area, 13=horas_habiles
+  // col 0=periodo, 1=patente, 2=area, 13=horas_habiles, 19=empresa(Col T), 21=Col V (único criterio de inclusión = "Si")
   const horasPat={}, horasMes={}, turnosMes={}, horasArea={};
 
   rows.slice(1).forEach(row=>{
+    const colV = String(row[21]||'').trim();
+    if(colV.toLowerCase() !== 'si') return; // Columna V: único criterio de inclusión para "Horas en Taller"
+
     const pat = String(row[1]||'').trim();
     const area = String(row[2]||'Sin área').trim();
     const horas = parseFloat(row[13])||0;
