@@ -699,11 +699,21 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas por patente — acumulado</div><div class="cs">Ordenado de mayor a menor</div></div></div><div class="cwxl"><canvas id="ch-taller-all"></canvas></div></div>
-    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipo de arreglo</div><div class="cs">Col I — distribución por tipo de trabajo</div></div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
+    <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipo de arreglo</div><div class="cs">Col I — distribución por tipo de trabajo · click para ver detalle (Col J)</div></div></div><div class="cw"><canvas id="ch-taller-tipo"></canvas></div></div>
   </div>
   <div class="c2" style="margin-top:14px;">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Turnos por mes</div></div></div><div class="cw"><canvas id="ch-turnos-mes"></canvas></div></div>
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Horas en taller vs disponibles</div><div class="cs">Dashboard — hoja FLOTA OPERACIONES</div></div></div><div class="cw"><canvas id="ch-taller-vs-disp"></canvas></div></div>
+  </div>
+  <div class="card" style="margin-top:14px;display:none;" id="taller-detalle-tipo-card">
+    <div class="ch">
+      <div><div class="ct" id="taller-detalle-tipo-title">Detalle del turno</div><div class="cs">Col J — "DETALLE DEL TURNO"</div></div>
+      <button class="btn" onclick="window.cerrarDetalleTipoArreglo()" style="background:var(--s2);color:var(--mu);">✕ Cerrar</button>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Patente</th><th>Período</th><th>Detalle del turno</th></tr></thead>
+      <tbody id="tb-taller-detalle-tipo"></tbody>
+    </table></div>
   </div>
   <div class="card" style="margin-top:14px;">
     <div class="ch"><div class="ct">Detalle por patente</div></div>
@@ -2123,6 +2133,7 @@ window.renderMaquinariasTabla = function(){
 };
 
 window.renderFlotaTaller = function renderFlotaTaller(){
+  window.cerrarDetalleTipoArreglo?.(); // evita mostrar detalle de un filtro anterior
   const femp  = document.getElementById("f-taller-emp")?.value||"";
   const fanio = document.getElementById("f-taller-anio")?.value||"";
   const ftipo = document.getElementById("f-taller-tipo")?.value||"";
@@ -2167,12 +2178,14 @@ window.renderFlotaTaller = function renderFlotaTaller(){
 
   // Tipo de arreglo — doughnut (Col I de Turnos)
   const tipoData = {};
-  (window.TURNOS_DETALLE||[]).filter(t=>{
+  const turnosFiltradosTipo = (window.TURNOS_DETALLE||[]).filter(t=>{
     if(femp && t.empresa!==femp) return false;
     if(fanio && t.anio!==fanio) return false;
     return true;
-  }).forEach(t=>{ if(t.tipoArr) tipoData[t.tipoArr]=(tipoData[t.tipoArr]||0)+1; });
+  });
+  turnosFiltradosTipo.forEach(t=>{ if(t.tipoArr) tipoData[t.tipoArr]=(tipoData[t.tipoArr]||0)+1; });
   const tipoEntries = Object.entries(tipoData).sort((a,b)=>b[1]-a[1]);
+  window._turnosFiltradosTipo = turnosFiltradosTipo; // usado por el drill-down al hacer click en una porción
   dc("ch-taller-tipo");
   if(tipoEntries.length>0){
     const TCOL=['#4f8ef799','#22c55e99','#f59e0b99','#7c3aed99','#ef444499','#14b8a699','#f9731699','#06b6d499'];
@@ -2180,6 +2193,13 @@ window.renderFlotaTaller = function renderFlotaTaller(){
       type:"doughnut",
       data:{labels:tipoEntries.map(e=>e[0]),datasets:[{data:tipoEntries.map(e=>e[1]),backgroundColor:TCOL.slice(0,tipoEntries.length),borderWidth:0}]},
       options:{responsive:true,maintainAspectRatio:false,cutout:"55%",
+        onClick:(evt,elements)=>{
+          if(!elements.length) return;
+          const idx = elements[0].index;
+          const tipoSeleccionado = tipoEntries[idx][0];
+          window.mostrarDetalleTipoArreglo(tipoSeleccionado);
+        },
+        onHover:(evt,elements)=>{ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
         plugins:{legend:{labels:{color:"#8b8fa8",font:{size:10},boxWidth:8},position:"right"},
           tooltip:{callbacks:{label:c=>`${c.label}: ${c.raw} turnos`}}}}
     });
@@ -2214,6 +2234,31 @@ window.renderFlotaTaller = function renderFlotaTaller(){
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${p}</td><td style="font-size:11px;">${v.j||"—"}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${v.est?pill(v.est,ec):"—"}</td><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,hs/maxH*100)}%;background:${bc};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;">${hs.toFixed(1)}h</span></div></td><td style="color:var(--mu);font-size:11px;">${pct}%</td></tr>`;
   }).join("");
 }
+
+// ── Drill-down: click en "Tipo de arreglo" (Col I) → detalle de Col J ("DETALLE DEL TURNO") ──
+window.mostrarDetalleTipoArreglo = function(tipo){
+  const card = document.getElementById("taller-detalle-tipo-card");
+  const title = document.getElementById("taller-detalle-tipo-title");
+  const tb = document.getElementById("tb-taller-detalle-tipo");
+  if(!card || !tb) return;
+
+  const filas = (window._turnosFiltradosTipo||[]).filter(t=>t.tipoArr===tipo);
+  if(title) title.textContent = `Detalle del turno — ${tipo} (${filas.length})`;
+  tb.innerHTML = filas.length ? filas.map(t=>`
+    <tr>
+      <td style="font-family:'JetBrains Mono';font-weight:700;">${t.pat||"—"}</td>
+      <td style="font-size:11px;">${t.periodo||"—"}</td>
+      <td style="font-size:11px;">${t.detalle||"—"}</td>
+    </tr>`).join("") : `<tr><td colspan="3" style="text-align:center;color:var(--mu);">Sin detalle registrado en Col J para este tipo</td></tr>`;
+
+  card.style.display = "";
+  card.scrollIntoView({behavior:"smooth", block:"nearest"});
+};
+
+window.cerrarDetalleTipoArreglo = function(){
+  const card = document.getElementById("taller-detalle-tipo-card");
+  if(card) card.style.display = "none";
+};
 
 function renderFlotaImpacto(){
   if(!EST3.length){ document.getElementById("k-impacto").innerHTML="<div style='color:var(--mu);padding:10px;'>Cargando datos de Estadística 3...</div>"; return; }
@@ -2940,8 +2985,11 @@ function parseDetalleMaquinas(data){
 
 // ── Parser: "Turnos unidades" → HORAS_PAT + HORAS_MES ──
 function parseTurnos(rows){
-  // col 0=periodo, 1=patente, 2=area, 13=horas_habiles, 19=empresa(Col T), 21=Col V (único criterio de inclusión = "Si")
+  // col 0=periodo, 1=patente, 2=area, 8=Col I (tipo arreglo), 9=Col J (detalle del turno),
+  // 13=horas_habiles (Col N), 19=empresa(Col T), 21=Col V (único criterio de inclusión = "Si")
   const horasPat={}, horasMes={}, turnosMes={}, horasArea={};
+  window.TURNOS_DETALLE = []; // Se inicializa UNA sola vez antes del loop (antes se reseteaba en cada fila,
+                               // por eso los filtros de la página no funcionaban: solo quedaba la última fila)
 
   rows.slice(1).forEach(row=>{
     const colV = String(row[21]||'').trim();
@@ -2951,7 +2999,8 @@ function parseTurnos(rows){
     const area = String(row[2]||'Sin área').trim();
     const horas = parseFloat(row[13])||0;
     const periodo = String(row[0]||'').trim();
-    const tipoArr = String(row[8]||'').trim();
+    const tipoArr = String(row[8]||'').trim();     // Col I — Tipo de arreglo
+    const detalle = String(row[9]||'').trim();     // Col J — Detalle del turno
     const empresa = String(row[19]||'').trim(); // Col T = EMPRESA
     if(!pat) return;
     let mesKey = periodo, anio = '';
@@ -2965,8 +3014,7 @@ function parseTurnos(rows){
       }
     }catch(e){}
     const asistioVal = String(row[15]||'').trim().toUpperCase();
-    window.TURNOS_DETALLE = []; // Reset on each parse
-    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,horas,asistio:asistioVal,empresa,mesKey,anio,periodo});
+    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,detalle,horas,asistio:asistioVal,empresa,mesKey,anio,periodo});
     if(horas>0){
       horasPat[pat]=(horasPat[pat]||0)+horas;
       horasArea[area]=(horasArea[area]||0)+horas;
