@@ -280,6 +280,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Recursos</div>
     <button class="ni" data-page="dotacion"><span class="ni-icon">👥</span><span class="ni-label">Dotación de Operaciones</span></button>
+    <button class="ni" data-page="analisis-dotacion"><span class="ni-icon">📈</span><span class="ni-label">Análisis de dotación</span></button>
     
     
 
@@ -835,6 +836,47 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
 </section>
 
+<!-- ANALISIS DE DOTACION -->
+<section class="page" id="page-analisis-dotacion">
+  <div class="topbar">
+    <div><div class="ptitle">Análisis de dotación</div><div class="psub" id="ad-psub">Cargando datos en tiempo real...</div></div>
+  </div>
+
+  <div class="kg" id="k-analisis-dot"></div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Ranking de CECOs / Servicios</div><div class="cs">Eventos, índice de rotación y variación neta por CECO</div></div></div>
+    <div class="cwtall"><canvas id="ch-ad-ceco"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Ranking de Jefes Zonales</div><div class="cs">Eventos y variación neta por Jefe Zonal</div></div></div>
+    <div class="cwtall"><canvas id="ch-ad-jefe"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Tendencia temporal</div><div class="cs">Eventos, variación neta y variación acumulada por semana</div></div></div>
+    <div class="cwtall"><canvas id="ch-ad-tendencia"></canvas></div>
+  </div>
+
+  <div class="c2" style="margin-top:14px;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Alertas por CECO</div></div></div>
+      <div class="tw"><table>
+        <thead><tr><th>CECO</th><th>Alerta</th></tr></thead>
+        <tbody id="tb-ad-alertas-ceco"></tbody>
+      </table></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="ch"><div><div class="ct">Alertas por Jefe</div></div></div>
+      <div class="tw"><table>
+        <thead><tr><th>Jefe Zonal</th><th>Alerta</th></tr></thead>
+        <tbody id="tb-ad-alertas-jefe"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
 <!-- PREVENTIVOS -->
 <section class="page" id="page-preventivos">
   <div class="topbar">
@@ -1151,6 +1193,7 @@ function renderAll(){
   if(AUDITORIA_DATA.filas.length>0) renderAuditoria();
   if(FUMIGACION_DATA.filas.length>0) renderFumigacion();
   if(REMITOS_TANQUES_DATA.length>0) renderRemitosTanques();
+  if(ANALISIS_DOTACION_DATA.ranking_cecos.length>0 || ANALISIS_DOTACION_DATA.ranking_jefes.length>0) renderAnalisisDotacion();
   if(ABONOS_LEY_DATA.length>0) renderAbonosLey();
   if(MEDICIONES_DATA.length>0) renderMediciones();
 }
@@ -4103,6 +4146,7 @@ async function actualizarTodo(showToast=false){
   actualizarAuditoria(); // no bloquea el resto del ciclo de actualización
   actualizarFumigacion(); // no bloquea el resto del ciclo de actualización
   actualizarRemitosTanques(); // no bloquea el resto del ciclo de actualización
+  actualizarAnalisisDotacion(); // no bloquea el resto del ciclo de actualización
   actualizarAbonosLey(); // no bloquea el resto del ciclo de actualización
   actualizarMediciones(); // no bloquea el resto del ciclo de actualización
   renderAll();
@@ -4177,6 +4221,7 @@ let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}}
 let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
 let FUMIGACION_DATA = {meses: [], filas: []}; // Fumigacion y limpieza de tanques → {meses:[...], filas:[{jefe,servicio,anio,valores:{mes:estado}}]}
 let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)
+let ANALISIS_DOTACION_DATA = {kpis:{}, ranking_cecos:[], ranking_jefes:[], tendencia:[], alertas_ceco:[], alertas_jefe:[]}; // Análisis de dotación → hoja "Análisis de fluctuación"
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
@@ -4298,6 +4343,190 @@ async function actualizarDotacion(){
     return false;
   }
 }
+
+// ── Análisis de dotación: helpers para leer celdas/rangos por referencia tipo "E7" o columna+filas ──
+function colToIndex(col){
+  let idx=0;
+  for(let i=0;i<col.length;i++){ idx = idx*26 + (col.charCodeAt(i)-64); }
+  return idx-1; // 0-based
+}
+function getCell(rows, ref){
+  const m = ref.match(/^([A-Z]+)(\d+)$/);
+  if(!m) return '';
+  const col = colToIndex(m[1]);
+  const row = parseInt(m[2],10)-1;
+  return rows[row]?.[col];
+}
+function getColumnRange(rows, col, rowStart, rowEnd){
+  const idx = colToIndex(col);
+  const out=[];
+  for(let r=rowStart;r<=rowEnd;r++){ out.push(rows[r-1]?.[idx]); }
+  return out;
+}
+
+// ── Análisis de dotación: parser de la hoja "Análisis de fluctuación" (rangos fijos, no tabular) ──
+function parseAnalisisFluctuacion(rows){
+  const kpis = {
+    totalEventos:  Number(getCell(rows,'E7'))  || 0,
+    incorporadas:  Number(getCell(rows,'E8'))  || 0,
+    retiradas:     Number(getCell(rows,'E9'))  || 0,
+    variacionNeta: Number(getCell(rows,'E10')) || 0,
+    cecosConMov:   Number(getCell(rows,'E14')) || 0,
+    jefesConMov:   Number(getCell(rows,'E15')) || 0,
+    pctRevertidos: Number(getCell(rows,'E17')) || 0,
+  };
+
+  // Ranking de CECOs / Servicios (filas 21 a 50) + Alertas por CECO (Col K no vacía)
+  const cecoA = getColumnRange(rows,'A',21,50);
+  const cecoE = getColumnRange(rows,'E',21,50);
+  const cecoH = getColumnRange(rows,'H',21,50);
+  const cecoJ = getColumnRange(rows,'J',21,50);
+  const cecoK = getColumnRange(rows,'K',21,50);
+  const ranking_cecos = [];
+  const alertas_ceco = [];
+  cecoA.forEach((ceco,i)=>{
+    const cecoStr = String(ceco||'').trim();
+    if(!cecoStr) return;
+    ranking_cecos.push({
+      ceco: cecoStr,
+      eventos: Number(cecoE[i])||0,
+      variacionNeta: Number(cecoH[i])||0,
+      indiceRotacion: Number(cecoJ[i])||0,
+    });
+    const alerta = String(cecoK[i]||'').trim();
+    if(alerta) alertas_ceco.push({ceco:cecoStr, alerta});
+  });
+
+  // Ranking de Jefes Zonales (filas 55 a 74) + Alertas por Jefe (Col G no vacía)
+  const jefeA = getColumnRange(rows,'A',55,74);
+  const jefeB = getColumnRange(rows,'B',55,74);
+  const jefeE = getColumnRange(rows,'E',55,74);
+  const jefeG = getColumnRange(rows,'G',55,74);
+  const ranking_jefes = [];
+  const alertas_jefe = [];
+  jefeA.forEach((jefe,i)=>{
+    const jefeStr = String(jefe||'').trim();
+    if(!jefeStr) return;
+    ranking_jefes.push({
+      jefe: jefeStr,
+      eventos: Number(jefeB[i])||0,
+      variacionNeta: Number(jefeE[i])||0,
+    });
+    const alerta = String(jefeG[i]||'').trim();
+    if(alerta) alertas_jefe.push({jefe:jefeStr, alerta});
+  });
+
+  // Tendencia temporal (filas 78 a 129)
+  const semB = getColumnRange(rows,'B',78,129);
+  const semC = getColumnRange(rows,'C',78,129);
+  const semF = getColumnRange(rows,'F',78,129);
+  const semG = getColumnRange(rows,'G',78,129);
+  const tendencia = [];
+  semB.forEach((semana,i)=>{
+    const semanaStr = String(semana||'').trim();
+    if(!semanaStr) return;
+    tendencia.push({
+      semana: semanaStr,
+      eventos: Number(semC[i])||0,
+      variacionNeta: Number(semF[i])||0,
+      variacionAcum: Number(semG[i])||0,
+    });
+  });
+
+  return {kpis, ranking_cecos, ranking_jefes, tendencia, alertas_ceco, alertas_jefe};
+}
+
+// ── Análisis de dotación: extracción de datos ──
+async function actualizarAnalisisDotacion(){
+  try{
+    const rows = await fetchSheet(GS_DOTACION, 'Análisis de fluctuación');
+    ANALISIS_DOTACION_DATA = parseAnalisisFluctuacion(rows);
+
+    const psub = document.getElementById('ad-psub');
+    if(psub) psub.textContent = `${ANALISIS_DOTACION_DATA.ranking_cecos.length} CECOs · ${ANALISIS_DOTACION_DATA.ranking_jefes.length} jefes zonales · hoja "Análisis de fluctuación"`;
+
+    renderAnalisisDotacion();
+    return true;
+  }catch(err){
+    console.warn('Error Análisis de dotación:', err);
+    return false;
+  }
+}
+
+// ── Análisis de dotación: KPIs + 3 gráficos + 2 tablas de alertas ──
+window.renderAnalisisDotacion = function(){
+  const d = ANALISIS_DOTACION_DATA;
+  const k = d.kpis;
+
+  const kEl = document.getElementById('k-analisis-dot');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total de eventos</div><div class="kv">${k.totalEventos}</div><div class="ks">Volumen general de actividad</div></div>
+      <div class="kc ${k.variacionNeta<0?'re':'gr'}"><span class="ki">${k.variacionNeta<0?'📉':'📈'}</span><div class="kl">Variación neta</div><div class="kv">${k.variacionNeta>=0?'+':''}${k.variacionNeta}</div><div class="ks">Dotación</div></div>
+      <div class="kc gr"><span class="ki">➕</span><div class="kl">Incorporadas</div><div class="kv">${k.incorporadas}</div><div class="ks">Personas</div></div>
+      <div class="kc re"><span class="ki">➖</span><div class="kl">Retiradas</div><div class="kv">${k.retiradas}</div><div class="ks">Personas</div></div>
+      <div class="kc am"><span class="ki">↩️</span><div class="kl">% eventos revertidos</div><div class="kv">${k.pctRevertidos}%</div><div class="ks">Calidad de carga</div></div>
+      <div class="kc pu"><span class="ki">🏢</span><div class="kl">CECOs con movimiento</div><div class="kv">${k.cecosConMov}</div><div class="ks">Escala de rotación</div></div>
+      <div class="kc bl"><span class="ki">👤</span><div class="kl">Jefes con movimiento</div><div class="kv">${k.jefesConMov}</div><div class="ks">Escala de rotación</div></div>`;
+  }
+
+  dc('ch-ad-ceco');
+  if(d.ranking_cecos.length>0){
+    charts['ch-ad-ceco'] = new Chart(document.getElementById('ch-ad-ceco'),{
+      type:'bar',
+      data:{labels:d.ranking_cecos.map(r=>r.ceco),
+        datasets:[
+          {label:'Eventos', data:d.ranking_cecos.map(r=>r.eventos), backgroundColor:'#4f8ef799', borderRadius:4},
+          {label:'Índice de rotación', data:d.ranking_cecos.map(r=>r.indiceRotacion), backgroundColor:'#f59e0b99', borderRadius:4},
+          {label:'Variación neta', data:d.ranking_cecos.map(r=>r.variacionNeta), backgroundColor:'#ef444499', borderRadius:4},
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
+    });
+  }
+
+  dc('ch-ad-jefe');
+  if(d.ranking_jefes.length>0){
+    charts['ch-ad-jefe'] = new Chart(document.getElementById('ch-ad-jefe'),{
+      type:'bar',
+      data:{labels:d.ranking_jefes.map(r=>r.jefe),
+        datasets:[
+          {label:'Eventos', data:d.ranking_jefes.map(r=>r.eventos), backgroundColor:'#4f8ef799', borderRadius:4},
+          {label:'Variación neta', data:d.ranking_jefes.map(r=>r.variacionNeta), backgroundColor:'#ef444499', borderRadius:4},
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
+    });
+  }
+
+  dc('ch-ad-tendencia');
+  if(d.tendencia.length>0){
+    charts['ch-ad-tendencia'] = new Chart(document.getElementById('ch-ad-tendencia'),{
+      type:'line',
+      data:{labels:d.tendencia.map(t=>t.semana),
+        datasets:[
+          {label:'Eventos', data:d.tendencia.map(t=>t.eventos), borderColor:'#4f8ef7', backgroundColor:'#4f8ef733', tension:0.3, fill:false},
+          {label:'Variación neta', data:d.tendencia.map(t=>t.variacionNeta), borderColor:'#f59e0b', backgroundColor:'#f59e0b33', tension:0.3, fill:false},
+          {label:'Variación acumulada', data:d.tendencia.map(t=>t.variacionAcum), borderColor:'#22c55e', backgroundColor:'#22c55e33', tension:0.3, fill:true},
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'}}}}
+    });
+  }
+
+  const tbC = document.getElementById('tb-ad-alertas-ceco');
+  if(tbC){
+    tbC.innerHTML = d.alertas_ceco.length ? d.alertas_ceco.map(a=>`
+      <tr><td style="font-weight:600;">${a.ceco}</td><td><span class="p p-warn">${a.alerta}</span></td></tr>`).join('') :
+      `<tr><td colspan="2" style="text-align:center;color:var(--mu);">Sin alertas activas</td></tr>`;
+  }
+  const tbJ = document.getElementById('tb-ad-alertas-jefe');
+  if(tbJ){
+    tbJ.innerHTML = d.alertas_jefe.length ? d.alertas_jefe.map(a=>`
+      <tr><td style="font-weight:600;">${a.jefe}</td><td><span class="p p-warn">${a.alerta}</span></td></tr>`).join('') :
+      `<tr><td colspan="2" style="text-align:center;color:var(--mu);">Sin alertas activas</td></tr>`;
+  }
+};
 
 // ── Actualizar Preventivos ──
 async function actualizarPreventivos(){
