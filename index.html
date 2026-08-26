@@ -4439,11 +4439,11 @@ function parseAnalisisFluctuacion(rows){
 // ── Análisis de dotación: extracción de datos ──
 async function actualizarAnalisisDotacion(){
   try{
-    const rows = await fetchSheet(GS_DOTACION, 'Análisis de fluctuación');
+    const rows = await fetchSheet(GS_DOTACION, 'Analisis de fluctuacion');
     ANALISIS_DOTACION_DATA = parseAnalisisFluctuacion(rows);
 
     const psub = document.getElementById('ad-psub');
-    if(psub) psub.textContent = `${ANALISIS_DOTACION_DATA.ranking_cecos.length} CECOs · ${ANALISIS_DOTACION_DATA.ranking_jefes.length} jefes zonales · hoja "Análisis de fluctuación"`;
+    if(psub) psub.textContent = `${ANALISIS_DOTACION_DATA.ranking_cecos.length} CECOs · ${ANALISIS_DOTACION_DATA.ranking_jefes.length} jefes zonales · hoja "Analisis de fluctuacion"`;
 
     renderAnalisisDotacion();
     return true;
