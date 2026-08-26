@@ -4363,6 +4363,16 @@ function getColumnRange(rows, col, rowStart, rowEnd){
   for(let r=rowStart;r<=rowEnd;r++){ out.push(rows[r-1]?.[idx]); }
   return out;
 }
+// Formatea la fecha de una celda a "DD/MM" — admite tanto texto "01/10/2025" como ISO "2025-10-01T00:00:00.000Z"
+function formatFechaCorta(v){
+  const s = String(v==null?'':v).trim();
+  if(!s) return '';
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  if(iso) return `${iso[3]}/${iso[2]}`;
+  const dmy = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if(dmy) return `${dmy[1].padStart(2,'0')}/${dmy[2].padStart(2,'0')}`;
+  return s;
+}
 
 // ── Análisis de dotación: parser de la hoja "Análisis de fluctuación" (rangos fijos, no tabular) ──
 function parseAnalisisFluctuacion(rows){
@@ -4373,7 +4383,7 @@ function parseAnalisisFluctuacion(rows){
     variacionNeta: Number(getCell(rows,'E10')) || 0,
     cecosConMov:   Number(getCell(rows,'E14')) || 0,
     jefesConMov:   Number(getCell(rows,'E15')) || 0,
-    pctRevertidos: Number(getCell(rows,'E17')) || 0,
+    pctRevertidos: Math.round((Number(getCell(rows,'E17')) || 0) * 100 * 10) / 10, // E17 viene como fracción (ej. 0.2667) → 26.7%
   };
 
   // Ranking de CECOs / Servicios (filas 21 a 50) + Alertas por CECO (Col K no vacía)
@@ -4416,17 +4426,17 @@ function parseAnalisisFluctuacion(rows){
     if(alerta) alertas_jefe.push({jefe:jefeStr, alerta});
   });
 
-  // Tendencia temporal (filas 78 a 129)
-  const semB = getColumnRange(rows,'B',78,129);
+  // Tendencia temporal (filas 78 a 129) — etiqueta temporal = Columna A (fecha real, no el código de semana de Col B)
+  const semA = getColumnRange(rows,'A',78,129);
   const semC = getColumnRange(rows,'C',78,129);
   const semF = getColumnRange(rows,'F',78,129);
   const semG = getColumnRange(rows,'G',78,129);
   const tendencia = [];
-  semB.forEach((semana,i)=>{
-    const semanaStr = String(semana||'').trim();
-    if(!semanaStr) return;
+  semA.forEach((fecha,i)=>{
+    const fechaStr = formatFechaCorta(fecha);
+    if(!fechaStr) return;
     tendencia.push({
-      semana: semanaStr,
+      semana: fechaStr,
       eventos: Number(semC[i])||0,
       variacionNeta: Number(semF[i])||0,
       variacionAcum: Number(semG[i])||0,
