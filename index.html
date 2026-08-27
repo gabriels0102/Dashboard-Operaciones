@@ -3539,11 +3539,13 @@ window.renderFumigacion = function(){
   const meses = fm ? [fm] : FUMIGACION_DATA.meses; // "Todos los meses" → todos juntos, uno al lado del otro
 
   // ── Cuadros resumen: cuentan cada combinación Jefe+Servicio+Mes visible ──
+  // "SIN DATOS" (mes que todavía no llegó / no se cargó) queda afuera del total: no tiene sentido
+  // contar contra el % de cumplimiento un mes que aún no corresponde evaluar.
   let total = 0, fumigados = 0, pendientes = 0;
   filas.forEach(r=>{
     meses.forEach(m=>{
       const v = r.valores[m];
-      if(v===undefined) return;
+      if(v===undefined || v==='SIN DATOS') return;
       total++;
       if(v==='FUMIGADO') fumigados++;
       else if(v==='PENDIENTE') pendientes++;
@@ -3555,7 +3557,7 @@ window.renderFumigacion = function(){
   const kEl = document.getElementById('k-fum');
   if(kEl){
     kEl.innerHTML = `
-      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">${fm?capMes(fm):'Todos los meses'} · Jefe Zonal × Servicio</div></div>
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">${fm?capMes(fm):'Todos los meses'} · con dato cargado</div></div>
       <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${fumigados} fumigados</div></div>
       <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${pendientes} pendientes</div></div>`;
   }
@@ -3876,13 +3878,16 @@ window.renderMediciones = function(){
   const cumplido = filas.filter(r=>{const c=vigenciaCls(r.vigencia); return c==='p-ok'||c==='p-warn';}).length; // Vigente + Cerca de vencer
   const noRealizado = filas.filter(r=>String(r.vigencia||'').trim().toLowerCase()==='no realizado').length;
   const vencido = filas.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
+  const pctCumplido = total ? Math.round((cumplido/total)*100) : 0;
+  const pctNoRealizado = total ? Math.round((noRealizado/total)*100) : 0;
+  const pctVencido = total ? Math.round((vencido/total)*100) : 0;
 
   const kEl = document.getElementById('k-med');
   if(kEl){
     kEl.innerHTML = `
-      <div class="kc gr"><span class="ki">✅</span><div class="kl">Cumplido</div><div class="kv">${cumplido}</div><div class="ks">Vigente + Cerca de vencer</div></div>
-      <div class="kc am"><span class="ki">⏳</span><div class="kl">No realizado</div><div class="kv">${noRealizado}</div><div class="ks">Sin llevar a cabo</div></div>
-      <div class="kc re"><span class="ki">🔴</span><div class="kl">Vencido</div><div class="kv">${vencido}</div><div class="ks">Fuera de plazo</div></div>`;
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">Cumplido</div><div class="kv">${pctCumplido}%</div><div class="ks">${cumplido} de ${total} · Vigente + Cerca de vencer</div></div>
+      <div class="kc am"><span class="ki">⏳</span><div class="kl">No realizado</div><div class="kv">${pctNoRealizado}%</div><div class="ks">${noRealizado} de ${total} · Sin llevar a cabo</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">Vencido</div><div class="kv">${pctVencido}%</div><div class="ks">${vencido} de ${total} · Fuera de plazo</div></div>`;
   }
 
   const cont = document.getElementById('mediciones-cont');
