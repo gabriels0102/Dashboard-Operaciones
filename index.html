@@ -3873,17 +3873,16 @@ window.renderMediciones = function(){
 
   // ── Cuadros resumen (se recalculan según los filtros activos) ──
   const total = filas.length;
-  const cumplen = filas.filter(r=>{const c=vigenciaCls(r.vigencia); return c==='p-ok'||c==='p-warn';}).length;
-  const noCumplen = filas.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
-  const pctCumple = total ? Math.round((cumplen/total)*100) : 0;
-  const pctNoCumple = total ? Math.round((noCumplen/total)*100) : 0;
+  const cumplido = filas.filter(r=>{const c=vigenciaCls(r.vigencia); return c==='p-ok'||c==='p-warn';}).length; // Vigente + Cerca de vencer
+  const noRealizado = filas.filter(r=>String(r.vigencia||'').trim().toLowerCase()==='no realizado').length;
+  const vencido = filas.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
 
   const kEl = document.getElementById('k-med');
   if(kEl){
     kEl.innerHTML = `
-      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Mediciones</div></div>
-      <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${cumplen} vigentes / cerca de vencer</div></div>
-      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noCumplen} vencidos</div></div>`;
+      <div class="kc gr"><span class="ki">✅</span><div class="kl">Cumplido</div><div class="kv">${cumplido}</div><div class="ks">Vigente + Cerca de vencer</div></div>
+      <div class="kc am"><span class="ki">⏳</span><div class="kl">No realizado</div><div class="kv">${noRealizado}</div><div class="ks">Sin llevar a cabo</div></div>
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">Vencido</div><div class="kv">${vencido}</div><div class="ks">Fuera de plazo</div></div>`;
   }
 
   const cont = document.getElementById('mediciones-cont');
