@@ -3391,6 +3391,22 @@ function capMes(s){
   return String(s).toLowerCase().replace(/(^|\s)\S/g, l=>l.toUpperCase());
 }
 
+// ¿El mes indicado por el encabezado (ej. "MAYO 2026") ya transcurrió respecto a hoy?
+// Se usa para no contabilizar en los cálculos meses futuros que todavía no corresponde evaluar.
+const MESES_ES_IDX = {ENERO:0,FEBRERO:1,MARZO:2,ABRIL:3,MAYO:4,JUNIO:5,JULIO:6,AGOSTO:7,SEPTIEMBRE:8,OCTUBRE:9,NOVIEMBRE:10,DICIEMBRE:11};
+function mesTranscurrido(mesLabel){
+  const m = String(mesLabel||'').trim().toUpperCase().match(/([A-ZÁÉÍÓÚÑ]+)\s*(\d{4})/);
+  if(!m) return true; // si no se puede interpretar el formato, no se filtra (fail-safe: se incluye)
+  const nombre = m[1].normalize('NFD').replace(/[\u0300-\u036f]/g,''); // quita tildes (ej. "SEPTIEMBRE")
+  const anio = parseInt(m[2],10);
+  const mesIdx = MESES_ES_IDX[nombre];
+  if(mesIdx===undefined) return true;
+  const ahora = new Date();
+  const fechaMes = new Date(anio, mesIdx, 1);
+  const fechaActual = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+  return fechaMes <= fechaActual;
+}
+
 // ── Control - Auditoría: cuadros resumen + tabla mensual (un mes o todos los meses juntos) ──
 window.renderAuditoria = function(){
   const selMes  = document.getElementById('f-aud-mes');
@@ -3538,12 +3554,12 @@ window.renderFumigacion = function(){
   const filas = FUMIGACION_DATA.filas.filter(r => (!fa || r.anio===fa) && (!fj || r.jefe===fj) && (!fs || r.servicio===fs));
   const meses = fm ? [fm] : FUMIGACION_DATA.meses; // "Todos los meses" → todos juntos, uno al lado del otro
 
-  // ── Cuadros resumen: cuentan cada combinación Jefe+Servicio+Mes visible ──
-  // "SIN DATOS" (mes que todavía no llegó / no se cargó) queda afuera del total: no tiene sentido
-  // contar contra el % de cumplimiento un mes que aún no corresponde evaluar.
+  // ── Cuadros resumen: cuentan cada combinación Jefe+Servicio+Mes visible, SOLO de meses ya transcurridos ──
+  // Un mes futuro (que todavía no llegó) no corresponde evaluarlo como "pendiente" ni contarlo en el total.
+  const mesesCalculo = meses.filter(mesTranscurrido);
   let total = 0, fumigados = 0, pendientes = 0;
   filas.forEach(r=>{
-    meses.forEach(m=>{
+    mesesCalculo.forEach(m=>{
       const v = r.valores[m];
       if(v===undefined || v==='SIN DATOS') return;
       total++;
@@ -3552,12 +3568,12 @@ window.renderFumigacion = function(){
     });
   });
   const pctCumple = total ? Math.round((fumigados/total)*100) : 0;
-  const pctNoCumple = total ? Math.round((pendientes/total)*100) : 0;
+  const pctNoCumple = total ? (100 - pctCumple) : 0; // se deriva del complemento para que siempre sumen 100%
 
   const kEl = document.getElementById('k-fum');
   if(kEl){
     kEl.innerHTML = `
-      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">${fm?capMes(fm):'Todos los meses'} · con dato cargado</div></div>
+      <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">${fm?capMes(fm):'Todos los meses'} · meses transcurridos</div></div>
       <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${fumigados} fumigados</div></div>
       <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${pendientes} pendientes</div></div>`;
   }
@@ -3880,7 +3896,7 @@ window.renderMediciones = function(){
   const vencido = filas.filter(r=>vigenciaCls(r.vigencia)==='p-err').length;
   const pctCumplido = total ? Math.round((cumplido/total)*100) : 0;
   const pctNoRealizado = total ? Math.round((noRealizado/total)*100) : 0;
-  const pctVencido = total ? Math.round((vencido/total)*100) : 0;
+  const pctVencido = total ? Math.max(0, 100 - pctCumplido - pctNoRealizado) : 0; // se deriva del resto para que sumen 100%
 
   const kEl = document.getElementById('k-med');
   if(kEl){
