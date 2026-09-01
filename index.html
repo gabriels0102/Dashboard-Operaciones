@@ -606,7 +606,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
     <div class="kg" id="k-rem" style="margin-bottom:14px;"></div>
     <div class="card">
-      <div class="ch"><div><div class="ct">Detalle de remitos</div><div class="cs">Servicio, Jefe Zonal, Fecha de vencimiento y Estado · hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)</div></div></div>
+      <div class="ch"><div><div class="ct">Detalle de remitos</div><div class="cs">Servicio, Jefe Zonal, Fecha de vencimiento y Estado · hoja "Consolidado" (Columna G = LIMPIEZA DE TANQUES)</div></div></div>
       <div class="tw"><table>
         <thead><tr><th>Servicio</th><th>Jefe Zonal</th><th>Fecha de vencimiento</th><th>Estado</th></tr></thead>
         <tbody id="tb-remitos-tanques"></tbody>
@@ -3602,21 +3602,21 @@ window.renderFumigacion = function(){
   }
 };
 
-// ── Remitos de limpieza de tanques: extracción de datos (hoja "Detalle de remitos Limpieza de Tanques") ──
-// Columna Q(16) = filtro estricto "SI" para incluir el registro en el análisis.
-// K(10)=Servicio, L(11)=Jefe Zonal, N(13)=Fecha de vencimiento, O(14)=Estado (Vigente/Vencido/Cerca de vencer)
+// ── Remitos de limpieza de tanques: extracción de datos (hoja "Consolidado", misma planilla que "Abonos de ley") ──
+// Columna G(6) = "Tipo" — filtro estricto: únicamente "LIMPIEZA DE TANQUES" entra al análisis.
+// B(1)=Jefe Zonal, E(4)=Servicio, K(10)=Fecha de vencimiento, M(12)=Vigencia (Vigente/Vencido/Cerca de vencer)
 async function actualizarRemitosTanques(){
   try{
-    const rows = await fetchSheet(GS_FUMIGACION, 'Detalle de remitos Limpieza de Tanques');
+    const rows = await fetchSheet(GS_ABONOS_LEY, 'Consolidado');
     const datos = [];
     rows.slice(1).forEach(row=>{
-      const incluir = String(row[16]||'').trim().toUpperCase();
-      if(incluir !== 'SI') return; // Columna Q: solo "SI" entra al análisis
+      const tipo = String(row[6]||'').trim().toUpperCase();
+      if(tipo !== 'LIMPIEZA DE TANQUES') return; // Columna G: solo este tipo entra al análisis
 
-      const servicio    = String(row[10]||'').trim(); // Col K
-      const jefe         = String(row[11]||'').trim(); // Col L
-      const vencimiento = String(row[13]||'').trim(); // Col N
-      const estado       = String(row[14]||'').trim(); // Col O
+      const servicio    = String(row[4]||'').trim();  // Col E
+      const jefe         = String(row[1]||'').trim();  // Col B
+      const vencimiento = String(row[10]||'').trim(); // Col K
+      const estado       = String(row[12]||'').trim(); // Col M — Vigencia
       if(!jefe && !servicio) return;
 
       datos.push({servicio, jefe, vencimiento, estado});
@@ -3624,7 +3624,7 @@ async function actualizarRemitosTanques(){
     REMITOS_TANQUES_DATA = datos;
 
     const psub = document.getElementById('rem-psub');
-    if(psub) psub.textContent = `${REMITOS_TANQUES_DATA.length} registros · hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)`;
+    if(psub) psub.textContent = `${REMITOS_TANQUES_DATA.length} registros · hoja "Consolidado" (Columna G = LIMPIEZA DE TANQUES)`;
 
     renderRemitosTanques();
     return true;
@@ -4240,7 +4240,7 @@ let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porS
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
 let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:[...], filas:[{jefe,servicio,valores:{mes:estado}}]}
 let FUMIGACION_DATA = {meses: [], filas: []}; // Fumigacion y limpieza de tanques → {meses:[...], filas:[{jefe,servicio,anio,valores:{mes:estado}}]}
-let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Detalle de remitos Limpieza de Tanques" (Columna Q = SI)
+let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Consolidado" (Columna G = LIMPIEZA DE TANQUES)
 let ANALISIS_DOTACION_DATA = {kpis:{}, ranking_cecos:[], ranking_jefes:[], tendencia:[], alertas_ceco:[], alertas_jefe:[]}; // Análisis de dotación → hoja "Análisis de fluctuación"
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
