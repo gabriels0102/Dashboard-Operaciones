@@ -3658,19 +3658,19 @@ window.renderRemitosTanques = function(){
     (!fj || r.jefe===fj) && (!fs || r.servicio===fs) && (!fe || r.estado===fe)
   );
 
-  // ── Cuadros resumen (mismo criterio que Abonos de ley: Vigente/Cerca de vencer = cumple, Vencido = no cumple) ──
+  // ── Cuadros resumen: Vigente (+Cerca de vencer) vs. Vencido (agrupa Vencido + No realizado + Sin datos) ──
   const total = filas.length;
-  const cumplen = filas.filter(r=>{const c=vigenciaCls(r.estado); return c==='p-ok'||c==='p-warn';}).length;
-  const noCumplen = filas.filter(r=>vigenciaCls(r.estado)==='p-err').length;
+  const cumplen = filas.filter(r=>{const c=vigenciaCls(r.estado); return c==='p-ok'||c==='p-warn';}).length; // Vigente + Cerca de vencer
+  const noCumplen = total - cumplen; // Vencido + No realizado + Sin datos (todo lo que no es Vigente/Cerca de vencer)
   const pctCumple = total ? Math.round((cumplen/total)*100) : 0;
-  const pctNoCumple = total ? Math.round((noCumplen/total)*100) : 0;
+  const pctNoCumple = total ? (100 - pctCumple) : 0; // se deriva del resto para que sumen exactamente 100%
 
   const kEl = document.getElementById('k-rem');
   if(kEl){
     kEl.innerHTML = `
       <div class="kc bl"><span class="ki">📊</span><div class="kl">Total general</div><div class="kv">${total}</div><div class="ks">Remitos</div></div>
       <div class="kc gr"><span class="ki">✅</span><div class="kl">% Cumplimiento</div><div class="kv">${pctCumple}%</div><div class="ks">${cumplen} vigentes / cerca de vencer</div></div>
-      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noCumplen} vencidos</div></div>`;
+      <div class="kc re"><span class="ki">🔴</span><div class="kl">% No cumplimiento</div><div class="kv">${pctNoCumple}%</div><div class="ks">${noCumplen} vencidos / no realizados / sin datos</div></div>`;
   }
 
   const tb = document.getElementById('tb-remitos-tanques');
