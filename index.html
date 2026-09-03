@@ -663,13 +663,31 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <label>Año:</label><select id="f-aes-anio" onchange="window.renderAnalisisEcoSitios()" style="min-width:110px;"><option value="">Todos</option></select>
   </div>
 
-  <div class="kg" id="k-aes"></div>
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Resumen mensual</div><div class="cs">Cada mes se calcula de forma independiente — no se suma acumulado entre meses distintos</div></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación (favorable / desfavorable)</th></tr></thead>
+      <tbody id="tb-aes-mensual"></tbody>
+    </table></div>
+  </div>
 
   <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Desglose por sitio</div><div class="cs">Presupuesto mensual vs. Gasto real, según los filtros activos</div></div></div>
+    <div class="ch"><div><div class="ct">Desglose por sitio</div><div class="cs">Presupuesto vs. Gasto real, por sitio y por mes (sin mezclar meses distintos)</div></div></div>
     <div class="tw"><table>
       <thead><tr><th>CECO</th><th>Sitio</th><th>Jefe Zonal</th><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación</th></tr></thead>
       <tbody id="tb-aes"></tbody>
+    </table></div>
+  </div>
+
+  <!-- ANÁLISIS POR SITIO (al final, con selector dedicado para ver un sitio a la vez) -->
+  <div class="card" style="margin-top:14px;">
+    <div class="ch">
+      <div><div class="ct">Análisis por Sitio</div><div class="cs">Detalle mes a mes de un sitio específico</div></div>
+      <select id="f-aes-sitio-detalle" onchange="window.renderAnalisisEcoSitios()" style="min-width:260px;"><option value="">Seleccioná un sitio...</option></select>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación (favorable / desfavorable)</th></tr></thead>
+      <tbody id="tb-aes-sitio-detalle"></tbody>
     </table></div>
   </div>
 </section>
@@ -4650,42 +4668,57 @@ window.renderAnalisisEcoSitios = function(){
     (!fc || r.ceco===fc) && (!fj || r.jefe_zonal===fj) && (!fm || r.mes===fm) && (!fa || r.anio===fa)
   );
 
-  // ── KPIs ──
-  // Ojo: "Presupuesto" (Col D) es un valor fijo por CECO+Sitio que se repite en cada fila/transacción
-  // (cada fila es un gasto puntual — NP/Caja). Sumarlo por fila lo infla; hay que tomarlo una sola vez por sitio.
-  const presupuestoUnico = {};
-  filas.forEach(r=>{
-    const key = `${r.ceco}|||${r.sitio}`;
-    if(!(key in presupuestoUnico)) presupuestoUnico[key] = r.costo_presupuestado;
-  });
-  const presupuesto = Object.values(presupuestoUnico).reduce((s,v)=>s+v, 0);
-  const gastoReal = filas.reduce((s,r)=>s+r.gasto_real, 0); // Col G sí es por transacción: se suma normalmente
-  const desviacion = gastoReal - presupuesto;
-  const pctDesviacion = presupuesto ? Math.round((desviacion/presupuesto)*1000)/10 : 0;
-  const sobregasto = desviacion > 0;
+  // Orden cronológico de meses (nombres en español, tal como vienen en la Columna H)
+  const MESES_ORDEN = {ENERO:1,FEBRERO:2,MARZO:3,ABRIL:4,MAYO:5,JUNIO:6,JULIO:7,AGOSTO:8,SEPTIEMBRE:9,OCTUBRE:10,NOVIEMBRE:11,DICIEMBRE:12};
+  const ordenMesAnio = (m,a)=> (parseInt(a,10)||0)*100 + (MESES_ORDEN[String(m||'').trim().toUpperCase()]||0);
 
-  const kEl = document.getElementById('k-aes');
-  if(kEl){
-    kEl.innerHTML = `
-      <div class="kc bl"><span class="ki">💵</span><div class="kl">Presupuesto mensual</div><div class="kv" style="font-size:18px;word-break:break-all;">${fmtARS(presupuesto)}</div><div class="ks">Suma de Columna D (única por sitio)</div></div>
-      <div class="kc am"><span class="ki">🧾</span><div class="kl">Gasto real acumulado</div><div class="kv" style="font-size:18px;word-break:break-all;">${fmtARS(gastoReal)}</div><div class="ks">Suma de Columna G</div></div>
-      <div class="kc ${sobregasto?'re':'gr'}"><span class="ki">${sobregasto?'🔴':'🟢'}</span><div class="kl">Desviación</div><div class="kv" style="font-size:18px;word-break:break-all;">${desviacion>=0?'+':''}${fmtARS(desviacion)}</div><div class="ks">${desviacion>=0?'+':''}${pctDesviacion}% ${sobregasto?'sobregasto':'ahorro / dentro de límite'}</div></div>`;
+  // ── Resumen mensual: cada Mes+Año se calcula por separado, SIN sumar acumulado entre meses distintos ──
+  const porMes = {};
+  filas.forEach(r=>{
+    const mkey = `${r.mes}|||${r.anio}`;
+    if(!porMes[mkey]) porMes[mkey] = {mes:r.mes, anio:r.anio, presupuestoUnico:{}, gasto:0};
+    const pkey = `${r.ceco}|||${r.sitio}`;
+    // Presupuesto: valor fijo por CECO+Sitio dentro de ESE mes — se toma una sola vez, no se suma por transacción
+    if(!(pkey in porMes[mkey].presupuestoUnico)) porMes[mkey].presupuestoUnico[pkey] = r.costo_presupuestado;
+    porMes[mkey].gasto += r.gasto_real; // Col G sí es por transacción: se suma normalmente dentro del mes
+  });
+
+  const resumenMensual = Object.values(porMes).map(m=>{
+    const presupuesto = Object.values(m.presupuestoUnico).reduce((s,v)=>s+v, 0);
+    // Desviación = Presupuesto − Gasto real → positivo (favorable/ahorro), negativo (desfavorable/sobregasto)
+    const desviacion = presupuesto - m.gasto;
+    const pct = presupuesto ? Math.round((desviacion/presupuesto)*1000)/10 : 0;
+    return {mes:m.mes, anio:m.anio, presupuesto, gasto:m.gasto, desviacion, pct};
+  }).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
+
+  const tbMensual = document.getElementById('tb-aes-mensual');
+  if(tbMensual){
+    tbMensual.innerHTML = resumenMensual.length ? resumenMensual.map(m=>{
+      const favorable = m.desviacion >= 0; // positivo = sobra plata (favorable) = verde
+      return `<tr>
+        <td style="font-weight:600;">${m.mes||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${m.anio||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${fmtARS(m.presupuesto)}</td>
+        <td style="font-family:'JetBrains Mono';">${fmtARS(m.gasto)}</td>
+        <td><span class="p ${favorable?'p-ok':'p-err'}">${m.desviacion>=0?'+':''}${fmtARS(m.desviacion)} (${m.pct>=0?'+':''}${m.pct}%)</span></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 
-  // ── Desglose por sitio ──
+  // ── Desglose por sitio: agrupado por CECO+Sitio+Mes+Año, para no mezclar meses distintos en la misma fila ──
   const porSitio = {};
   filas.forEach(r=>{
-    const key = `${r.ceco}|||${r.sitio}`;
+    const key = `${r.ceco}|||${r.sitio}|||${r.mes}|||${r.anio}`;
     if(!porSitio[key]) porSitio[key] = {ceco:r.ceco, sitio:r.sitio, jefe:r.jefe_zonal, mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
-    porSitio[key].gasto += r.gasto_real; // Columna G sí se acumula (cada fila es una transacción distinta)
+    porSitio[key].gasto += r.gasto_real; // Columna G sí se acumula (cada fila es una transacción distinta) dentro del mismo mes
   });
 
   const tb = document.getElementById('tb-aes');
   if(tb){
-    const filasSitio = Object.values(porSitio);
+    const filasSitio = Object.values(porSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
     tb.innerHTML = filasSitio.length ? filasSitio.map(s=>{
-      const dev = s.gasto - s.presupuesto;
-      const devCls = dev>0 ? 'p-err' : 'p-ok';
+      const dev = s.presupuesto - s.gasto; // positivo = favorable (ahorro), negativo = desfavorable (sobregasto)
+      const devCls = dev>=0 ? 'p-ok' : 'p-err';
       return `<tr>
         <td style="font-family:'JetBrains Mono';">${s.ceco||'—'}</td>
         <td>${s.sitio||'—'}</td>
@@ -4698,7 +4731,49 @@ window.renderAnalisisEcoSitios = function(){
       </tr>`;
     }).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
+
+  // ── Análisis por Sitio: selector dedicado para ver el detalle mes a mes de UN sitio a la vez ──
+  // (independiente de los 4 filtros de arriba — lista todos los sitios de la fuente completa)
+  const selSitioDet = document.getElementById('f-aes-sitio-detalle');
+  if(selSitioDet && selSitioDet.options.length <= 1){
+    const sitiosUnicos = [...new Map(ANALISIS_ECO_SITIOS_DATA.map(r=>[`${r.ceco}|||${r.sitio}`, r])).values()]
+      .sort((a,b)=>(a.sitio||'').localeCompare(b.sitio||''));
+    sitiosUnicos.forEach(r=>{
+      const val = `${r.ceco}|||${r.sitio}`;
+      selSitioDet.innerHTML += `<option value="${val}">${r.sitio} (${r.ceco})</option>`;
+    });
+  }
+
+  const tbSitioDet = document.getElementById('tb-aes-sitio-detalle');
+  if(tbSitioDet){
+    const sitioSel = selSitioDet?.value || '';
+    if(!sitioSel){
+      tbSitioDet.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Seleccioná un sitio arriba para ver su detalle mes a mes</td></tr>`;
+    } else {
+      const [cecoSel, sitioNombre] = sitioSel.split('|||');
+      const filasDelSitio = ANALISIS_ECO_SITIOS_DATA.filter(r=>r.ceco===cecoSel && r.sitio===sitioNombre);
+      const porMesSitio = {};
+      filasDelSitio.forEach(r=>{
+        const mkey = `${r.mes}|||${r.anio}`;
+        if(!porMesSitio[mkey]) porMesSitio[mkey] = {mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
+        porMesSitio[mkey].gasto += r.gasto_real;
+      });
+      const detalleSitio = Object.values(porMesSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
+      tbSitioDet.innerHTML = detalleSitio.length ? detalleSitio.map(m=>{
+        const dev = m.presupuesto - m.gasto;
+        const pct = m.presupuesto ? Math.round((dev/m.presupuesto)*1000)/10 : 0;
+        return `<tr>
+          <td style="font-weight:600;">${m.mes||'—'}</td>
+          <td style="font-family:'JetBrains Mono';">${m.anio||'—'}</td>
+          <td style="font-family:'JetBrains Mono';">${fmtARS(m.presupuesto)}</td>
+          <td style="font-family:'JetBrains Mono';">${fmtARS(m.gasto)}</td>
+          <td><span class="p ${dev>=0?'p-ok':'p-err'}">${dev>=0?'+':''}${fmtARS(dev)} (${pct>=0?'+':''}${pct}%)</span></td>
+        </tr>`;
+      }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin datos para este sitio</td></tr>`;
+    }
+  }
 };
+
 
 async function actualizarPreventivos(){
   setGsStatus('prev','loading');
