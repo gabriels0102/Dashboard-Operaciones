@@ -4651,8 +4651,15 @@ window.renderAnalisisEcoSitios = function(){
   );
 
   // ── KPIs ──
-  const presupuesto = filas.reduce((s,r)=>s+r.costo_presupuestado, 0);
-  const gastoReal = filas.reduce((s,r)=>s+r.gasto_real, 0);
+  // Ojo: "Presupuesto" (Col D) es un valor fijo por CECO+Sitio que se repite en cada fila/transacción
+  // (cada fila es un gasto puntual — NP/Caja). Sumarlo por fila lo infla; hay que tomarlo una sola vez por sitio.
+  const presupuestoUnico = {};
+  filas.forEach(r=>{
+    const key = `${r.ceco}|||${r.sitio}`;
+    if(!(key in presupuestoUnico)) presupuestoUnico[key] = r.costo_presupuestado;
+  });
+  const presupuesto = Object.values(presupuestoUnico).reduce((s,v)=>s+v, 0);
+  const gastoReal = filas.reduce((s,r)=>s+r.gasto_real, 0); // Col G sí es por transacción: se suma normalmente
   const desviacion = gastoReal - presupuesto;
   const pctDesviacion = presupuesto ? Math.round((desviacion/presupuesto)*1000)/10 : 0;
   const sobregasto = desviacion > 0;
@@ -4660,18 +4667,17 @@ window.renderAnalisisEcoSitios = function(){
   const kEl = document.getElementById('k-aes');
   if(kEl){
     kEl.innerHTML = `
-      <div class="kc bl"><span class="ki">💵</span><div class="kl">Presupuesto mensual</div><div class="kv">${fmtARS(presupuesto)}</div><div class="ks">Suma de Columna D</div></div>
-      <div class="kc am"><span class="ki">🧾</span><div class="kl">Gasto real acumulado</div><div class="kv">${fmtARS(gastoReal)}</div><div class="ks">Suma de Columna G</div></div>
-      <div class="kc ${sobregasto?'re':'gr'}"><span class="ki">${sobregasto?'🔴':'🟢'}</span><div class="kl">Desviación</div><div class="kv">${desviacion>=0?'+':''}${fmtARS(desviacion)}</div><div class="ks">${desviacion>=0?'+':''}${pctDesviacion}% ${sobregasto?'sobregasto':'ahorro / dentro de límite'}</div></div>`;
+      <div class="kc bl"><span class="ki">💵</span><div class="kl">Presupuesto mensual</div><div class="kv" style="font-size:18px;word-break:break-all;">${fmtARS(presupuesto)}</div><div class="ks">Suma de Columna D (única por sitio)</div></div>
+      <div class="kc am"><span class="ki">🧾</span><div class="kl">Gasto real acumulado</div><div class="kv" style="font-size:18px;word-break:break-all;">${fmtARS(gastoReal)}</div><div class="ks">Suma de Columna G</div></div>
+      <div class="kc ${sobregasto?'re':'gr'}"><span class="ki">${sobregasto?'🔴':'🟢'}</span><div class="kl">Desviación</div><div class="kv" style="font-size:18px;word-break:break-all;">${desviacion>=0?'+':''}${fmtARS(desviacion)}</div><div class="ks">${desviacion>=0?'+':''}${pctDesviacion}% ${sobregasto?'sobregasto':'ahorro / dentro de límite'}</div></div>`;
   }
 
   // ── Desglose por sitio ──
   const porSitio = {};
   filas.forEach(r=>{
     const key = `${r.ceco}|||${r.sitio}`;
-    if(!porSitio[key]) porSitio[key] = {ceco:r.ceco, sitio:r.sitio, jefe:r.jefe_zonal, mes:r.mes, anio:r.anio, presupuesto:0, gasto:0};
-    porSitio[key].presupuesto += r.costo_presupuestado;
-    porSitio[key].gasto += r.gasto_real;
+    if(!porSitio[key]) porSitio[key] = {ceco:r.ceco, sitio:r.sitio, jefe:r.jefe_zonal, mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
+    porSitio[key].gasto += r.gasto_real; // Columna G sí se acumula (cada fila es una transacción distinta)
   });
 
   const tb = document.getElementById('tb-aes');
