@@ -254,6 +254,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
     <div class="nav-section">Contratos y Sitios</div>
     <button class="ni" data-page="contratos"><span class="ni-icon">📋</span><span class="ni-label">Contratos</span></button>
+    <button class="ni" data-page="analisis-eco-sitios"><span class="ni-icon">💰</span><span class="ni-label">Analisis economico mensual - Sitios</span></button>
     <button class="ni" data-page="sitios"><span class="ni-icon">🏢</span><span class="ni-label">Abonos de ley</span></button>
     <button class="ni" data-page="mediciones"><span class="ni-icon">🌡️</span><span class="ni-label">Mediciones</span></button>
     <button class="ni" data-page="fumigacion"><span class="ni-icon">🧴</span><span class="ni-label">Fumigacion y limpieza de tanques</span></button>
@@ -648,6 +649,29 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     <input type="text" id="f-cont-busq" placeholder="Buscar servicio o nombre..." style="width:180px;" oninput="renderContratos()"/>
   </div>
   <div id="contratos-cont"></div>
+</section>
+
+<!-- ANALISIS ECONOMICO MENSUAL - SITIOS -->
+<section class="page" id="page-analisis-eco-sitios">
+  <div class="topbar">
+    <div><div class="ptitle">Analisis economico mensual - Sitios</div><div class="psub" id="aes-psub">Cargando datos en tiempo real...</div></div>
+  </div>
+  <div class="fb">
+    <label>CECO:</label><select id="f-aes-ceco" onchange="window.renderAnalisisEcoSitios()" style="min-width:140px;"><option value="">Todos</option></select>
+    <label>Jefe Zonal:</label><select id="f-aes-jefe" onchange="window.renderAnalisisEcoSitios()" style="min-width:190px;"><option value="">Todos</option></select>
+    <label>Mes:</label><select id="f-aes-mes" onchange="window.renderAnalisisEcoSitios()" style="min-width:140px;"><option value="">Todos</option></select>
+    <label>Año:</label><select id="f-aes-anio" onchange="window.renderAnalisisEcoSitios()" style="min-width:110px;"><option value="">Todos</option></select>
+  </div>
+
+  <div class="kg" id="k-aes"></div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Desglose por sitio</div><div class="cs">Presupuesto mensual vs. Gasto real, según los filtros activos</div></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>CECO</th><th>Sitio</th><th>Jefe Zonal</th><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación</th></tr></thead>
+      <tbody id="tb-aes"></tbody>
+    </table></div>
+  </div>
 </section>
 
 <!-- FLOTA RESUMEN -->
@@ -1194,6 +1218,7 @@ function renderAll(){
   if(FUMIGACION_DATA.filas.length>0) renderFumigacion();
   if(REMITOS_TANQUES_DATA.length>0) renderRemitosTanques();
   if(ANALISIS_DOTACION_DATA.ranking_cecos.length>0 || ANALISIS_DOTACION_DATA.ranking_jefes.length>0) renderAnalisisDotacion();
+  if(ANALISIS_ECO_SITIOS_DATA.length>0) renderAnalisisEcoSitios();
   if(ABONOS_LEY_DATA.length>0) renderAbonosLey();
   if(MEDICIONES_DATA.length>0) renderMediciones();
 }
@@ -2800,6 +2825,7 @@ const GS_COMPL       = "https://script.google.com/macros/s/AKfycbxO8O3OAklWq37qx
 const GS_CONTRATOS   = "https://script.google.com/macros/s/AKfycby4uQ4OiPkTrY96Puy8d5vPaO77Qv2QtFzJP4gc26BWfLUexXm5T0pekMkrtsum69N7Ew/exec";
 const GS_SITIOS      = "https://script.google.com/macros/s/AKfycbzABBckbx9Twj9DgGsoAxBSolfhNwN2I_YbYccajMI29oN0gL9H27sLFSibiYmZd4gd/exec";
 const GS_ABONOS_LEY  = "https://script.google.com/macros/s/AKfycbyf-ToIQ9g4onwmS1R3KApcZpmr3k_efLpKrolweYdJ6TMXxc2ZKxZPHQCY_ZA0NRTl/exec";
+const GS_ANALISIS_ECO_SITIOS = "https://script.google.com/macros/s/AKfycbx4LOwmp1A47X1cOrdHNB_FtHBA0gbv6sEb_FxiFqcvqveDvd0u7838PZvyKB_EJwVG/exec";
 const GS_FUMIGACION  = "https://script.google.com/macros/s/AKfycbwC_aJHRCS0GHjoAW9RB0oqwWSF8kYxypFp0nZ4bzBt1-FuX2UNY9-GhuP8q8cp8qge/exec";
 const GS_MAQUINARIAS = "https://script.google.com/macros/s/AKfycbyo1aWEVL8Y9TngbRQhspIfRGnf9-xF5K1fuT5jckYvklnzD1fAngRdr5fBy9ncIjPB3Q/exec";
 const GS_AUDITORIA   = "https://script.google.com/macros/s/AKfycbzrY4TevvLFadWfbQkwjCmxKvsQleqqChomW0JZmeKGaqwi3E7RmfHI8cspWNE6izNWRg/exec";
@@ -4167,6 +4193,7 @@ async function actualizarTodo(showToast=false){
   actualizarFumigacion(); // no bloquea el resto del ciclo de actualización
   actualizarRemitosTanques(); // no bloquea el resto del ciclo de actualización
   actualizarAnalisisDotacion(); // no bloquea el resto del ciclo de actualización
+  actualizarAnalisisEcoSitios(); // no bloquea el resto del ciclo de actualización
   actualizarAbonosLey(); // no bloquea el resto del ciclo de actualización
   actualizarMediciones(); // no bloquea el resto del ciclo de actualización
   renderAll();
@@ -4242,6 +4269,7 @@ let AUDITORIA_DATA = {meses: [], filas: []}; // Control - Auditoría → {meses:
 let FUMIGACION_DATA = {meses: [], filas: []}; // Fumigacion y limpieza de tanques → {meses:[...], filas:[{jefe,servicio,anio,valores:{mes:estado}}]}
 let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Consolidado" (Columna G = LIMPIEZA DE TANQUES)
 let ANALISIS_DOTACION_DATA = {kpis:{}, ranking_cecos:[], ranking_jefes:[], tendencia:[], alertas_ceco:[], alertas_jefe:[]}; // Análisis de dotación → hoja "Análisis de fluctuación"
+let ANALISIS_ECO_SITIOS_DATA = []; // Analisis economico mensual - Sitios → hoja "Estudio economico"
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
@@ -4559,6 +4587,113 @@ window.renderAnalisisDotacion = function(){
 };
 
 // ── Actualizar Preventivos ──
+// ── Analisis economico mensual - Sitios: extracción de datos (hoja "Estudio economico") ──
+// A(0)=CECO, B(1)=Sitio, C(2)=Jefe Zonal, D(3)=Presupuesto mensual, G(6)=Gasto real, H(7)=Mes, I(8)=Año
+async function actualizarAnalisisEcoSitios(){
+  try{
+    const rows = await fetchSheet(GS_ANALISIS_ECO_SITIOS, 'Estudio economico');
+    const datos = [];
+    rows.slice(1).forEach(row=>{
+      const ceco = String(row[0]||'').trim();
+      const sitio = String(row[1]||'').trim();
+      if(!ceco && !sitio) return;
+      datos.push({
+        ceco,
+        sitio,
+        jefe_zonal: String(row[2]||'').trim(),
+        costo_presupuestado: Number(row[3])||0,
+        gasto_real: Number(row[6])||0,
+        mes: String(row[7]||'').trim(),
+        anio: String(row[8]||'').trim(),
+      });
+    });
+    ANALISIS_ECO_SITIOS_DATA = datos;
+
+    const psub = document.getElementById('aes-psub');
+    if(psub) psub.textContent = `${ANALISIS_ECO_SITIOS_DATA.length} registros · hoja "Estudio economico"`;
+
+    renderAnalisisEcoSitios();
+    return true;
+  }catch(err){
+    console.warn('Error Analisis economico mensual - Sitios:', err);
+    return false;
+  }
+}
+
+// ── Analisis economico mensual - Sitios: filtros cruzados + KPIs + desglose por sitio ──
+window.renderAnalisisEcoSitios = function(){
+  const selCeco = document.getElementById('f-aes-ceco');
+  const selJefe = document.getElementById('f-aes-jefe');
+  const selMes  = document.getElementById('f-aes-mes');
+  const selAnio = document.getElementById('f-aes-anio');
+
+  if(selCeco && selCeco.options.length <= 1){
+    [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.ceco))].filter(Boolean).sort().forEach(c=>{ selCeco.innerHTML += `<option value="${c}">${c}</option>`; });
+  }
+  if(selJefe && selJefe.options.length <= 1){
+    [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.jefe_zonal))].filter(Boolean).sort().forEach(j=>{ selJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+  }
+  if(selMes && selMes.options.length <= 1){
+    [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.mes))].filter(Boolean).forEach(m=>{ selMes.innerHTML += `<option value="${m}">${m}</option>`; });
+  }
+  if(selAnio && selAnio.options.length <= 1){
+    [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.anio))].filter(Boolean).sort().forEach(a=>{ selAnio.innerHTML += `<option value="${a}">${a}</option>`; });
+  }
+
+  const fc = selCeco?.value || '';
+  const fj = selJefe?.value || '';
+  const fm = selMes?.value  || '';
+  const fa = selAnio?.value || '';
+
+  // Filtros dinámicos cruzados: todos se aplican juntos y cualquier cambio recalcula todo al instante
+  const filas = ANALISIS_ECO_SITIOS_DATA.filter(r =>
+    (!fc || r.ceco===fc) && (!fj || r.jefe_zonal===fj) && (!fm || r.mes===fm) && (!fa || r.anio===fa)
+  );
+
+  // ── KPIs ──
+  const presupuesto = filas.reduce((s,r)=>s+r.costo_presupuestado, 0);
+  const gastoReal = filas.reduce((s,r)=>s+r.gasto_real, 0);
+  const desviacion = gastoReal - presupuesto;
+  const pctDesviacion = presupuesto ? Math.round((desviacion/presupuesto)*1000)/10 : 0;
+  const sobregasto = desviacion > 0;
+
+  const kEl = document.getElementById('k-aes');
+  if(kEl){
+    kEl.innerHTML = `
+      <div class="kc bl"><span class="ki">💵</span><div class="kl">Presupuesto mensual</div><div class="kv">${fmtARS(presupuesto)}</div><div class="ks">Suma de Columna D</div></div>
+      <div class="kc am"><span class="ki">🧾</span><div class="kl">Gasto real acumulado</div><div class="kv">${fmtARS(gastoReal)}</div><div class="ks">Suma de Columna G</div></div>
+      <div class="kc ${sobregasto?'re':'gr'}"><span class="ki">${sobregasto?'🔴':'🟢'}</span><div class="kl">Desviación</div><div class="kv">${desviacion>=0?'+':''}${fmtARS(desviacion)}</div><div class="ks">${desviacion>=0?'+':''}${pctDesviacion}% ${sobregasto?'sobregasto':'ahorro / dentro de límite'}</div></div>`;
+  }
+
+  // ── Desglose por sitio ──
+  const porSitio = {};
+  filas.forEach(r=>{
+    const key = `${r.ceco}|||${r.sitio}`;
+    if(!porSitio[key]) porSitio[key] = {ceco:r.ceco, sitio:r.sitio, jefe:r.jefe_zonal, mes:r.mes, anio:r.anio, presupuesto:0, gasto:0};
+    porSitio[key].presupuesto += r.costo_presupuestado;
+    porSitio[key].gasto += r.gasto_real;
+  });
+
+  const tb = document.getElementById('tb-aes');
+  if(tb){
+    const filasSitio = Object.values(porSitio);
+    tb.innerHTML = filasSitio.length ? filasSitio.map(s=>{
+      const dev = s.gasto - s.presupuesto;
+      const devCls = dev>0 ? 'p-err' : 'p-ok';
+      return `<tr>
+        <td style="font-family:'JetBrains Mono';">${s.ceco||'—'}</td>
+        <td>${s.sitio||'—'}</td>
+        <td style="font-weight:600;">${s.jefe||'—'}</td>
+        <td>${s.mes||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${s.anio||'—'}</td>
+        <td style="font-family:'JetBrains Mono';">${fmtARS(s.presupuesto)}</td>
+        <td style="font-family:'JetBrains Mono';">${fmtARS(s.gasto)}</td>
+        <td><span class="p ${devCls}">${dev>=0?'+':''}${fmtARS(dev)}</span></td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  }
+};
+
 async function actualizarPreventivos(){
   setGsStatus('prev','loading');
   try {
