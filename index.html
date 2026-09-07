@@ -4615,6 +4615,9 @@ async function actualizarAnalisisEcoSitios(){
       const ceco = String(row[0]||'').trim();
       const sitio = String(row[1]||'').trim();
       if(!ceco && !sitio) return;
+      // Columna K(10): únicamente "SI"/"SÍ" entra al análisis; "NO" o cualquier otro valor se descarta por completo.
+      const colK = String(row[10]||'').trim().toUpperCase();
+      if(colK !== 'SI' && colK !== 'SÍ') return;
       datos.push({
         ceco,
         sitio,
@@ -4628,7 +4631,7 @@ async function actualizarAnalisisEcoSitios(){
     ANALISIS_ECO_SITIOS_DATA = datos;
 
     const psub = document.getElementById('aes-psub');
-    if(psub) psub.textContent = `${ANALISIS_ECO_SITIOS_DATA.length} registros · hoja "Estudio economico"`;
+    if(psub) psub.textContent = `${ANALISIS_ECO_SITIOS_DATA.length} registros · hoja "Estudio economico" (Columna K = SI)`;
 
     renderAnalisisEcoSitios();
     return true;
