@@ -671,15 +671,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </table></div>
   </div>
 
-  <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Desglose por sitio</div><div class="cs">Presupuesto vs. Gasto real, por sitio y por mes (sin mezclar meses distintos)</div></div></div>
-    <div class="tw"><table>
-      <thead><tr><th>CECO</th><th>Sitio</th><th>Jefe Zonal</th><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación</th></tr></thead>
-      <tbody id="tb-aes"></tbody>
-    </table></div>
-  </div>
-
-  <!-- ANÁLISIS POR SITIO (al final, con selector dedicado para ver un sitio a la vez) -->
+  <!-- ANÁLISIS POR SITIO (ahora en 2da posición, con selector dedicado para ver un sitio a la vez) -->
   <div class="card" style="margin-top:14px;">
     <div class="ch">
       <div><div class="ct">Análisis por Sitio</div><div class="cs">Detalle mes a mes de un sitio específico</div></div>
@@ -689,6 +681,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <thead><tr><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación (favorable / desfavorable)</th></tr></thead>
       <tbody id="tb-aes-sitio-detalle"></tbody>
     </table></div>
+  </div>
+
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Presupuesto vs. Gasto real por mes</div><div class="cs">Del sitio seleccionado en "Análisis por Sitio"</div></div></div>
+    <div class="cwtall"><canvas id="ch-aes-sitio"></canvas></div>
   </div>
 </section>
 
@@ -4708,33 +4705,6 @@ window.renderAnalisisEcoSitios = function(){
     }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
   }
 
-  // ── Desglose por sitio: agrupado por CECO+Sitio+Mes+Año, para no mezclar meses distintos en la misma fila ──
-  const porSitio = {};
-  filas.forEach(r=>{
-    const key = `${r.ceco}|||${r.sitio}|||${r.mes}|||${r.anio}`;
-    if(!porSitio[key]) porSitio[key] = {ceco:r.ceco, sitio:r.sitio, jefe:r.jefe_zonal, mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
-    porSitio[key].gasto += r.gasto_real; // Columna G sí se acumula (cada fila es una transacción distinta) dentro del mismo mes
-  });
-
-  const tb = document.getElementById('tb-aes');
-  if(tb){
-    const filasSitio = Object.values(porSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
-    tb.innerHTML = filasSitio.length ? filasSitio.map(s=>{
-      const dev = s.presupuesto - s.gasto; // positivo = favorable (ahorro), negativo = desfavorable (sobregasto)
-      const devCls = dev>=0 ? 'p-ok' : 'p-err';
-      return `<tr>
-        <td style="font-family:'JetBrains Mono';">${s.ceco||'—'}</td>
-        <td>${s.sitio||'—'}</td>
-        <td style="font-weight:600;">${s.jefe||'—'}</td>
-        <td>${s.mes||'—'}</td>
-        <td style="font-family:'JetBrains Mono';">${s.anio||'—'}</td>
-        <td style="font-family:'JetBrains Mono';">${fmtARS(s.presupuesto)}</td>
-        <td style="font-family:'JetBrains Mono';">${fmtARS(s.gasto)}</td>
-        <td><span class="p ${devCls}">${dev>=0?'+':''}${fmtARS(dev)}</span></td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="8" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
-  }
-
   // ── Análisis por Sitio: selector dedicado para ver el detalle mes a mes de UN sitio a la vez ──
   // (independiente de los 4 filtros de arriba — lista todos los sitios de la fuente completa)
   const selSitioDet = document.getElementById('f-aes-sitio-detalle');
@@ -4748,20 +4718,21 @@ window.renderAnalisisEcoSitios = function(){
   }
 
   const tbSitioDet = document.getElementById('tb-aes-sitio-detalle');
-  if(tbSitioDet){
-    const sitioSel = selSitioDet?.value || '';
-    if(!sitioSel){
-      tbSitioDet.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Seleccioná un sitio arriba para ver su detalle mes a mes</td></tr>`;
-    } else {
-      const [cecoSel, sitioNombre] = sitioSel.split('|||');
-      const filasDelSitio = ANALISIS_ECO_SITIOS_DATA.filter(r=>r.ceco===cecoSel && r.sitio===sitioNombre);
-      const porMesSitio = {};
-      filasDelSitio.forEach(r=>{
-        const mkey = `${r.mes}|||${r.anio}`;
-        if(!porMesSitio[mkey]) porMesSitio[mkey] = {mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
-        porMesSitio[mkey].gasto += r.gasto_real;
-      });
-      const detalleSitio = Object.values(porMesSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
+  const sitioSel = selSitioDet?.value || '';
+  let detalleSitio = [];
+  if(!sitioSel){
+    if(tbSitioDet) tbSitioDet.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Seleccioná un sitio arriba para ver su detalle mes a mes</td></tr>`;
+  } else {
+    const [cecoSel, sitioNombre] = sitioSel.split('|||');
+    const filasDelSitio = ANALISIS_ECO_SITIOS_DATA.filter(r=>r.ceco===cecoSel && r.sitio===sitioNombre);
+    const porMesSitio = {};
+    filasDelSitio.forEach(r=>{
+      const mkey = `${r.mes}|||${r.anio}`;
+      if(!porMesSitio[mkey]) porMesSitio[mkey] = {mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
+      porMesSitio[mkey].gasto += r.gasto_real;
+    });
+    detalleSitio = Object.values(porMesSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
+    if(tbSitioDet){
       tbSitioDet.innerHTML = detalleSitio.length ? detalleSitio.map(m=>{
         const dev = m.presupuesto - m.gasto;
         const pct = m.presupuesto ? Math.round((dev/m.presupuesto)*1000)/10 : 0;
@@ -4774,6 +4745,25 @@ window.renderAnalisisEcoSitios = function(){
         </tr>`;
       }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin datos para este sitio</td></tr>`;
     }
+  }
+
+  // ── Gráfico de barras conectado reactivamente al mismo detalle de "Análisis por Sitio" ──
+  // Se redibuja siempre que cambia el selector de sitio o cualquiera de los filtros globales de la página.
+  dc('ch-aes-sitio');
+  if(detalleSitio.length>0){
+    charts['ch-aes-sitio'] = new Chart(document.getElementById('ch-aes-sitio'),{
+      type:'bar',
+      data:{labels:detalleSitio.map(m=>`${capMes(m.mes)} ${m.anio}`),
+        datasets:[
+          {label:'Presupuesto', data:detalleSitio.map(m=>m.presupuesto), backgroundColor:'#4f8ef799', borderRadius:4},
+          {label:'Gasto real', data:detalleSitio.map(m=>m.gasto), backgroundColor:'#f59e0b99', borderRadius:4},
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8}},
+          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtARS(c.raw)}`}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:9}},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
+    });
   }
 };
 
