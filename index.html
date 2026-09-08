@@ -702,7 +702,10 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
 
   <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Justificativos de gasto</div><div class="cs">Gasto real agrupado por justificativo (Columna F) del sitio seleccionado</div></div></div>
+    <div class="ch">
+      <div><div class="ct">Justificativos de gasto</div><div class="cs" id="aes-just-cs">Gasto real agrupado por justificativo (Columna F) del sitio seleccionado</div></div>
+      <select id="f-aes-justificativo-periodo" onchange="window.renderAnalisisEcoSitios()" style="min-width:180px;"><option value="">Todos los períodos</option></select>
+    </div>
     <div class="cwtall"><canvas id="ch-aes-justificativo"></canvas></div>
   </div>
 </section>
@@ -4839,9 +4842,40 @@ window.renderAnalisisEcoSitios = function(){
   }
 
   // ── Gráfico de torta: Gasto real agrupado por justificativo (Columna F) ──
-  // Conectado al mismo sitio + filtro de Estados NP de "Análisis por Sitio" (no depende del toggle Mes a Mes/Resumen Anual).
+  // Conectado al mismo sitio + filtro de Estados NP de "Análisis por Sitio", y ahora también a un período
+  // (mes puntual o año puntual, según el toggle Mes a Mes/Resumen Anual) elegido en su propio selector.
+  const selJustPeriodo = document.getElementById('f-aes-justificativo-periodo');
+  const csJust = document.getElementById('aes-just-cs');
+
+  if(selJustPeriodo){
+    // Se reconstruyen las opciones según la vista activa (mes a mes → meses; resumen anual → años)
+    const valorPrevio = selJustPeriodo.value;
+    const periodosUnicos = vistaAnual
+      ? [...new Set(filasDelSitio.map(r=>r.anio))].filter(Boolean).sort()
+      : [...new Set(filasDelSitio.map(r=>`${r.mes}|||${r.anio}`))].filter(Boolean)
+          .sort((a,b)=>{const [ma,aa]=a.split('|||'); const [mb,ab]=b.split('|||'); return ordenMesAnio(ma,aa)-ordenMesAnio(mb,ab);});
+    selJustPeriodo.innerHTML = `<option value="">Todos los períodos</option>` + periodosUnicos.map(p=>{
+      if(vistaAnual) return `<option value="${p}">${p}</option>`;
+      const [m,a] = p.split('|||');
+      return `<option value="${p}">${capMes(m)} ${a}</option>`;
+    }).join('');
+    // Conserva la selección previa si sigue siendo válida en la nueva lista de opciones
+    if([...selJustPeriodo.options].some(o=>o.value===valorPrevio)) selJustPeriodo.value = valorPrevio;
+  }
+
+  const periodoSel = selJustPeriodo?.value || '';
+  let filasJustificativo = filasDelSitio;
+  if(periodoSel){
+    filasJustificativo = vistaAnual
+      ? filasDelSitio.filter(r=>r.anio===periodoSel)
+      : filasDelSitio.filter(r=>`${r.mes}|||${r.anio}`===periodoSel);
+  }
+  if(csJust) csJust.textContent = periodoSel
+    ? `Gasto real agrupado por justificativo — ${vistaAnual?periodoSel:capMes(periodoSel.split('|||')[0])+' '+periodoSel.split('|||')[1]}`
+    : 'Gasto real agrupado por justificativo (Columna F) del sitio seleccionado — todos los períodos';
+
   const justificativoData = {};
-  filasDelSitio.forEach(r=>{
+  filasJustificativo.forEach(r=>{
     const just = r.justificativo || 'Sin justificativo';
     justificativoData[just] = (justificativoData[just]||0) + r.gasto_real;
   });
