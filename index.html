@@ -4648,6 +4648,7 @@ async function actualizarAnalisisEcoSitios(){
         anio: String(row[8]||'').trim(),
         estado_np: String(row[9]||'').trim(), // Col J — estado de la NP (ej. "CERRADO CON EXITO", "Autorizadas")
         justificativo: String(row[5]||'').trim(), // Col F — justificativo/origen del gasto
+        presupuesto_anual: Number(row[12])||0, // Col M — Presupuesto Anual (valor estático de origen, ligado a la fecha de inicio del contrato)
       });
     });
     ANALISIS_ECO_SITIOS_DATA = datos;
@@ -4788,18 +4789,19 @@ window.renderAnalisisEcoSitios = function(){
       filasVista = Object.values(porMesSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio))
         .map(m=>({etiqueta:`${capMes(m.mes)}`, anio:m.anio, presupuesto:m.presupuesto, gasto:m.gasto}));
     } else {
-      // ── Vista "Resumen Anual" ── Presupuesto Anual = Gasto Presupuestado Mensual × 12; Gasto Real Anual = suma de gastos mensuales reales del año
+      // ── Vista "Resumen Anual" ── Presupuesto Anual = valor estático de Columna M (ligado a la fecha de inicio del contrato);
+      // Gasto Real Anual = suma de gastos mensuales reales del año
       const porAnioSitio = {};
       filasDelSitio.forEach(r=>{
-        if(!porAnioSitio[r.anio]) porAnioSitio[r.anio] = {anio:r.anio, presupuestoMensual:r.costo_presupuestado, gasto:0};
+        if(!porAnioSitio[r.anio]) porAnioSitio[r.anio] = {anio:r.anio, presupuestoAnual:r.presupuesto_anual, gasto:0};
         porAnioSitio[r.anio].gasto += r.gasto_real;
       });
       filasVista = Object.values(porAnioSitio).sort((a,b)=>(parseInt(a.anio,10)||0)-(parseInt(b.anio,10)||0))
-        .map(a=>({etiqueta:a.anio, anio:a.anio, presupuesto:a.presupuestoMensual*12, gasto:a.gasto}));
+        .map(a=>({etiqueta:a.anio, anio:a.anio, presupuesto:a.presupuestoAnual, gasto:a.gasto}));
     }
   }
 
-  if(csSitioDet) csSitioDet.textContent = vistaAnual ? 'Resumen anual (Presupuesto Anual = Mensual × 12) de un sitio específico' : 'Detalle mes a mes de un sitio específico';
+  if(csSitioDet) csSitioDet.textContent = vistaAnual ? 'Resumen anual (Presupuesto Anual desde Columna M) de un sitio específico' : 'Detalle mes a mes de un sitio específico';
   if(chartTitle) chartTitle.textContent = vistaAnual ? 'Presupuesto Anual vs. Gasto Real Anual' : 'Presupuesto vs. Gasto real por mes';
 
   if(theadSitioDet){
