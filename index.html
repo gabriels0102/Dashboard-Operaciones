@@ -677,6 +677,15 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <div><div class="ct">Análisis por Sitio</div><div class="cs" id="aes-sitio-cs">Detalle mes a mes de un sitio específico</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <select id="f-aes-sitio-detalle" onchange="window.renderAnalisisEcoSitios()" style="min-width:220px;"><option value="">Seleccioná un sitio...</option></select>
+        <div style="position:relative;">
+          <button class="fum-tab" id="f-aes-estado-btn" onclick="window.toggleAesEstadoPanel()">Estados NP: Todos ▾</button>
+          <div id="f-aes-estado-panel" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:20;background:var(--surface);border:1px solid var(--b2);border-radius:var(--r);padding:10px;min-width:220px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-weight:700;border-bottom:1px solid var(--b);margin-bottom:4px;">
+              <input type="checkbox" id="f-aes-estado-todos" checked onchange="window.toggleAesEstadoTodos(this.checked)"> Todos
+            </label>
+            <div id="f-aes-estado-opciones"></div>
+          </div>
+        </div>
         <button class="fum-tab active" id="aes-tab-btn-mensual" onclick="window.setAesVistaSitio('mensual')">Análisis Mes a Mes</button>
         <button class="fum-tab" id="aes-tab-btn-anual" onclick="window.setAesVistaSitio('anual')">Resumen Anual</button>
       </div>
@@ -4290,6 +4299,7 @@ let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Conso
 let ANALISIS_DOTACION_DATA = {kpis:{}, ranking_cecos:[], ranking_jefes:[], tendencia:[], alertas_ceco:[], alertas_jefe:[]}; // Análisis de dotación → hoja "Análisis de fluctuación"
 let ANALISIS_ECO_SITIOS_DATA = []; // Analisis economico mensual - Sitios → hoja "Estudio economico"
 let AES_VISTA_SITIO = 'mensual'; // Toggle de "Análisis por Sitio": 'mensual' o 'anual'
+let AES_ESTADOS_SELECCIONADOS = new Set(); // vacío = "Todos"; si tiene valores, son los únicos estados NP (Col J) a incluir
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
@@ -4628,6 +4638,7 @@ async function actualizarAnalisisEcoSitios(){
         gasto_real: Number(row[6])||0,
         mes: String(row[7]||'').trim(),
         anio: String(row[8]||'').trim(),
+        estado_np: String(row[9]||'').trim(), // Col J — estado de la NP (ej. "CERRADO CON EXITO", "Autorizadas")
       });
     });
     ANALISIS_ECO_SITIOS_DATA = datos;
@@ -4722,6 +4733,22 @@ window.renderAnalisisEcoSitios = function(){
     });
   }
 
+  // ── Filtro multi-selección de Estados NP (Columna J) — solo afecta a "Análisis por Sitio" ──
+  const panelEstados = document.getElementById('f-aes-estado-opciones');
+  if(panelEstados && panelEstados.children.length === 0){
+    const estadosUnicos = [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.estado_np))].filter(Boolean).sort();
+    panelEstados.innerHTML = estadosUnicos.map(e=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:12px;">
+        <input type="checkbox" value="${e}" onchange="window.toggleAesEstadoOpcion('${e.replace(/'/g,"\\'")}', this.checked)"> ${e}
+      </label>`).join('');
+  }
+  const btnEstados = document.getElementById('f-aes-estado-btn');
+  if(btnEstados){
+    btnEstados.textContent = AES_ESTADOS_SELECCIONADOS.size===0
+      ? 'Estados NP: Todos ▾'
+      : `Estados NP: ${AES_ESTADOS_SELECCIONADOS.size} seleccionado${AES_ESTADOS_SELECCIONADOS.size>1?'s':''} ▾`;
+  }
+
   const tbSitioDet = document.getElementById('tb-aes-sitio-detalle');
   const theadSitioDet = document.getElementById('aes-sitio-thead');
   const csSitioDet = document.getElementById('aes-sitio-cs');
@@ -4734,7 +4761,11 @@ window.renderAnalisisEcoSitios = function(){
     if(tbSitioDet) tbSitioDet.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Seleccioná un sitio arriba para ver su detalle</td></tr>`;
   } else {
     const [cecoSel, sitioNombre] = sitioSel.split('|||');
-    const filasDelSitio = ANALISIS_ECO_SITIOS_DATA.filter(r=>r.ceco===cecoSel && r.sitio===sitioNombre);
+    let filasDelSitio = ANALISIS_ECO_SITIOS_DATA.filter(r=>r.ceco===cecoSel && r.sitio===sitioNombre);
+    // "Todos" = sin filtro (Set vacío); si hay estados marcados, solo se incluyen esos (selección múltiple simultánea)
+    if(AES_ESTADOS_SELECCIONADOS.size>0){
+      filasDelSitio = filasDelSitio.filter(r=>AES_ESTADOS_SELECCIONADOS.has(r.estado_np));
+    }
 
     if(!vistaAnual){
       // ── Vista "Análisis Mes a Mes" ──
@@ -4809,6 +4840,36 @@ window.setAesVistaSitio = function(vista){
   renderAnalisisEcoSitios();
 };
 
+// ── Filtro multi-selección de Estados NP (Columna J) — abrir/cerrar panel y manejar selección ──
+window.toggleAesEstadoPanel = function(){
+  const panel = document.getElementById('f-aes-estado-panel');
+  if(panel) panel.style.display = panel.style.display==='none' ? '' : 'none';
+};
+
+window.toggleAesEstadoTodos = function(checked){
+  if(checked){
+    AES_ESTADOS_SELECCIONADOS.clear();
+    document.querySelectorAll('#f-aes-estado-opciones input[type="checkbox"]').forEach(cb=>{ cb.checked = false; });
+  }
+  renderAnalisisEcoSitios();
+};
+
+window.toggleAesEstadoOpcion = function(estado, checked){
+  if(checked) AES_ESTADOS_SELECCIONADOS.add(estado);
+  else AES_ESTADOS_SELECCIONADOS.delete(estado);
+  const todosCb = document.getElementById('f-aes-estado-todos');
+  if(todosCb) todosCb.checked = AES_ESTADOS_SELECCIONADOS.size===0; // "Todos" se marca solo si no queda ningún estado puntual elegido
+  renderAnalisisEcoSitios();
+};
+
+// Cierra el panel de Estados NP al hacer click afuera
+document.addEventListener('click', (e)=>{
+  const panel = document.getElementById('f-aes-estado-panel');
+  const btn = document.getElementById('f-aes-estado-btn');
+  if(panel && panel.style.display!=='none' && !panel.contains(e.target) && e.target!==btn){
+    panel.style.display = 'none';
+  }
+});
 
 async function actualizarPreventivos(){
   setGsStatus('prev','loading');
