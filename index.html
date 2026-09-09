@@ -664,11 +664,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   </div>
 
   <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Resumen mensual</div><div class="cs">Cada mes se calcula de forma independiente — no se suma acumulado entre meses distintos</div></div></div>
-    <div class="tw"><table>
-      <thead><tr><th>Mes</th><th>Año</th><th>Presupuesto</th><th>Gasto real</th><th>Desviación (favorable / desfavorable)</th></tr></thead>
-      <tbody id="tb-aes-mensual"></tbody>
-    </table></div>
+    <div class="ch">
+      <div><div class="ct">Presupuesto Anual vs. Gasto Real</div><div class="cs">Sumatoria de Presupuesto Anual (Columna M) contra el total de lo gastado realmente</div></div>
+      <select id="f-aes-torta-anio" onchange="window.renderAnalisisEcoSitios()" style="min-width:140px;"><option value="">Todos los años</option></select>
+    </div>
+    <div class="cwtall"><canvas id="ch-aes-presupuesto-gasto"></canvas></div>
   </div>
 
   <!-- ANÁLISIS POR SITIO (con selector de sitio + toggle Mes a Mes / Resumen Anual) -->
@@ -4718,37 +4718,33 @@ window.renderAnalisisEcoSitios = function(){
   const MESES_ORDEN = {ENERO:1,FEBRERO:2,MARZO:3,ABRIL:4,MAYO:5,JUNIO:6,JULIO:7,AGOSTO:8,SEPTIEMBRE:9,OCTUBRE:10,NOVIEMBRE:11,DICIEMBRE:12};
   const ordenMesAnio = (m,a)=> (parseInt(a,10)||0)*100 + (MESES_ORDEN[String(m||'').trim().toUpperCase()]||0);
 
-  // ── Resumen mensual: cada Mes+Año se calcula por separado, SIN sumar acumulado entre meses distintos ──
-  const porMes = {};
-  filas.forEach(r=>{
-    const mkey = `${r.mes}|||${r.anio}`;
-    if(!porMes[mkey]) porMes[mkey] = {mes:r.mes, anio:r.anio, presupuestoUnico:{}, gasto:0};
-    const pkey = `${r.ceco}|||${r.sitio}`;
-    // Presupuesto: valor fijo por CECO+Sitio dentro de ESE mes — se toma una sola vez, no se suma por transacción
-    if(!(pkey in porMes[mkey].presupuestoUnico)) porMes[mkey].presupuestoUnico[pkey] = r.costo_presupuestado;
-    porMes[mkey].gasto += r.gasto_real; // Col G sí es por transacción: se suma normalmente dentro del mes
+  // ── Presupuesto Anual vs. Gasto Real (torta), con selector de año propio ──
+  const selTortaAnio = document.getElementById('f-aes-torta-anio');
+  if(selTortaAnio && selTortaAnio.options.length <= 1){
+    [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.anio))].filter(Boolean).sort().forEach(a=>{ selTortaAnio.innerHTML += `<option value="${a}">${a}</option>`; });
+  }
+  const tortaAnioSel = selTortaAnio?.value || '';
+  const filasTorta = filas.filter(r => !tortaAnioSel || r.anio===tortaAnioSel);
+
+  // Presupuesto Anual (Col M): valor fijo por CECO+Sitio+Año — se toma una sola vez, no se suma por transacción
+  const presupuestoAnualUnico = {};
+  filasTorta.forEach(r=>{
+    const key = `${r.ceco}|||${r.sitio}|||${r.anio}`;
+    if(!(key in presupuestoAnualUnico)) presupuestoAnualUnico[key] = r.presupuesto_anual;
   });
+  const totalPresupuestoAnual = Object.values(presupuestoAnualUnico).reduce((s,v)=>s+v, 0);
+  const totalGastoReal = filasTorta.reduce((s,r)=>s+r.gasto_real, 0); // Col G sí se suma por transacción
 
-  const resumenMensual = Object.values(porMes).map(m=>{
-    const presupuesto = Object.values(m.presupuestoUnico).reduce((s,v)=>s+v, 0);
-    // Desviación = Presupuesto − Gasto real → positivo (favorable/ahorro), negativo (desfavorable/sobregasto)
-    const desviacion = presupuesto - m.gasto;
-    const pct = presupuesto ? Math.round((desviacion/presupuesto)*1000)/10 : 0;
-    return {mes:m.mes, anio:m.anio, presupuesto, gasto:m.gasto, desviacion, pct};
-  }).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio));
-
-  const tbMensual = document.getElementById('tb-aes-mensual');
-  if(tbMensual){
-    tbMensual.innerHTML = resumenMensual.length ? resumenMensual.map(m=>{
-      const favorable = m.desviacion >= 0; // positivo = sobra plata (favorable) = verde
-      return `<tr>
-        <td style="font-weight:600;">${m.mes||'—'}</td>
-        <td style="font-family:'JetBrains Mono';">${m.anio||'—'}</td>
-        <td style="font-family:'JetBrains Mono';">${fmtARS(m.presupuesto)}</td>
-        <td style="font-family:'JetBrains Mono';">${fmtARS(m.gasto)}</td>
-        <td><span class="p ${favorable?'p-ok':'p-err'}">${m.desviacion>=0?'+':''}${fmtARS(m.desviacion)} (${m.pct>=0?'+':''}${m.pct}%)</span></td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin registros para el filtro seleccionado</td></tr>`;
+  dc('ch-aes-presupuesto-gasto');
+  if(totalPresupuestoAnual>0 || totalGastoReal>0){
+    charts['ch-aes-presupuesto-gasto'] = new Chart(document.getElementById('ch-aes-presupuesto-gasto'),{
+      type:'pie',
+      data:{labels:['Presupuesto Anual','Gasto Real'],
+        datasets:[{data:[totalPresupuestoAnual, totalGastoReal], backgroundColor:['#4f8ef799','#f59e0b99'], borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b8fa8',font:{size:11},boxWidth:10},position:'right'},
+          tooltip:{callbacks:{label:c=>`${c.label}: ${fmtARS(c.raw)}`}}}}
+    });
   }
 
   // ── Análisis por Sitio: selector dedicado para ver el detalle mes a mes de UN sitio a la vez ──
