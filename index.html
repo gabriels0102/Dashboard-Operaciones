@@ -686,6 +686,24 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
             <div id="f-aes-estado-opciones"></div>
           </div>
         </div>
+        <div style="position:relative;" id="f-aes-meses-wrap">
+          <button class="fum-tab" id="f-aes-meses-btn" onclick="window.toggleAesMesesPanel()">Meses: Todos ▾</button>
+          <div id="f-aes-meses-panel" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:20;background:var(--surface);border:1px solid var(--b2);border-radius:var(--r);padding:10px;min-width:200px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-weight:700;border-bottom:1px solid var(--b);margin-bottom:4px;">
+              <input type="checkbox" id="f-aes-meses-todos" checked onchange="window.toggleAesMesesTodos(this.checked)"> Todos
+            </label>
+            <div id="f-aes-meses-opciones"></div>
+          </div>
+        </div>
+        <div style="position:relative;display:none;" id="f-aes-anios-wrap">
+          <button class="fum-tab" id="f-aes-anios-btn" onclick="window.toggleAesAniosPanel()">Años: Todos ▾</button>
+          <div id="f-aes-anios-panel" style="display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:20;background:var(--surface);border:1px solid var(--b2);border-radius:var(--r);padding:10px;min-width:160px;max-height:260px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.4);">
+            <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-weight:700;border-bottom:1px solid var(--b);margin-bottom:4px;">
+              <input type="checkbox" id="f-aes-anios-todos" checked onchange="window.toggleAesAniosTodos(this.checked)"> Todos
+            </label>
+            <div id="f-aes-anios-opciones"></div>
+          </div>
+        </div>
         <button class="fum-tab active" id="aes-tab-btn-mensual" onclick="window.setAesVistaSitio('mensual')">Análisis Mes a Mes</button>
         <button class="fum-tab" id="aes-tab-btn-anual" onclick="window.setAesVistaSitio('anual')">Resumen Anual</button>
       </div>
@@ -4308,6 +4326,8 @@ let ANALISIS_DOTACION_DATA = {kpis:{}, ranking_cecos:[], ranking_jefes:[], tende
 let ANALISIS_ECO_SITIOS_DATA = []; // Analisis economico mensual - Sitios → hoja "Estudio economico"
 let AES_VISTA_SITIO = 'mensual'; // Toggle de "Análisis por Sitio": 'mensual' o 'anual'
 let AES_ESTADOS_SELECCIONADOS = new Set(); // vacío = "Todos"; si tiene valores, son los únicos estados NP (Col J) a incluir
+let AES_MESES_SELECCIONADOS = new Set(); // vacío = "Todos"; aplica solo a la vista "Análisis Mes a Mes"
+let AES_ANIOS_SELECCIONADOS = new Set(); // vacío = "Todos"; aplica solo a la vista "Resumen Anual"
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
@@ -4759,6 +4779,39 @@ window.renderAnalisisEcoSitios = function(){
       : `Estados NP: ${AES_ESTADOS_SELECCIONADOS.size} seleccionado${AES_ESTADOS_SELECCIONADOS.size>1?'s':''} ▾`;
   }
 
+  // ── Filtro multi-selección de Meses (solo vista "Análisis Mes a Mes") ──
+  const panelMeses = document.getElementById('f-aes-meses-opciones');
+  if(panelMeses && panelMeses.children.length === 0){
+    const mesesUnicos = [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.mes))].filter(Boolean)
+      .sort((a,b)=>(MESES_ORDEN[String(a).toUpperCase()]||0)-(MESES_ORDEN[String(b).toUpperCase()]||0));
+    panelMeses.innerHTML = mesesUnicos.map(m=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:12px;">
+        <input type="checkbox" value="${m}" onchange="window.toggleAesMesesOpcion('${m.replace(/'/g,"\\'")}', this.checked)"> ${capMes(m)}
+      </label>`).join('');
+  }
+  const btnMeses = document.getElementById('f-aes-meses-btn');
+  if(btnMeses){
+    btnMeses.textContent = AES_MESES_SELECCIONADOS.size===0
+      ? 'Meses: Todos ▾'
+      : `Meses: ${AES_MESES_SELECCIONADOS.size} seleccionado${AES_MESES_SELECCIONADOS.size>1?'s':''} ▾`;
+  }
+
+  // ── Filtro multi-selección de Años (solo vista "Resumen Anual") ──
+  const panelAnios = document.getElementById('f-aes-anios-opciones');
+  if(panelAnios && panelAnios.children.length === 0){
+    const aniosUnicos = [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.anio))].filter(Boolean).sort();
+    panelAnios.innerHTML = aniosUnicos.map(a=>`
+      <label style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:12px;">
+        <input type="checkbox" value="${a}" onchange="window.toggleAesAniosOpcion('${a}', this.checked)"> ${a}
+      </label>`).join('');
+  }
+  const btnAnios = document.getElementById('f-aes-anios-btn');
+  if(btnAnios){
+    btnAnios.textContent = AES_ANIOS_SELECCIONADOS.size===0
+      ? 'Años: Todos ▾'
+      : `Años: ${AES_ANIOS_SELECCIONADOS.size} seleccionado${AES_ANIOS_SELECCIONADOS.size>1?'s':''} ▾`;
+  }
+
   const tbSitioDet = document.getElementById('tb-aes-sitio-detalle');
   const theadSitioDet = document.getElementById('aes-sitio-thead');
   const csSitioDet = document.getElementById('aes-sitio-cs');
@@ -4779,9 +4832,13 @@ window.renderAnalisisEcoSitios = function(){
     }
 
     if(!vistaAnual){
-      // ── Vista "Análisis Mes a Mes" ──
+      // ── Vista "Análisis Mes a Mes" ── (filtro multi-selección de Meses aplica solo acá)
+      let filasParaVista = filasDelSitio;
+      if(AES_MESES_SELECCIONADOS.size>0){
+        filasParaVista = filasParaVista.filter(r=>AES_MESES_SELECCIONADOS.has(r.mes));
+      }
       const porMesSitio = {};
-      filasDelSitio.forEach(r=>{
+      filasParaVista.forEach(r=>{
         const mkey = `${r.mes}|||${r.anio}`;
         if(!porMesSitio[mkey]) porMesSitio[mkey] = {mes:r.mes, anio:r.anio, presupuesto:r.costo_presupuestado, gasto:0};
         porMesSitio[mkey].gasto += r.gasto_real;
@@ -4789,10 +4846,15 @@ window.renderAnalisisEcoSitios = function(){
       filasVista = Object.values(porMesSitio).sort((a,b)=>ordenMesAnio(a.mes,a.anio)-ordenMesAnio(b.mes,b.anio))
         .map(m=>({etiqueta:`${capMes(m.mes)}`, anio:m.anio, presupuesto:m.presupuesto, gasto:m.gasto}));
     } else {
-      // ── Vista "Resumen Anual" ── Presupuesto Anual = valor estático de Columna M (ligado a la fecha de inicio del contrato);
+      // ── Vista "Resumen Anual" ── (filtro multi-selección de Años aplica solo acá)
+      // Presupuesto Anual = valor estático de Columna M (ligado a la fecha de inicio del contrato);
       // Gasto Real Anual = suma de gastos mensuales reales del año
+      let filasParaVista = filasDelSitio;
+      if(AES_ANIOS_SELECCIONADOS.size>0){
+        filasParaVista = filasParaVista.filter(r=>AES_ANIOS_SELECCIONADOS.has(r.anio));
+      }
       const porAnioSitio = {};
-      filasDelSitio.forEach(r=>{
+      filasParaVista.forEach(r=>{
         if(!porAnioSitio[r.anio]) porAnioSitio[r.anio] = {anio:r.anio, presupuestoAnual:r.presupuesto_anual, gasto:0};
         porAnioSitio[r.anio].gasto += r.gasto_real;
       });
@@ -4901,6 +4963,10 @@ window.setAesVistaSitio = function(vista){
   AES_VISTA_SITIO = vista;
   document.getElementById('aes-tab-btn-mensual')?.classList.toggle('active', vista==='mensual');
   document.getElementById('aes-tab-btn-anual')?.classList.toggle('active', vista==='anual');
+  const wrapMeses = document.getElementById('f-aes-meses-wrap');
+  const wrapAnios = document.getElementById('f-aes-anios-wrap');
+  if(wrapMeses) wrapMeses.style.display = vista==='mensual' ? '' : 'none';
+  if(wrapAnios) wrapAnios.style.display = vista==='anual' ? '' : 'none';
   renderAnalisisEcoSitios();
 };
 
@@ -4926,13 +4992,63 @@ window.toggleAesEstadoOpcion = function(estado, checked){
   renderAnalisisEcoSitios();
 };
 
-// Cierra el panel de Estados NP al hacer click afuera
-document.addEventListener('click', (e)=>{
-  const panel = document.getElementById('f-aes-estado-panel');
-  const btn = document.getElementById('f-aes-estado-btn');
-  if(panel && panel.style.display!=='none' && !panel.contains(e.target) && e.target!==btn){
-    panel.style.display = 'none';
+// ── Filtro multi-selección de Meses (solo vista "Análisis Mes a Mes") ──
+window.toggleAesMesesPanel = function(){
+  const panel = document.getElementById('f-aes-meses-panel');
+  if(panel) panel.style.display = panel.style.display==='none' ? '' : 'none';
+};
+
+window.toggleAesMesesTodos = function(checked){
+  if(checked){
+    AES_MESES_SELECCIONADOS.clear();
+    document.querySelectorAll('#f-aes-meses-opciones input[type="checkbox"]').forEach(cb=>{ cb.checked = false; });
   }
+  renderAnalisisEcoSitios();
+};
+
+window.toggleAesMesesOpcion = function(mes, checked){
+  if(checked) AES_MESES_SELECCIONADOS.add(mes);
+  else AES_MESES_SELECCIONADOS.delete(mes);
+  const todosCb = document.getElementById('f-aes-meses-todos');
+  if(todosCb) todosCb.checked = AES_MESES_SELECCIONADOS.size===0;
+  renderAnalisisEcoSitios();
+};
+
+// ── Filtro multi-selección de Años (solo vista "Resumen Anual") ──
+window.toggleAesAniosPanel = function(){
+  const panel = document.getElementById('f-aes-anios-panel');
+  if(panel) panel.style.display = panel.style.display==='none' ? '' : 'none';
+};
+
+window.toggleAesAniosTodos = function(checked){
+  if(checked){
+    AES_ANIOS_SELECCIONADOS.clear();
+    document.querySelectorAll('#f-aes-anios-opciones input[type="checkbox"]').forEach(cb=>{ cb.checked = false; });
+  }
+  renderAnalisisEcoSitios();
+};
+
+window.toggleAesAniosOpcion = function(anio, checked){
+  if(checked) AES_ANIOS_SELECCIONADOS.add(anio);
+  else AES_ANIOS_SELECCIONADOS.delete(anio);
+  const todosCb = document.getElementById('f-aes-anios-todos');
+  if(todosCb) todosCb.checked = AES_ANIOS_SELECCIONADOS.size===0;
+  renderAnalisisEcoSitios();
+};
+
+// Cierra los paneles de Estados NP / Meses / Años al hacer click afuera
+document.addEventListener('click', (e)=>{
+  [
+    {panel:'f-aes-estado-panel', btn:'f-aes-estado-btn'},
+    {panel:'f-aes-meses-panel', btn:'f-aes-meses-btn'},
+    {panel:'f-aes-anios-panel', btn:'f-aes-anios-btn'},
+  ].forEach(({panel:pid, btn:bid})=>{
+    const panel = document.getElementById(pid);
+    const btn = document.getElementById(bid);
+    if(panel && panel.style.display!=='none' && !panel.contains(e.target) && e.target!==btn){
+      panel.style.display = 'none';
+    }
+  });
 });
 
 async function actualizarPreventivos(){
