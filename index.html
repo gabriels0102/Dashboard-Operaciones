@@ -732,6 +732,16 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
     </div>
     <div class="cwtall"><canvas id="ch-aes-justificativo"></canvas></div>
   </div>
+
+  <!-- COMPARATIVO POR RUBRO: Presupuestado (hoja "Presupuesto por rubro") vs. Gasto Real (hoja "Estudio economico") -->
+  <div class="card" style="margin-top:14px;">
+    <div class="ch"><div><div class="ct">Comparativo por Rubro — Presupuestado vs. Gasto Real</div><div class="cs">Reacciona a los filtros de CECO, Jefe Zonal, Mes y Año de arriba de esta página</div></div></div>
+    <div class="tw"><table>
+      <thead><tr><th>Rubro</th><th>Presupuestado</th><th>Gasto Real</th><th>Desviación (favorable / desfavorable)</th></tr></thead>
+      <tbody id="tb-aes-rubro"></tbody>
+    </table></div>
+    <div class="cwtall" style="margin-top:14px;"><canvas id="ch-aes-rubro"></canvas></div>
+  </div>
 </section>
 
 <!-- FLOTA RESUMEN -->
@@ -4452,6 +4462,7 @@ let FUMIGACION_DATA = {meses: [], filas: []}; // Fumigacion y limpieza de tanque
 let REMITOS_TANQUES_DATA = []; // Remitos de limpieza de tanques → hoja "Consolidado" (Columna G = LIMPIEZA DE TANQUES)
 let ANALISIS_DOTACION_DATA = {kpis:{}, ranking_cecos:[], ranking_jefes:[], tendencia:[], alertas_ceco:[], alertas_jefe:[]}; // Análisis de dotación → hoja "Análisis de fluctuación"
 let ANALISIS_ECO_SITIOS_DATA = []; // Analisis economico mensual - Sitios → hoja "Estudio economico"
+let PRESUPUESTO_RUBRO_DATA = []; // Comparativo por Rubro → hoja "Presupuesto por rubro" (uno por CECO)
 let AES_VISTA_SITIO = 'mensual'; // Toggle de "Análisis por Sitio": 'mensual' o 'anual'
 let AES_ESTADOS_SELECCIONADOS = new Set(); // vacío = "Todos"; si tiene valores, son los únicos estados NP (Col J) a incluir
 let AES_MESES_SELECCIONADOS = new Set(); // vacío = "Todos"; aplica solo a la vista "Análisis Mes a Mes"
@@ -4806,6 +4817,26 @@ async function actualizarAnalisisEcoSitios(){
     const psub = document.getElementById('aes-psub');
     if(psub) psub.textContent = `${ANALISIS_ECO_SITIOS_DATA.length} registros · hoja "Estudio economico" (Columna K = SI)`;
 
+    // ── Presupuesto por rubro (para el Comparativo por Rubro al final de la página) ──
+    try{
+      const rowsRubro = await fetchSheet(GS_ANALISIS_ECO_SITIOS, 'Presupuesto por rubro');
+      const datosRubro = [];
+      rowsRubro.slice(1).forEach(row=>{
+        const ceco = String(row[0]||'').trim();
+        if(!ceco) return;
+        datosRubro.push({
+          ceco,
+          manoObra: Number(row[8])||0,      // Col I
+          materiales: Number(row[9])||0,     // Col J
+          abonosFijos: Number(row[10])||0,   // Col K
+          inversiones: Number(row[11])||0,   // Col L
+        });
+      });
+      PRESUPUESTO_RUBRO_DATA = datosRubro;
+    }catch(err){
+      console.warn('Error Presupuesto por rubro:', err);
+    }
+
     renderAnalisisEcoSitios();
     return true;
   }catch(err){
@@ -4843,6 +4874,69 @@ window.renderAnalisisEcoSitios = function(){
   const filas = ANALISIS_ECO_SITIOS_DATA.filter(r =>
     (!fc || r.ceco===fc) && (!fj || r.jefe_zonal===fj) && (!fm || r.mes===fm) && (!fa || r.anio===fa)
   );
+
+  // ── Comparativo por Rubro: Presupuestado (hoja "Presupuesto por rubro") vs. Gasto Real (hoja "Estudio economico") ──
+  // Reacciona a los mismos 4 filtros de arriba (CECO, Jefe Zonal, Mes, Año) vía la misma variable "filas".
+  (function renderComparativoRubro(){
+    const mapRubroGrupo = (codigo)=>{
+      const c = String(codigo||'').trim().toUpperCase();
+      if(['NPU','NPM','NPA','NPC','NPI','CAJA'].includes(c)) return 'Materiales e Insumos';
+      if(c==='MANO DE OBRA') return 'Mano de Obra';
+      if(['NMM','NMMR','NPR/EPP'].includes(c)) return 'Inversiones';
+      if(c==='ABONO FIJO') return 'Abonos Fijos';
+      return null; // código no contemplado en la regla de mapeo — no se computa en ningún rubro
+    };
+
+    // Gasto Real por rubro: Columna G ya viene en gasto_real, agrupado por la regla de mapeo sobre justificativo (Columna F)
+    const gastoPorRubro = {'Mano de Obra':0, 'Materiales e Insumos':0, 'Abonos Fijos':0, 'Inversiones':0};
+    filas.forEach(r=>{
+      const grupo = mapRubroGrupo(r.justificativo);
+      if(grupo) gastoPorRubro[grupo] += r.gasto_real;
+    });
+
+    // Presupuesto Calculado por rubro: se toma de "Presupuesto por rubro", una fila por CECO — se suman
+    // los CECOs que quedan visibles según los filtros activos (CECO/Jefe Zonal/Mes/Año, vía "filas").
+    const cecosVisibles = new Set(filas.map(r=>r.ceco));
+    const presupPorRubro = {'Mano de Obra':0, 'Materiales e Insumos':0, 'Abonos Fijos':0, 'Inversiones':0};
+    PRESUPUESTO_RUBRO_DATA.filter(p=>cecosVisibles.has(p.ceco)).forEach(p=>{
+      presupPorRubro['Mano de Obra'] += p.manoObra;
+      presupPorRubro['Materiales e Insumos'] += p.materiales;
+      presupPorRubro['Abonos Fijos'] += p.abonosFijos;
+      presupPorRubro['Inversiones'] += p.inversiones;
+    });
+
+    const rubros = ['Mano de Obra', 'Materiales e Insumos', 'Abonos Fijos', 'Inversiones'];
+
+    const tbRubro = document.getElementById('tb-aes-rubro');
+    if(tbRubro){
+      tbRubro.innerHTML = rubros.map(rb=>{
+        const presu = presupPorRubro[rb], gasto = gastoPorRubro[rb];
+        const dev = presu - gasto; // positivo = favorable (ahorro), negativo = desfavorable (sobregasto)
+        const pct = presu ? Math.round((dev/presu)*1000)/10 : 0;
+        return `<tr>
+          <td style="font-weight:600;">${rb}</td>
+          <td style="font-family:'JetBrains Mono';">${fmtARS(presu)}</td>
+          <td style="font-family:'JetBrains Mono';">${fmtARS(gasto)}</td>
+          <td><span class="p ${dev>=0?'p-ok':'p-err'}">${dev>=0?'+':''}${fmtARS(dev)} (${pct>=0?'+':''}${pct}%)</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    dc('ch-aes-rubro');
+    charts['ch-aes-rubro'] = new Chart(document.getElementById('ch-aes-rubro'),{
+      type:'bar',
+      data:{labels:rubros,
+        datasets:[
+          {label:'Presupuestado', data:rubros.map(rb=>presupPorRubro[rb]), backgroundColor:'#4f8ef799', borderRadius:4},
+          {label:'Gasto Real', data:rubros.map(rb=>gastoPorRubro[rb]), backgroundColor:'#f59e0b99', borderRadius:4},
+        ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{labels:{color:'#8b8fa8',font:{size:10},boxWidth:8}},
+          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmtARS(c.raw)}`}}},
+        scales:{x:{ticks:{color:'#8b8fa8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{color:'#8b8fa8'},grid:{color:'rgba(255,255,255,0.04)'},beginAtZero:true}}}
+    });
+  })();
 
   // Orden cronológico de meses (nombres en español, tal como vienen en la Columna H)
   const MESES_ORDEN = {ENERO:1,FEBRERO:2,MARZO:3,ABRIL:4,MAYO:5,JUNIO:6,JULIO:7,AGOSTO:8,SEPTIEMBRE:9,OCTUBRE:10,NOVIEMBRE:11,DICIEMBRE:12};
