@@ -911,6 +911,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
       <select id="f-dot-empresa" onchange="renderDotacion()" style="min-width:130px;"><option value="">Todas las empresas</option></select>
     </div>
   </div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active dot-ger-btn" data-ger="" onclick="window.setDotGerencia('')">Todas las Gerencias</button>
+    <button class="fum-tab dot-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setDotGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab dot-ger-btn" data-ger="Gerencia Grub" onclick="window.setDotGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="kg" id="k-dotacion"></div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;">
@@ -4429,6 +4434,16 @@ function injectRefreshButton(){
 // DOTACION Y PREVENTIVOS — DATOS Y FUNCIONES
 // ══════════════════════════════════════════════════════
 let DOTACION_DATA = [];
+let DOT_GERENCIA_SEL = ''; // Botones de Gerencia en Dotación de Operaciones (Columna J). '' = Todas las Gerencias
+
+// Botones superiores de Gerencia — exclusivos de "Dotación de Operaciones"
+window.setDotGerencia = function(gerencia){
+  DOT_GERENCIA_SEL = gerencia;
+  document.querySelectorAll('.dot-ger-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.ger===gerencia);
+  });
+  window.renderDotacion();
+};
 let PREV_DATA = [];
 let COMPL_DATA = {adicionales: 0, venta_total: 0, detalle: [], porJefe: [], porServicio: [], detallePorJefe: {}, operativo: {sinPCP: [], pcp: [], noOca: []}};
 let NO_OCA_DATA = {venta_total:0, porJefe:[], porServicio:[], detallePorJefe:{}};
@@ -4453,7 +4468,7 @@ function parseDotacion(rows){
   // HOJA: Dotacion - Relevamiento
   // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO
   // D(3)=CANTIDAD APROBADA, E(4)=CANTIDAD RELEVADA, F(5)=CECO
-  // I(8)=Incluir en análisis ("Si" = se incluye, "No" = se excluye)
+  // I(8)=Incluir en análisis ("Si" = se incluye, "No" = se excluye), J(9)=Gerencia
   const result = [];
   rows.slice(1).forEach(row => {
     if(!row[1] && !row[2]) return;
@@ -4467,8 +4482,9 @@ function parseDotacion(rows){
     // Col E puede venir vacía — tratarla como 0
     const real     = row[4]===''||row[4]===null||row[4]===undefined ? 0 : parseFloat(row[4])||0;
     const ceco     = String(row[5]||'').trim();
+    const gerencia = String(row[9]||'').trim(); // Col J — Gerencia
     if(!jefe && !servicio) return;
-    result.push({empresa, jefe, servicio, aprobada, real, ceco, diff: real - aprobada});
+    result.push({empresa, jefe, servicio, aprobada, real, ceco, gerencia, diff: real - aprobada});
   });
   return result;
 }
@@ -5204,6 +5220,7 @@ window.renderDotacion = function(){
   let data = DOTACION_DATA.filter(d => {
     if(fz && d.jefe !== fz) return false;
     if(femp && d.empresa !== femp) return false;
+    if(DOT_GERENCIA_SEL && d.gerencia !== DOT_GERENCIA_SEL) return false;
     return true;
   });
 
