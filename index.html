@@ -735,7 +735,13 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
   <!-- COMPARATIVO POR RUBRO: Presupuestado (hoja "Presupuesto por rubro") vs. Gasto Real (hoja "Estudio economico") -->
   <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Comparativo por Rubro — Presupuestado vs. Gasto Real</div><div class="cs">Reacciona a los filtros de CECO, Jefe Zonal, Mes y Año de arriba de esta página</div></div></div>
+    <div class="ch"><div><div class="ct">Comparativo por Rubro — Presupuestado vs. Gasto Real</div><div class="cs">Filtro propio, independiente del filtro de arriba de esta página</div></div></div>
+    <div class="fb" style="margin-bottom:12px;">
+      <label>CECO:</label><select id="f-rubro-ceco" onchange="window.renderAnalisisEcoSitios()" style="min-width:140px;"><option value="">Todos</option></select>
+      <label>Jefe Zonal:</label><select id="f-rubro-jefe" onchange="window.renderAnalisisEcoSitios()" style="min-width:190px;"><option value="">Todos</option></select>
+      <label>Mes:</label><select id="f-rubro-mes" onchange="window.renderAnalisisEcoSitios()" style="min-width:140px;"><option value="">Todos</option></select>
+      <label>Año:</label><select id="f-rubro-anio" onchange="window.renderAnalisisEcoSitios()" style="min-width:110px;"><option value="">Todos</option></select>
+    </div>
     <div class="tw"><table>
       <thead><tr><th>Rubro</th><th>Presupuestado</th><th>Gasto Real</th><th>Desviación (favorable / desfavorable)</th></tr></thead>
       <tbody id="tb-aes-rubro"></tbody>
@@ -4878,6 +4884,28 @@ window.renderAnalisisEcoSitios = function(){
   // ── Comparativo por Rubro: Presupuestado (hoja "Presupuesto por rubro") vs. Gasto Real (hoja "Estudio economico") ──
   // Reacciona a los mismos 4 filtros de arriba (CECO, Jefe Zonal, Mes, Año) vía la misma variable "filas".
   (function renderComparativoRubro(){
+    // ── Filtros propios (CECO, Jefe Zonal, Mes, Año), independientes de los filtros de arriba de la página ──
+    const selRCeco = document.getElementById('f-rubro-ceco');
+    const selRJefe = document.getElementById('f-rubro-jefe');
+    const selRMes  = document.getElementById('f-rubro-mes');
+    const selRAnio = document.getElementById('f-rubro-anio');
+    if(selRCeco && selRCeco.options.length <= 1){
+      [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.ceco))].filter(Boolean).sort().forEach(c=>{ selRCeco.innerHTML += `<option value="${c}">${c}</option>`; });
+    }
+    if(selRJefe && selRJefe.options.length <= 1){
+      [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.jefe_zonal))].filter(Boolean).sort().forEach(j=>{ selRJefe.innerHTML += `<option value="${j}">${j}</option>`; });
+    }
+    if(selRMes && selRMes.options.length <= 1){
+      [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.mes))].filter(Boolean).forEach(m=>{ selRMes.innerHTML += `<option value="${m}">${m}</option>`; });
+    }
+    if(selRAnio && selRAnio.options.length <= 1){
+      [...new Set(ANALISIS_ECO_SITIOS_DATA.map(r=>r.anio))].filter(Boolean).sort().forEach(a=>{ selRAnio.innerHTML += `<option value="${a}">${a}</option>`; });
+    }
+    const rc = selRCeco?.value || '', rj = selRJefe?.value || '', rm = selRMes?.value || '', ra = selRAnio?.value || '';
+    const filasRubro = ANALISIS_ECO_SITIOS_DATA.filter(r =>
+      (!rc || r.ceco===rc) && (!rj || r.jefe_zonal===rj) && (!rm || r.mes===rm) && (!ra || r.anio===ra)
+    );
+
     const mapRubroGrupo = (codigo)=>{
       const c = String(codigo||'').trim().toUpperCase();
       if(['NPU','NPM','NPA','NPC','NPI','CAJA'].includes(c)) return 'Materiales e Insumos';
@@ -4889,14 +4917,14 @@ window.renderAnalisisEcoSitios = function(){
 
     // Gasto Real por rubro: Columna G ya viene en gasto_real, agrupado por la regla de mapeo sobre justificativo (Columna F)
     const gastoPorRubro = {'Mano de Obra':0, 'Materiales e Insumos':0, 'Abonos Fijos':0, 'Inversiones':0};
-    filas.forEach(r=>{
+    filasRubro.forEach(r=>{
       const grupo = mapRubroGrupo(r.justificativo);
       if(grupo) gastoPorRubro[grupo] += r.gasto_real;
     });
 
     // Presupuesto Calculado por rubro: se toma de "Presupuesto por rubro", una fila por CECO — se suman
-    // los CECOs que quedan visibles según los filtros activos (CECO/Jefe Zonal/Mes/Año, vía "filas").
-    const cecosVisibles = new Set(filas.map(r=>r.ceco));
+    // los CECOs que quedan visibles según los filtros propios de este apartado.
+    const cecosVisibles = new Set(filasRubro.map(r=>r.ceco));
     const presupPorRubro = {'Mano de Obra':0, 'Materiales e Insumos':0, 'Abonos Fijos':0, 'Inversiones':0};
     PRESUPUESTO_RUBRO_DATA.filter(p=>cecosVisibles.has(p.ceco)).forEach(p=>{
       presupPorRubro['Mano de Obra'] += p.manoObra;
