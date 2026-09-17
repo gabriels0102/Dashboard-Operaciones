@@ -642,9 +642,15 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="topbar">
     <div><div class="ptitle">Contratos por Responsable</div><div class="psub" id="cont-psub">Cargando desde Google Sheets...</div></div>
   </div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active" id="cont-ger-btn-todas" onclick="window.setContGerencia('')">Todas las gerencias</button>
+    <button class="fum-tab" id="cont-ger-btn-mantovana" onclick="window.setContGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab" id="cont-ger-btn-grub" onclick="window.setContGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="fb">
     <label>Responsable:</label><select id="f-cont-resp" onchange="renderContratos()" style="min-width:190px;"><option value="">Todos</option></select>
     <label>Empresa:</label><select id="f-cont-emp" onchange="renderContratos()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option><option value="PVP">PVP</option></select>
+    <label>CECO:</label><select id="f-cont-ceco" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option></select>
     <label>Estado:</label><select id="f-cont-estado" onchange="renderContratos()" style="min-width:120px;"><option value="">Todos</option><option value="Activo">Activos</option><option value="Inactivo">Inactivos</option></select>
     <input type="text" id="f-cont-busq" placeholder="Buscar servicio o nombre..." style="width:180px;" oninput="renderContratos()"/>
   </div>
@@ -2096,24 +2102,60 @@ window.guardarSitio=async function(){
 window.eliminarSitioActual=function(){confirmar("¿Eliminar sitio?","Irreversible.",async()=>{try{await deleteDoc(doc(db,"sitios",editSitioId));cerrarModalSitio();toast("Eliminado");}catch(err){toast("Error: "+err.message);}});};
 
 // ══ CONTRATOS ══
+// Base de Contratos ya filtrada por la Bandera de Visibilidad (Col J = "Si") y la Gerencia (Col H) activa.
+// Col J es exclusivamente un filtro lógico interno: nunca se expone en tablas ni componentes.
+function contVisibles(){
+  return CONTRATOS_RT.filter(c=>(c.visible||'').trim().toLowerCase()==='si' && (!CONT_GERENCIA_SEL || c.gerencia===CONT_GERENCIA_SEL));
+}
+
+// Botones superiores de Gerencia — vinculados a todo el dashboard de Contratos (filtros + tabla)
+window.setContGerencia = function(gerencia){
+  CONT_GERENCIA_SEL = gerencia;
+  document.getElementById('cont-ger-btn-todas')?.classList.toggle('active', gerencia==='');
+  document.getElementById('cont-ger-btn-mantovana')?.classList.toggle('active', gerencia==='Gerencia Mantovana');
+  document.getElementById('cont-ger-btn-grub')?.classList.toggle('active', gerencia==='Gerencia Grub');
+  window.populateContFiltros();
+  renderContratos();
+};
+
+// Repuebla Responsable/Empresa/CECO en base a la Gerencia activa (reactivo: se llama de nuevo al cambiar de botón)
+window.populateContFiltros = function(){
+  const base = contVisibles();
+  const jefes=[...new Set(base.map(c=>c.jefe).filter(Boolean))].sort();
+  const emps=[...new Set(base.map(c=>c.empresa).filter(Boolean))].sort();
+  const cecos=[...new Set(base.map(c=>c.ceco).filter(Boolean))].sort();
+  const selR=document.getElementById("f-cont-resp");
+  const prevR = selR?.value;
+  if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});if(jefes.includes(prevR))selR.value=prevR;}
+  const selE=document.getElementById("f-cont-emp");
+  const prevE = selE?.value;
+  if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});if(emps.includes(prevE))selE.value=prevE;}
+  const selC=document.getElementById("f-cont-ceco");
+  const prevC = selC?.value;
+  if(selC){selC.innerHTML='<option value="">Todos</option>';cecos.forEach(c=>{selC.innerHTML+=`<option value="${c}">${c}</option>`;});if(cecos.includes(prevC))selC.value=prevC;}
+};
+
 window.renderContratos=function(){
   const fr   = document.getElementById("f-cont-resp")?.value||"";
   const femp = document.getElementById("f-cont-emp")?.value||"";
+  const fceco = document.getElementById("f-cont-ceco")?.value||"";
   const fest = document.getElementById("f-cont-estado")?.value||"";
   const busq = (document.getElementById("f-cont-busq")?.value||"").toLowerCase();
   const cont = document.getElementById("contratos-cont");
   if(!cont) return;
+  const base = contVisibles(); // ya filtrado por Bandera de Visibilidad (Col J = "Si") y Gerencia (Col H) activa
   const psub = document.getElementById("cont-psub");
-  if(psub && CONTRATOS_RT.length>0){
-    const act=CONTRATOS_RT.filter(c=>c.estado==="Activo").length;
-    const inact=CONTRATOS_RT.filter(c=>c.estado==="Inactivo").length;
-    const emps=[...new Set(CONTRATOS_RT.map(c=>c.empresa).filter(Boolean))].join(" · ");
-    psub.textContent=CONTRATOS_RT.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
+  if(psub && base.length>0){
+    const act=base.filter(c=>c.estado==="Activo").length;
+    const inact=base.filter(c=>c.estado==="Inactivo").length;
+    const emps=[...new Set(base.map(c=>c.empresa).filter(Boolean))].join(" · ");
+    psub.textContent=base.length+" contratos · "+act+" activos · "+inact+" inactivos · "+emps+" · Tiempo real";
   }
   if(!CONTRATOS_RT.length){cont.innerHTML="<div style='color:var(--mu);padding:20px;text-align:center;'>Cargando...</div>";return;}
-  const filtered=CONTRATOS_RT.filter(ct=>{
+  const filtered=base.filter(ct=>{
     if(fr&&ct.jefe!==fr) return false;
     if(femp&&ct.empresa!==femp) return false;
+    if(fceco&&ct.ceco!==fceco) return false;
     if(fest&&ct.estado!==fest) return false;
     if(busq){const s=(ct.servicio||"").toLowerCase(),j=(ct.jefe||"").toLowerCase(),cc=(ct.ceco||"").toLowerCase();if(!s.includes(busq)&&!j.includes(busq)&&!cc.includes(busq))return false;}
     return true;
@@ -4111,22 +4153,19 @@ async function actualizarContratos(){
   try {
     const rows = await fetchSheet(GS_CONTRATOS, 'Contratos');
     // A(0)=EMPRESA, B(1)=JEFE ZONAL, C(2)=SERVICIO, D(3)=CECO, E(4)=ESTADO, F(5)=FECHA VENCIMIENTO
+    // H(7)=GERENCIA, J(9)=Bandera de Visibilidad ("Si"/"No") — filtro lógico interno, nunca se muestra en pantalla
     const result = [];
     rows.slice(1).forEach(row=>{
       const empresa=String(row[0]||'').trim(), jefe=String(row[1]||'').trim();
       const servicio=String(row[2]||'').trim(), ceco=String(row[3]||'').trim();
       const estado=String(row[4]||'').trim(), vence=String(row[5]||'').trim();
+      const gerencia=String(row[7]||'').trim(), visible=String(row[9]||'').trim();
       if(!jefe && !servicio) return;
-      result.push({empresa, jefe, servicio, ceco, estado, vence});
+      result.push({empresa, jefe, servicio, ceco, estado, vence, gerencia, visible});
     });
     if(result.length > 0){
       CONTRATOS_RT = result;
-      const jefes=[...new Set(result.map(c=>c.jefe).filter(Boolean))].sort();
-      const emps=[...new Set(result.map(c=>c.empresa).filter(Boolean))].sort();
-      const selR=document.getElementById("f-cont-resp");
-      if(selR){selR.innerHTML='<option value="">Todos los responsables</option>';jefes.forEach(j=>{selR.innerHTML+=`<option value="${j}">${j}</option>`;});}
-      const selE=document.getElementById("f-cont-emp");
-      if(selE){selE.innerHTML='<option value="">Todas</option>';emps.forEach(e=>{selE.innerHTML+=`<option value="${e}">${e}</option>`;});}
+      window.populateContFiltros();
     }
     setGsStatus('cont','ok');
     renderContratos();
@@ -4331,6 +4370,7 @@ let AES_ANIOS_SELECCIONADOS = new Set(); // vacío = "Todos"; aplica solo a la v
 let ABONOS_LEY_DATA = []; // Abonos de ley → hoja "Consolidado" filtrada por Clasificación = "Abonos de ley"
 let MEDICIONES_DATA = []; // Mediciones → hoja "Consolidado" filtrada por Clasificación = "Medicion"
 let CONTRATOS_RT = []; // Contratos en tiempo real desde Google Sheets
+let CONT_GERENCIA_SEL = ''; // Botón de Gerencia activo en Contratos ('' = Todas las gerencias)
 let DOTACION_DETALLE_DATA = []; // Detalle de personal (Hoja: Dotacion detalle)
 let DOTACION_DETALLE_BY_CECO = {}; // Detalle agrupado por CECO
 
