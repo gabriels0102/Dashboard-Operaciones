@@ -737,6 +737,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- FLOTA RESUMEN -->
 <section class="page" id="page-flota-resumen">
   <div class="topbar"><div><div class="ptitle">Resumen Flota Vehicular</div><div class="psub" id="flota-res-psub">Cargando datos en tiempo real...</div></div></div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active flota-ger-btn" data-ger="" onclick="window.setFlotaGerencia('')">Todas las Gerencias</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setFlotaGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Grub" onclick="window.setFlotaGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="kg" id="k-flota-res"></div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Estado de la flota</div></div></div><div class="cw"><canvas id="ch-fl-estado"></canvas></div></div>
@@ -754,6 +759,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- FLOTA ESTADO -->
 <section class="page" id="page-flota-estado">
   <div class="topbar"><div><div class="ptitle">Estado de Unidades</div><div class="psub">Todas las unidades activas (sin PREVIAL)</div></div></div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active flota-ger-btn" data-ger="" onclick="window.setFlotaGerencia('')">Todas las Gerencias</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setFlotaGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Grub" onclick="window.setFlotaGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="fb">
     <label>Estado:</label><select id="f-fl-est" onchange="renderFlotaTabla()" style="min-width:140px;"><option value="">Todos</option><option value="Operativa">Operativa</option><option value="En taller">En taller</option></select>
     <label>Empresa:</label><select id="f-fl-emp" onchange="renderFlotaTabla()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option></select>
@@ -772,6 +782,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- FLOTA TALLER -->
 <section class="page" id="page-flota-taller">
   <div class="topbar"><div><div class="ptitle">Horas en Taller</div><div class="psub">Col N — Horas hábiles · filtros por empresa, año, área y tipo de arreglo</div></div></div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active flota-ger-btn" data-ger="" onclick="window.setFlotaGerencia('')">Todas las Gerencias</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setFlotaGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Grub" onclick="window.setFlotaGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="fb">
     <label>Empresa:</label><select id="f-taller-emp" onchange="window.renderFlotaTaller()" style="min-width:110px;"><option value="">Todas</option><option value="LMSG">LMSG</option><option value="GRUB">GRUB</option></select>
     <label>Año:</label><select id="f-taller-anio" onchange="window.renderFlotaTaller()" style="min-width:100px;"><option value="">Todos</option><option value="2025">2025</option><option value="2026">2026</option></select>
@@ -812,6 +827,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- FLOTA IMPACTO -->
 <section class="page" id="page-flota-impacto">
   <div class="topbar"><div><div class="ptitle">Impacto Operativo</div><div class="psub">Estadística 3 — Impacto de horas en taller sobre disponibilidad de la flota</div></div></div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active flota-ger-btn" data-ger="" onclick="window.setFlotaGerencia('')">Todas las Gerencias</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setFlotaGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Grub" onclick="window.setFlotaGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="kg" id="k-impacto"></div>
   <div class="card"><div class="ch"><div><div class="ct">% Disponibilidad de la flota</div><div class="cs">100% = toda la flota operativa. Por debajo = impacto por horas en taller</div></div></div><div class="cw"><canvas id="ch-disp"></canvas></div></div>
   <div class="c2">
@@ -830,6 +850,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- SINIESTROS -->
 <section class="page" id="page-siniestros">
   <div class="topbar"><div><div class="ptitle">Siniestros</div><div class="psub">105 siniestros registrados · 2023 — 2026</div></div></div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active flota-ger-btn" data-ger="" onclick="window.setFlotaGerencia('')">Todas las Gerencias</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setFlotaGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab flota-ger-btn" data-ger="Gerencia Grub" onclick="window.setFlotaGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="kg" id="k-sin"></div>
   <div class="c2">
     <div class="card" style="margin-bottom:0;"><div class="ch"><div><div class="ct">Tipo de siniestro</div></div></div><div class="cw"><canvas id="ch-sin-tipo"></canvas></div></div>
@@ -1193,6 +1218,7 @@ const CONTR={
 let FLOTA=[{p:"AD682MK",j:"Sin asignar",s:"",est:"Fuera de servicio",e:"Sin empresa",m:""},{p:"AH144PZ",j:"Maria Gutierrez",s:"F29 MEGA OCA TSG MANT",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AH210RA",j:"Carlos Leonardo Costanci",s:"N85 BANCO PROVINCIA MAR DEL PLATA",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AH144PN",j:"Maria Gutierrez",s:"SUPERVISION",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AF794PQ",j:"Maria Gutierrez",s:"M57 SRT CUADRILLA MTTO",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AE530TE",j:"Carlos Leonardo Costanci",s:"063 CEMENTERIOS MATENIMIENTO",est:"Operativa",e:"LMSG",m:"Fiat Fiorino"},{p:"AD333OZ",j:"Albis Antonio Díaz Quinteros",s:"F84 MIN DES URB RECI. SOLIS",est:"Fuera de servicio",e:"Sin empresa",m:"Fiat Fiorino"},{p:"AG409TQ",j:"Carlos Leonardo Costanci",s:"K63 MEGA OCA POLI POMAR MTTO",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG583EM",j:"Sin asignar",s:"SUPERVISION",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AF020JS",j:"Germán Gutierrez",s:"G62 MEGA OCA AUTODROMO GALVEZ",est:"Operativa",e:"LMSG",m:"Nissan Frontier"},{p:"AF203UY",j:"Germán Gutierrez",s:"G62 MEGA OCA AUTODROMO GALVEZ",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AD451BY",j:"Patricio Frechou",s:"F77 MEGA PCP CUADRILLA",est:"En taller",e:"LMSG",m:"Renault Kangoo"},{p:"AG369GO",j:"Patricio Frechou",s:"F77 MEGA PCP CUADRILLA",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AE530TH",j:"Patricio Frechou",s:"F77 MEGA PCP CUADRILLA",est:"Operativa",e:"LMSG",m:"Fiat Fiorino"},{p:"AG983SM",j:"Patricio Frechou",s:"M40 INST. SUP. POLICIA",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AF488AQ",j:"Patricio Frechou",s:"E13 EMUI PUENTES MTTO ZONA 1",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AE833VX",j:"Patricio Frechou",s:"E13 EMUI PUENTES MTTO ZONA 1",est:"Operativa",e:"LMSG",m:"Fiat Fiorino"},{p:"AE791KZ",j:"Patricio Frechou",s:"IVECO PUENTES",est:"Operativa",e:"LMSG",m:"IVECO TECTOR"},{p:"AG983SL",j:"Patricio Frechou",s:"M40 INST. SUP. POLICIA",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG983SC",j:"Carlos Leonardo Costanci",s:"MIN DE TRABAJO PBA",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG983SA",j:"Patricio Frechou",s:"M40 INST. SUP. POLICIA",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AF109KB",j:"Maria Gutierrez",s:"G97 MEGA OCA COMUNAS MTTO",est:"Operativa",e:"LMSG",m:"Fiat Fiorino"},{p:"AF643ZG",j:"Maria Gutierrez",s:"F83 CUADRILLA OBRA MANT",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AC397XR",j:"Maria Gutierrez",s:"G98 MEGA OCA SALUD MTTO",est:"Operativa",e:"LMSG",m:"Fiat Fiorino"},{p:"AG121YX",j:"Maria Gutierrez",s:"M57 SRT CUADRILLA MTTO",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AH609FU",j:"Maria Gutierrez",s:"O47 PAMI A.A.",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG068HP",j:"Gaston Noguera",s:"F15 RENAPER INTERIOR",est:"En taller",e:"LMSG",m:"Renault Kangoo"},{p:"AG068HO",j:"Gaston Noguera",s:"F15 RENAPER INTERIOR",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AD181TI",j:"Gaston Noguera",s:"040 RENAPER",est:"Operativa",e:"LMSG",m:"Fiat Fiorino"},{p:"AH144PT",j:"Gaston Noguera",s:"F15 RENAPER INTERIOR",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AF109KC",j:"Sin asignar",s:"SUPERVISION",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG369GB",j:"Gaston Noguera",s:"B39 COLONIA MONTES DE OCA MANT",est:"Operativa",e:"LMSG",m:"Nissan Frontier"},{p:"AG369GE",j:"Gabriel Tranamil",s:"Previal",est:"Operativa",e:"LMSG",m:"IVECO TECTOR"},{p:"AD577JK",j:"Gabriel Tranamil",s:"Previal",est:"Operativa",e:"LMSG",m:"Fiat Ducato"},{p:"AG336LA",j:"Gabriel Tranamil",s:"Previal",est:"Operativa",e:"LMSG",m:"Nissan Frontier"},{p:"AF987SF",j:"Gabriel Tranamil",s:"Previal",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG583EO",j:"Gabriel Eduardo Yuricich",s:"570 ARCA MTO ANEXOS",est:"Operativa",e:"GRUB",m:"Renault Kangoo"},{p:"AG808ZZ",j:"Maria Gutierrez",s:"L46 DIR. NAC. MIGRACIONES MTTO",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AG583EN",j:"Sin asignar",s:"SUPERVISION",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AH884ZO",j:"Gabriel Eduardo Yuricich",s:"MIGRACIONES 802 GRUB",est:"Operativa",e:"GRUB",m:"Renault Kangoo"},{p:"AH912BA",j:"Carlos Leonardo Costanci",s:"F84 MIN DES URB RECI. SOLIS",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AH643YK",j:"Liliana Cacace",s:"Previal",est:"Operativa",e:"LMSG",m:"Renault Kangoo"},{p:"AI183XH",j:"Sin asignar",s:"SUPERVISION",est:"Operativa",e:"GRUB",m:"Renault Kangoo"}];
 
 let HORAS_PAT={"AC397XR":691.4,"AG068HP":575.3,"AD181TI":438.6,"AD333OZ":340.3,"AG068HO":321.8,"AE530TE":298.5,"AE530TH":246.2,"AG369GE":242.3,"AD451BY":224.0,"AG983SC":111.8,"AF488AQ":90.7,"AF203UY":74.5,"AH144PN":73.9,"AF987SF":71.4,"AG808ZZ":62.0,"AG983SA":56.8,"AE833VX":55.8,"AF794PQ":52.7,"AD577JK":35.2,"AE791KZ":34.3,"AG369GB":32.3,"AH210RA":26.5,"AF109KC":24.4,"AH144PZ":24.0,"AH609FU":22.6,"AF643ZG":21.6,"AG983SL":16.8,"AH643YK":15.8,"AG583EO":15.5,"AH144PT":14.2,"AG336LA":14.2,"AF020JS":11.2,"AH912BA":8.2,"AG583EN":7.5,"AG369GO":7.2,"AG583EM":6.8,"AG983SM":4.7,"AG121YX":4.3,"AH884ZO":3.5,"AI183XH":0.2};
+let FLOTA_GERENCIA_SEL = ''; // Botones de Gerencia en Resumen de Flota / Estado de Unidades / Horas en Taller / Impacto Operativo / Siniestros. '' = Todas las Gerencias
 let HORAS_MES={"Oct'25":403.0,"Nov'25":849.7,"Dic'25":575.5,"Ene'26":553.1,"Feb'26":343.1,"Mar'26":833.3,"Abr'26":808.3,"May'26":12.8};
 let TURNOS_MES={"Oct'25":24,"Nov'25":24,"Dic'25":21,"Ene'26":26,"Feb'26":23,"Mar'26":31,"Abr'26":33,"May'26":2};
 let HORAS_AREA={"MANTENIMIENTO":4005.0,"OBRAS":366.5,"ESTRUCTURA":7.5};
@@ -2211,13 +2237,48 @@ window.renderContratos=function(){
 };
 
 // ══ FLOTA ══
+// Devuelve FLOTA (Control vehicular) filtrada por la Gerencia activa (Columna AC) — '' = Todas las Gerencias
+function flotaGerencia(){
+  return FLOTA_GERENCIA_SEL ? FLOTA.filter(v=>v.ger===FLOTA_GERENCIA_SEL) : FLOTA;
+}
+
+// Reconstruye horasPat/horasMes/turnosMes/horasArea filtrando "Turnos unidades" por la Gerencia activa (Columna W)
+function turnosGerencia(){
+  if(!FLOTA_GERENCIA_SEL || !window.TURNOS_DETALLE?.length){
+    return {horasPat:HORAS_PAT, horasMes:HORAS_MES, turnosMes:TURNOS_MES, horasArea:HORAS_AREA};
+  }
+  const horasPat={}, horasMes={}, turnosMes={}, horasArea={};
+  window.TURNOS_DETALLE.filter(t=>t.gerencia===FLOTA_GERENCIA_SEL).forEach(t=>{
+    if(t.horas>0){horasPat[t.pat]=(horasPat[t.pat]||0)+t.horas;horasMes[t.mesKey]=(horasMes[t.mesKey]||0)+t.horas;horasArea[t.area]=(horasArea[t.area]||0)+t.horas;}
+    const esDesdoble = t.tipoArr === 'Desdoble - VTV' || t.tipoArr === 'Desdoble - Correctivo' || t.tipoArr === 'Desdoble - Service';
+    if(t.asistio==='SI' && !esDesdoble) turnosMes[t.mesKey]=(turnosMes[t.mesKey]||0)+1;
+  });
+  Object.keys(horasPat).forEach(k=>{horasPat[k]=Math.round(horasPat[k]*10)/10;});
+  return {horasPat, horasMes, turnosMes, horasArea};
+}
+
+// Botones superiores de Gerencia, compartidos por Resumen de Flota / Estado de Unidades / Horas en Taller / Impacto Operativo / Siniestros
+window.setFlotaGerencia = function(gerencia){
+  FLOTA_GERENCIA_SEL = gerencia;
+  document.querySelectorAll('.flota-ger-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.ger===gerencia);
+  });
+  renderFlotaResumen();
+  renderFlotaTabla();
+  renderFlotaTaller();
+  renderFlotaImpacto();
+  renderSiniestros();
+};
+
 function renderFlotaResumen(){
   // FLOTA ya viene filtrada exclusivamente por Columna AB = "Si" (parseControlVehicular),
   // que ya contempla mantenimiento y descarta "fuera de servicio" — no hace falta filtrar de nuevo.
-  const flotaActiva = FLOTA;
+  // flotaGerencia()/turnosGerencia() aplican además el filtro de Gerencia activo (Col AC / Col W).
+  const flotaActiva = flotaGerencia();
+  const {horasPat: HP, horasMes: HM, turnosMes: TM} = turnosGerencia();
   const op  = flotaActiva.filter(v=>v.est==="Operativa").length;
   const tal = flotaActiva.filter(v=>v.est==="En taller").length;
-  const totalH=Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
+  const totalH=Math.round(Object.values(HP).reduce((s,h)=>s+h,0));
   const totalFlota = flotaActiva.length;
   const psubFlota = document.getElementById("flota-res-psub");
   if(psubFlota) psubFlota.textContent = `${totalFlota} unidades (Columna AB = Sí) · ${op} operativas · ${tal} en taller`;
@@ -2227,7 +2288,7 @@ function renderFlotaResumen(){
     <div class="kc gr"><span class="ki">✅</span><div class="kl">Operativas</div><div class="kv">${op}</div><div class="ks">${pctOp}%</div></div>
     <div class="kc am"><span class="ki">🔧</span><div class="kl">En taller</div><div class="kv">${tal}</div><div class="ks">${totalFlota>0?Math.round(tal/totalFlota*100):0}%</div></div>
     <div class="kc or"><span class="ki">⏱️</span><div class="kl">Total hs. hábiles taller</div><div class="kv">${totalH}</div><div class="ks">Columna AB = Sí</div></div>
-    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TURNOS_MES).reduce((s,v)=>s+v,0)}</div><div class="ks">Columna AB = Sí</div></div>`;
+    <div class="kc pu"><span class="ki">📋</span><div class="kl">Turnos finalizados</div><div class="kv">${Object.values(TM).reduce((s,v)=>s+v,0)}</div><div class="ks">Columna AB = Sí</div></div>`;
 
   dc("ch-fl-estado");charts["ch-fl-estado"]=new Chart(document.getElementById("ch-fl-estado"),{
     type:"doughnut",
@@ -2241,14 +2302,14 @@ function renderFlotaResumen(){
     data:{labels:Object.keys(emp2),datasets:[{data:Object.values(emp2),backgroundColor:["#4f8ef799","#7c3aed99","#8b8fa899","#14b8a699"],borderWidth:0}]},
     options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})
   });
-  dc("ch-fl-mes");charts["ch-fl-mes"]=new Chart(document.getElementById("ch-fl-mes"),{type:"bar",data:{labels:Object.keys(HORAS_MES),datasets:[{label:"Horas hábiles",data:Object.values(HORAS_MES),backgroundColor:Object.values(HORAS_MES).map(h=>h>700?"#ef444499":h>500?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  const top10=Object.entries(HORAS_PAT).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  dc("ch-fl-mes");charts["ch-fl-mes"]=new Chart(document.getElementById("ch-fl-mes"),{type:"bar",data:{labels:Object.keys(HM),datasets:[{label:"Horas hábiles",data:Object.values(HM),backgroundColor:Object.values(HM).map(h=>h>700?"#ef444499":h>500?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  const top10=Object.entries(HP).sort((a,b)=>b[1]-a[1]).slice(0,10);
   dc("ch-fl-top10");charts["ch-fl-top10"]=new Chart(document.getElementById("ch-fl-top10"),{type:"bar",data:{labels:top10.map(p=>p[0]),datasets:[{label:"Horas",data:top10.map(p=>p[1]),backgroundColor:top10.map(p=>p[1]>400?"#ef444499":p[1]>200?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
 }
 
 window.renderFlotaTabla=function(){
   const fe=document.getElementById("f-fl-est").value,femp=document.getElementById("f-fl-emp").value,fj=document.getElementById("f-fl-jefe").value,busq=(document.getElementById("f-fl-busq").value||"").toLowerCase();
-  const fil=FLOTA.filter(v=>{if(fe&&v.est!==fe)return false;if(femp&&v.e!==femp)return false;if(fj&&v.j!==fj)return false;if(busq&&!v.p.toLowerCase().includes(busq)&&!v.s.toLowerCase().includes(busq))return false;return true;});
+  const fil=flotaGerencia().filter(v=>{if(fe&&v.est!==fe)return false;if(femp&&v.e!==femp)return false;if(fj&&v.j!==fj)return false;if(busq&&!v.p.toLowerCase().includes(busq)&&!v.s.toLowerCase().includes(busq))return false;return true;});
   document.getElementById("tb-flota").innerHTML=fil.map(v=>{
     const hs=HORAS_PAT[v.p]||0;const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":"p-err";const ec2=v.e==="GRUB"?"p-pu":v.e==="LMSG"?"p-bl":"p-mu";
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${v.p}</td><td style="color:var(--mu);">${v.m||"—"}</td><td>${v.j}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${pill(v.est,ec)}</td><td>${pill(v.e,ec2)}</td><td style="font-family:'JetBrains Mono';">${hs>0?hs.toFixed(1)+"h":"—"}</td></tr>`;
@@ -2301,7 +2362,7 @@ window.renderFlotaTaller = function renderFlotaTaller(){
   const femp  = document.getElementById("f-taller-emp")?.value||"";
   const fanio = document.getElementById("f-taller-anio")?.value||"";
   const ftipo = document.getElementById("f-taller-tipo")?.value||"";
-  const hasFilters = femp||fanio||ftipo;
+  const hasFilters = femp||fanio||ftipo||FLOTA_GERENCIA_SEL;
 
   // Populate dynamic filters from TURNOS_DETALLE
   const sel_tipo=document.getElementById("f-taller-tipo");
@@ -2316,6 +2377,7 @@ window.renderFlotaTaller = function renderFlotaTaller(){
       if(femp && t.empresa !== femp) return false;
       if(fanio && t.anio !== fanio) return false;
       if(ftipo && t.tipoArr !== ftipo) return false;
+      if(FLOTA_GERENCIA_SEL && t.gerencia !== FLOTA_GERENCIA_SEL) return false; // Col W — Gerencia
       return true;
     });
     useHP={};useHM={};useTM={};useHA={};
@@ -2394,8 +2456,8 @@ window.renderFlotaTaller = function renderFlotaTaller(){
         plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}}
     });
   }
-  document.getElementById("tb-taller").innerHTML=allPsorted.filter(([p])=>FLOTA.find(x=>x.p===p)).map(([p,hs])=>{
-    const v=FLOTA.find(x=>x.p===p)||{};const pct=Math.round(hs/totalH*100*10)/10;const bc=hs>400?"var(--err)":hs>200?"var(--warn)":"var(--ac)";const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":v.est?"p-err":"p-mu";
+  document.getElementById("tb-taller").innerHTML=allPsorted.filter(([p])=>flotaGerencia().find(x=>x.p===p)).map(([p,hs])=>{
+    const v=flotaGerencia().find(x=>x.p===p)||{};const pct=Math.round(hs/totalH*100*10)/10;const bc=hs>400?"var(--err)":hs>200?"var(--warn)":"var(--ac)";const ec=v.est==="Operativa"?"p-ok":v.est==="En taller"?"p-warn":v.est?"p-err":"p-mu";
     const maxH = maxPat[1]||1;
     return `<tr><td style="font-family:'JetBrains Mono';font-weight:700;">${p}</td><td style="font-size:11px;">${v.j||"—"}</td><td style="font-size:11px;">${v.s||"—"}</td><td>${v.est?pill(v.est,ec):"—"}</td><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:80px;height:5px;background:var(--s2);border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(100,hs/maxH*100)}%;background:${bc};border-radius:3px;"></div></div><span style="font-family:'JetBrains Mono';font-size:12px;font-weight:600;">${hs.toFixed(1)}h</span></div></td><td style="color:var(--mu);font-size:11px;">${pct}%</td></tr>`;
   }).join("");
@@ -2435,8 +2497,8 @@ function renderFlotaImpacto(){
   const avgI = (EST3.reduce((s,d)=>s+d.imp,0)/EST3.length).toFixed(2);
   // Mes crítico = menor disponibilidad (col N)
   const mw = EST3.reduce((a,b)=>a.disp<b.disp?a:b);
-  // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota)
-  const totalHTurnos = Math.round(Object.values(HORAS_PAT).reduce((s,h)=>s+h,0));
+  // Total hs taller = HORAS_PAT (col N de Turnos, misma fuente que Resumen Flota) — respeta Gerencia (Col W) activa
+  const totalHTurnos = Math.round(Object.values(turnosGerencia().horasPat).reduce((s,h)=>s+h,0));
   document.getElementById("k-impacto").innerHTML=`
     <div class="kc te"><span class="ki">📊</span><div class="kl">Disponibilidad prom.</div><div class="kv">${avgD}%</div><div class="ks">Col N — promedio mensual (Est. 3)</div></div>
     <div class="kc am"><span class="ki">🚐</span><div class="kl">Impacto prom. (cam.)</div><div class="kv">${avgI}</div><div class="ks">Col K — camionetas equiv./mes</div></div>
@@ -2524,18 +2586,25 @@ function renderFlotaImpacto(){
 }
 
 function renderSiniestros(){
-  const tot=Object.values(SIN_TIPO).reduce((s,v)=>s+v,0);
+  // Si hay una Gerencia activa, se recalcula Siniestros cruzando por patente contra Control vehicular (Col AC)
+  let tipo = SIN_TIPO, sem = SIN_SEM, pat = SIN_PAT, area = SIN_AREA;
+  if(FLOTA_GERENCIA_SEL && window.SINIESTROS_ROWS){
+    const patentesGer = new Set(flotaGerencia().map(v=>v.p));
+    const r = parseSiniestros(window.SINIESTROS_ROWS, patentesGer);
+    tipo = r.tipo; sem = r.sem; pat = r.topPat; area = r.area;
+  }
+  const tot=Object.values(tipo).reduce((s,v)=>s+v,0);
   document.getElementById("k-sin").innerHTML=`
     <div class="kc re"><span class="ki">⚠️</span><div class="kl">Total siniestros</div><div class="kv">${tot}</div><div class="ks">2023—2026</div></div>
-    <div class="kc am"><span class="ki">🚨</span><div class="kl">Siniestros mayores</div><div class="kv">${SIN_TIPO["Siniestro mayor"]}</div><div class="ks">${Math.round(SIN_TIPO["Siniestro mayor"]/tot*100)}%</div></div>
-    <div class="kc or"><span class="ki">🔸</span><div class="kl">Siniestros menores</div><div class="kv">${SIN_TIPO["Siniestro menor"]}</div></div>
-    <div class="kc pu"><span class="ki">🔓</span><div class="kl">Robos</div><div class="kv">${SIN_TIPO["Robo"]}</div></div>
-    <div class="kc bl"><span class="ki">📅</span><div class="kl">2025 2do semestre</div><div class="kv">${SIN_SEM["2025 2°Sem"]}</div><div class="ks">Semestre pico</div></div>
-    <div class="kc te"><span class="ki">🚐</span><div class="kl">Unidades afectadas</div><div class="kv">${Object.keys(SIN_PAT).length}+</div></div>`;
-  dc("ch-sin-tipo");charts["ch-sin-tipo"]=new Chart(document.getElementById("ch-sin-tipo"),{type:"doughnut",data:{labels:Object.keys(SIN_TIPO),datasets:[{data:Object.values(SIN_TIPO),backgroundColor:["#ef444499","#f59e0b99","#7c3aed99"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
-  dc("ch-sin-sem");charts["ch-sin-sem"]=new Chart(document.getElementById("ch-sin-sem"),{type:"bar",data:{labels:Object.keys(SIN_SEM),datasets:[{label:"Siniestros",data:Object.values(SIN_SEM),backgroundColor:Object.values(SIN_SEM).map(v=>v>=20?"#ef444499":v>=15?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10},maxRotation:40},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
-  dc("ch-sin-pat");charts["ch-sin-pat"]=new Chart(document.getElementById("ch-sin-pat"),{type:"bar",data:{labels:Object.keys(SIN_PAT),datasets:[{label:"Siniestros",data:Object.values(SIN_PAT),backgroundColor:Object.values(SIN_PAT).map(v=>v>=7?"#ef444499":v>=5?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
-  dc("ch-sin-area");charts["ch-sin-area"]=new Chart(document.getElementById("ch-sin-area"),{type:"doughnut",data:{labels:Object.keys(SIN_AREA),datasets:[{data:Object.values(SIN_AREA),backgroundColor:["#4f8ef799","#f59e0b99"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
+    <div class="kc am"><span class="ki">🚨</span><div class="kl">Siniestros mayores</div><div class="kv">${tipo["Siniestro mayor"]||0}</div><div class="ks">${tot?Math.round((tipo["Siniestro mayor"]||0)/tot*100):0}%</div></div>
+    <div class="kc or"><span class="ki">🔸</span><div class="kl">Siniestros menores</div><div class="kv">${tipo["Siniestro menor"]||0}</div></div>
+    <div class="kc pu"><span class="ki">🔓</span><div class="kl">Robos</div><div class="kv">${tipo["Robo"]||0}</div></div>
+    <div class="kc bl"><span class="ki">📅</span><div class="kl">2025 2do semestre</div><div class="kv">${sem["2025 2°Sem"]||0}</div><div class="ks">Semestre pico</div></div>
+    <div class="kc te"><span class="ki">🚐</span><div class="kl">Unidades afectadas</div><div class="kv">${Object.keys(pat).length}+</div></div>`;
+  dc("ch-sin-tipo");charts["ch-sin-tipo"]=new Chart(document.getElementById("ch-sin-tipo"),{type:"doughnut",data:{labels:Object.keys(tipo),datasets:[{data:Object.values(tipo),backgroundColor:["#ef444499","#f59e0b99","#7c3aed99"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
+  dc("ch-sin-sem");charts["ch-sin-sem"]=new Chart(document.getElementById("ch-sin-sem"),{type:"bar",data:{labels:Object.keys(sem),datasets:[{label:"Siniestros",data:Object.values(sem),backgroundColor:Object.values(sem).map(v=>v>=20?"#ef444499":v>=15?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8",font:{size:10},maxRotation:40},grid:{color:"rgba(255,255,255,0.04)"}},y:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true}}}});
+  dc("ch-sin-pat");charts["ch-sin-pat"]=new Chart(document.getElementById("ch-sin-pat"),{type:"bar",data:{labels:Object.keys(pat),datasets:[{label:"Siniestros",data:Object.values(pat),backgroundColor:Object.values(pat).map(v=>v>=7?"#ef444499":v>=5?"#f59e0b99":"#4f8ef799"),borderRadius:5}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#8b8fa8"},grid:{color:"rgba(255,255,255,0.04)"},beginAtZero:true},y:{ticks:{color:"#8b8fa8",font:{size:11}},grid:{color:"rgba(255,255,255,0.04)"}}}}});
+  dc("ch-sin-area");charts["ch-sin-area"]=new Chart(document.getElementById("ch-sin-area"),{type:"doughnut",data:{labels:Object.keys(area),datasets:[{data:Object.values(area),backgroundColor:["#4f8ef799","#f59e0b99"],borderWidth:0}]},options:CO({plugins:{legend:{labels:{color:"#8b8fa8",font:{size:11},boxWidth:10},position:"right"}}})});
 }
 
 // ══ EXPORT ══
@@ -3107,7 +3176,7 @@ function parseCorrZonal(rows){
 
 // ── Parser: "Control vehicular" → FLOTA ──
 function parseControlVehicular(rows){
-  // col 0=patente, 2=jefe, 4=servicio, 5=estado, 6=modelo, 21=empresa, 27=Col AB (único criterio de inclusión)
+  // col 0=patente, 2=jefe, 4=servicio, 5=estado, 6=modelo, 21=empresa, 27=Col AB (único criterio de inclusión), 28=Col AC (Gerencia)
   const result = [];
   rows.slice(1).forEach(row=>{
     const pat = String(row[0]||'').trim();
@@ -3125,6 +3194,7 @@ function parseControlVehicular(rows){
       est: est22,
       m: String(row[6]||'').trim(),
       e: empresa||'Sin empresa',
+      ger: String(row[28]||'').trim(), // Col AC — Gerencia
     });
   });
   return result;
@@ -3153,7 +3223,7 @@ function parseDetalleMaquinas(data){
 // ── Parser: "Turnos unidades" → HORAS_PAT + HORAS_MES ──
 function parseTurnos(rows){
   // col 0=periodo, 1=patente, 2=area, 8=Col I (tipo arreglo), 9=Col J (detalle del turno),
-  // 13=horas_habiles (Col N), 19=empresa(Col T), 21=Col V (único criterio de inclusión = "Si")
+  // 13=horas_habiles (Col N), 19=empresa(Col T), 21=Col V (único criterio de inclusión = "Si"), 22=Col W (Gerencia)
   const horasPat={}, horasMes={}, turnosMes={}, horasArea={};
   window.TURNOS_DETALLE = []; // Se inicializa UNA sola vez antes del loop (antes se reseteaba en cada fila,
                                // por eso los filtros de la página no funcionaban: solo quedaba la última fila)
@@ -3169,6 +3239,7 @@ function parseTurnos(rows){
     const tipoArr = String(row[8]||'').trim();     // Col I — Tipo de arreglo
     const detalle = String(row[9]||'').trim();     // Col J — Detalle del turno
     const empresa = String(row[19]||'').trim(); // Col T = EMPRESA
+    const gerencia = String(row[22]||'').trim(); // Col W — Gerencia
     if(!pat) return;
     let mesKey = periodo, anio = '';
     try{
@@ -3181,7 +3252,7 @@ function parseTurnos(rows){
       }
     }catch(e){}
     const asistioVal = String(row[15]||'').trim().toUpperCase();
-    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,detalle,horas,asistio:asistioVal,empresa,mesKey,anio,periodo});
+    window.TURNOS_DETALLE.push({pat,area,zonal:String(row[3]||'').trim(),tipoArr,detalle,horas,asistio:asistioVal,empresa,gerencia,mesKey,anio,periodo});
     if(horas>0){
       horasPat[pat]=(horasPat[pat]||0)+horas;
       horasArea[area]=(horasArea[area]||0)+horas;
@@ -3244,14 +3315,16 @@ function parseEst3(rows){
 }
 
 // ── Parser: "Siniestros" ──
-function parseSiniestros(rows){
+function parseSiniestros(rows, patentesPermitidas){
   // MAPEO EXACTO SINIESTROS:
   // A(0)=PATENTE, B(1)=FECHA, C(2)=SEMESTRE
   // F(5)=TIPO DE SINIESTRO, G(6)=AREA
+  // patentesPermitidas (opcional): Set de patentes según la Gerencia activa (cruce por patente contra Control vehicular, Col AC)
   const tipo={}, sem={}, pat={}, area={};
   rows.slice(1).forEach(row=>{
     if(!row[0]) return;
     const p = String(row[0]||'').trim();
+    if(patentesPermitidas && !patentesPermitidas.has(p)) return;
     const t = String(row[5]||'').trim()||'Sin tipo';  // F - tipo siniestro
     const a = String(row[6]||'').trim()||'Sin área';  // G - area
     const s = String(row[2]||'').trim();               // C - semestre
@@ -3375,6 +3448,7 @@ async function actualizarFlota(){
 
     // Siniestros
     const rowsSin = await fetchSheet(GS_FLOTA, 'Siniestros');
+    window.SINIESTROS_ROWS = rowsSin; // se guarda crudo para poder refiltrar por Gerencia (vía patente → Control vehicular) en cada render
     const {tipo, sem, topPat, area} = parseSiniestros(rowsSin);
     if(Object.keys(tipo).length > 0){
       Object.keys(SIN_TIPO).forEach(k=>delete SIN_TIPO[k]);
