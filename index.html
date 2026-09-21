@@ -885,6 +885,11 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 <!-- MAQUINARIAS -->
 <section class="page" id="page-maquinarias">
   <div class="topbar"><div><div class="ptitle">Maquinarias</div><div class="psub" id="maq-psub">Cargando datos en tiempo real...</div></div></div>
+  <div class="fb" style="margin-bottom:10px;">
+    <button class="fum-tab active maq-ger-btn" data-ger="" onclick="window.setMaqGerencia('')">Todas las gerencias</button>
+    <button class="fum-tab maq-ger-btn" data-ger="Gerencia Mantovana" onclick="window.setMaqGerencia('Gerencia Mantovana')">Gerencia Mantovana</button>
+    <button class="fum-tab maq-ger-btn" data-ger="Gerencia Grub" onclick="window.setMaqGerencia('Gerencia Grub')">Gerencia Grub</button>
+  </div>
   <div class="fb">
     <label>Estado:</label><select id="f-maq-tipo" onchange="window.renderMaquinariasTabla()" style="min-width:160px;"><option value="">Todos</option></select>
     <input type="text" id="f-maq-busq" placeholder="Buscar..." style="width:180px;" oninput="window.renderMaquinariasTabla()"/>
@@ -1283,6 +1288,16 @@ let sitios=[], charts={}, editSitioId=null, modalCb=null;
 
 // Maquinarias — cargado exclusivamente desde GS_MAQUINARIAS (hoja "Detalle de maquinas")
 let MAQUINARIAS=[];
+let MAQ_GERENCIA_SEL = ''; // Botones de Gerencia en Detalle de Máquinas (Columna L). '' = Todas las gerencias
+
+// Botones superiores de Gerencia — exclusivos de "Detalle de Máquinas"
+window.setMaqGerencia = function(gerencia){
+  MAQ_GERENCIA_SEL = gerencia;
+  document.querySelectorAll('.maq-ger-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.ger===gerencia);
+  });
+  window.renderMaquinariasTabla();
+};
 let MAQ_HEADERS=["CECO","Servicio","Máquina","Ubicación","Estado"];
 
 // Sitios se cargan EXCLUSIVAMENTE desde Google Sheets (GS_SITIOS)
@@ -2342,6 +2357,7 @@ window.renderMaquinariasTabla = function(){
   const busq = (document.getElementById("f-maq-busq")?.value || "").toLowerCase();
   const fil = MAQUINARIAS.filter(m=>{
     if(fe && m.e !== fe) return false;
+    if(MAQ_GERENCIA_SEL && m.ger !== MAQ_GERENCIA_SEL) return false;
     if(busq && !`${m.a} ${m.b} ${m.c} ${m.d}`.toLowerCase().includes(busq)) return false;
     return true;
   });
@@ -2365,12 +2381,13 @@ window.renderMaquinariasTabla = function(){
     }).join("") : `<tr><td colspan="5" style="text-align:center;color:var(--mu);">Sin resultados para el filtro aplicado</td></tr>`;
   }
 
-  // KPIs: total + distribución por columna E (estado)
+  // KPIs: total + distribución por columna E (estado) — respeta la Gerencia activa
   const kEl = document.getElementById("k-maquinarias");
   if(kEl){
-    const total = MAQUINARIAS.length;
+    const baseGerencia = MAQUINARIAS.filter(m=> !MAQ_GERENCIA_SEL || m.ger===MAQ_GERENCIA_SEL);
+    const total = baseGerencia.length;
     const porEstado = {};
-    MAQUINARIAS.forEach(m=>{ if(m.e) porEstado[m.e] = (porEstado[m.e]||0)+1; });
+    baseGerencia.forEach(m=>{ if(m.e) porEstado[m.e] = (porEstado[m.e]||0)+1; });
     const estados = Object.entries(porEstado).sort((a,b)=>b[1]-a[1]).slice(0,4);
     const colores = ["gr","am","or","pu"];
     kEl.innerHTML = `<div class="kc bl"><span class="ki">🚜</span><div class="kl">Total de máquinas</div><div class="kv">${total}</div><div class="ks">Hoja "Detalle de maquinas"</div></div>`
@@ -3230,12 +3247,16 @@ function parseDetalleMaquinas(data){
   (data||[]).forEach(item=>{
     const c = String(item.maquina||"").trim();
     if(!c) return; // fila vacía
+    // Columna K: único criterio de visibilidad — solo "Si" entra al análisis.
+    const visible = String(item.visible||"").trim().toLowerCase();
+    if(visible !== "si") return;
     result.push({
       a: String(item.ceco ?? "").trim(),      // Col A
       b: String(item.servicio||"").trim(),    // Col B
       c: c,                                   // Col C
       d: String(item.ubicacion||"").trim(),   // Col D
-      e: String(item.estado||"").trim()       // Col E (desplegable → filtro/estado)
+      e: String(item.estado||"").trim(),      // Col E (desplegable → filtro/estado)
+      ger: String(item.gerencia||"").trim()   // Col L — Gerencia
     });
   });
   return result;
