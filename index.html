@@ -1666,10 +1666,10 @@ window.renderSemaforo = function(){
   const sel = document.getElementById('f-sem-zonal');
   const activos = new Set(['abierto','en curso','pendiente']);
   const data = rows.slice(1).map(r=>({
-    jefe:String(r[1]||'').trim(),
+    jefe:String(r[1]||'').trim() || 'Sin jefe asignado',
     estado:norm(r[10]),
     sem:norm(r[23])
-  })).filter(d=>d.jefe && activos.has(d.estado));
+  })).filter(d=>activos.has(d.estado)); // solo tickets abiertos (Abierto/En curso/Pendiente); los cerrados salen del análisis aunque la col X conserve los días
   if(sel){
     const cur = sel.value;
     const jefes = [...new Set(data.map(d=>d.jefe))].sort();
