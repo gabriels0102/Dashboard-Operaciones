@@ -432,6 +432,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <div class="topbar">
     <div><div class="ptitle">Correctivos - OCA</div><div class="psub" id="corr-psub">Cargando...</div></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="fum-tab active" id="btn-semaforo" onclick="window.irSemaforo()">🚦 Semáforo</button>
       <select id="f-corr-zonal" onchange="renderCorr()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
     </div>
   </div>
@@ -484,6 +485,23 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
   <!-- Detalle por zonal -->
   <div class="sl" style="margin-top:14px;">Detalle por jefe zonal</div>
   <div id="corr-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;"></div>
+</section>
+
+<!-- SEMAFORO -->
+<section class="page" id="page-semaforo">
+  <div class="topbar">
+    <div><div class="ptitle">Semáforo - Correctivos OCA</div><div class="psub" id="sem-psub">Hoja definitiva · Col X</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="fum-tab" onclick="window.volverCorrectivos()">← Correctivos</button>
+      <select id="f-sem-zonal" onchange="renderSemaforo()" style="min-width:190px;"><option value="">Todos los zonales</option></select>
+    </div>
+  </div>
+  <div id="sem-criterio" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.35);border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.6;"></div>
+  <div class="kg" id="k-semaforo"></div>
+  <div class="card">
+    <div class="ch"><div><div class="ct">Tickets abiertos por semáforo</div><div class="cs">Cantidad de tickets · según filtro de Jefe Zonal</div></div></div>
+    <div class="cw"><canvas id="ch-semaforo"></canvas></div>
+  </div>
 </section>
 
 <!-- MOTIVOS -->
@@ -1616,6 +1634,68 @@ function renderDashboard(){
   }
 }
 
+
+// ── SEMÁFORO (Hoja definitiva · Col X; criterio en AA2:AA5) ──
+window.irSemaforo = function(){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-semaforo").classList.add("active");
+  window.renderSemaforo();
+};
+window.volverCorrectivos = function(){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-correctivos").classList.add("active");
+};
+window.renderSemaforo = function(){
+  const rows = window.SEMAFORO_ROWS || [];
+  const norm = v => String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const COLORES = [
+    {k:'verde',    label:'Verde',    color:'#22c55e', cls:'gr', fila:1},
+    {k:'amarillo', label:'Amarillo', color:'#eab308', cls:'am', fila:2},
+    {k:'naranja',  label:'Naranja',  color:'#f97316', cls:'or', fila:3},
+    {k:'rojo',     label:'Rojo',     color:'#ef4444', cls:'re', fila:4}
+  ];
+  // Criterio: AA2:AA5 (col idx 26, filas idx 1..4)
+  const crit = document.getElementById('sem-criterio');
+  if(crit){
+    crit.innerHTML = '<b>Criterio del semáforo</b><br>' + COLORES.map(c=>{
+      const t = String((rows[c.fila]||[])[26]||'').trim();
+      return `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${c.color};margin-right:6px;"></span><b>${c.label}:</b> ${t||'—'}`;
+    }).join('<br>');
+  }
+  // Select de Jefe Zonal (col B idx 1)
+  const sel = document.getElementById('f-sem-zonal');
+  const activos = new Set(['abierto','en curso','pendiente']);
+  const data = rows.slice(1).map(r=>({
+    jefe:String(r[1]||'').trim(),
+    estado:norm(r[10]),
+    sem:norm(r[23])
+  })).filter(d=>d.jefe && activos.has(d.estado));
+  if(sel){
+    const cur = sel.value;
+    const jefes = [...new Set(data.map(d=>d.jefe))].sort();
+    sel.innerHTML = '<option value="">Todos los zonales</option>' + jefes.map(j=>`<option value="${j}">${j}</option>`).join('');
+    sel.value = jefes.includes(cur) ? cur : '';
+  }
+  const fz = sel ? sel.value : '';
+  const base = data.filter(d=>!fz || d.jefe===fz);
+  const cnt = {};
+  COLORES.forEach(c=>{ cnt[c.k] = base.filter(d=>d.sem.includes(c.k)).length; });
+  const total = base.length;
+  const pct = n => total>0 ? Math.round(n/total*1000)/10 : 0;
+  const kg = document.getElementById('k-semaforo');
+  if(kg){
+    kg.innerHTML = COLORES.map(c=>`<div class="kc ${c.cls}"><div class="kl">${c.label}</div><div class="kv" style="color:${c.color};">${pct(cnt[c.k]).toLocaleString('es-AR')}%</div><div class="ks">${cnt[c.k]} de ${total} tickets abiertos</div></div>`).join('');
+  }
+  const psub = document.getElementById('sem-psub');
+  if(psub) psub.textContent = (fz||'Todos los zonales') + ' · ' + total + ' tickets abiertos';
+  dc('ch-semaforo');
+  const cv = document.getElementById('ch-semaforo');
+  if(cv){
+    charts['ch-semaforo'] = new Chart(cv,{type:'bar',
+      data:{labels:COLORES.map(c=>c.label),datasets:[{data:COLORES.map(c=>cnt[c.k]),backgroundColor:COLORES.map(c=>c.color),borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
+  }
+};
 
 window.renderCorr=function(){
   const fz  = document.getElementById("f-corr-zonal")?.value||"";
@@ -3437,6 +3517,8 @@ async function actualizarCorrectivos(){
 
     // Hoja 2: Hoja definitiva → CORR_ZONAL
     const rowsHojaDef = await fetchSheet(GS_CORRECTIVOS, 'Hoja definitiva');
+    window.SEMAFORO_ROWS = rowsHojaDef;
+    try{ renderSemaforo(); }catch(e){ console.warn('renderSemaforo:', e); }
     const nuevoZonal = parseCorrZonal(rowsHojaDef);
     Object.assign(CORR_ZONAL, nuevoZonal);
 
