@@ -1678,8 +1678,22 @@ window.renderSemaforo = function(){
   }
   const fz = sel ? sel.value : '';
   const base = data.filter(d=>!fz || d.jefe===fz);
+  // Umbrales (días) leídos del criterio AA2:AA4; fallback 14/30/60
+  const maxDe = (fila, def)=>{
+    const nums = (String((rows[fila]||[])[26]||'').match(/\d+/g)||[]).map(Number);
+    return nums.length ? Math.max(...nums) : def;
+  };
+  const uV = maxDe(1,14), uA = maxDe(2,30), uN = maxDe(3,60);
+  const colorDe = d=>{
+    const t = d.sem;
+    for(const c of COLORES){ if(t && isNaN(parseFloat(t.replace(',','.'))) && t.includes(c.k)) return c.k; }
+    const n = parseFloat(t.replace(',','.'));
+    if(isNaN(n)) return null;
+    return n<=uV?'verde':n<=uA?'amarillo':n<=uN?'naranja':'rojo';
+  };
+  base.forEach(d=>{ d.col = colorDe(d); });
   const cnt = {};
-  COLORES.forEach(c=>{ cnt[c.k] = base.filter(d=>d.sem.includes(c.k)).length; });
+  COLORES.forEach(c=>{ cnt[c.k] = base.filter(d=>d.col===c.k).length; });
   const total = base.length;
   const pct = n => total>0 ? Math.round(n/total*1000)/10 : 0;
   const kg = document.getElementById('k-semaforo');
