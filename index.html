@@ -478,7 +478,7 @@ tr:last-child td{border-bottom:none;} tr:hover td{background:rgba(255,255,255,0.
 
   <!-- Top servicios -->
   <div class="card" style="margin-top:14px;">
-    <div class="ch"><div><div class="ct">Top 15 — Servicios con más correctivos</div><div class="cs">Filtrable por jefe zonal</div></div></div>
+    <div class="ch"><div><div class="ct">Top 15 — Servicios con más correctivos</div><div class="cs">Solo tickets Abierto · En curso · Pendiente · Filtrable por jefe zonal</div></div></div>
     <div style="height:300px;position:relative;"><canvas id="ch-top-svc"></canvas></div>
   </div>
 
@@ -1838,13 +1838,22 @@ window.renderCorr=function(){
   }
 
   // ── Top servicios ──
-  const svcData = fz
-    ? Object.entries(CORR_ZONAL[fz]?.top||[]).map(([,v])=>v)
-    : Object.entries(window.CORR_GLOBAL?.servicios||{}).sort((a,b)=>b[1]-a[1]).slice(0,15);
+  // Solo tickets con estado Abierto / En curso / Pendiente (Hoja definitiva: B=Jefe, F=Servicio, K=Estado)
+  const _nz = v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const _estOk = new Set(['abierto','en curso','pendiente']);
+  const _svcCnt = {};
+  (window.SEMAFORO_ROWS||[]).slice(1).forEach(r=>{
+    if(!_estOk.has(_nz(r[10]))) return;
+    if(fz && _nz(r[1])!==_nz(fz)) return;
+    const sv = String(r[5]||'').trim();
+    if(!sv) return;
+    _svcCnt[sv] = (_svcCnt[sv]||0)+1;
+  });
+  const svcData = Object.entries(_svcCnt).sort((a,b)=>b[1]-a[1]).slice(0,15);
   dc("ch-top-svc");
   if(svcData.length>0){
-    const labels = fz ? svcData.map(t=>t[0].substring(0,35)) : svcData.map(([k])=>k.substring(0,35));
-    const vals2  = fz ? svcData.map(t=>t[1]) : svcData.map(([,v])=>v);
+    const labels = svcData.map(([k])=>k.substring(0,35));
+    const vals2  = svcData.map(([,v])=>v);
     charts["ch-top-svc"]=new Chart(document.getElementById("ch-top-svc"),{
       type:"bar",
       data:{labels,datasets:[{label:"Correctivos",data:vals2,backgroundColor:"#7c3aed99",borderRadius:4}]},
